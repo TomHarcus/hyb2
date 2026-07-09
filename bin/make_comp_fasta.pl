@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 my $barcodes=0;
 

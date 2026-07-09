@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # example:
 # add_dG_hyb.pl file.hyb file.vienna > file_with_dG.hyb

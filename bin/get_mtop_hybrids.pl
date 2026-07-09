@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # bug fix 20131019: chimeras with too-large gap or overlap are now filtered correctly
 

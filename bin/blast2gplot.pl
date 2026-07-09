@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # example: blast2gplot.pl EXP=exp1 N_GENES=20 REF_BLAST_FILE=hybrids.blast BLAST_FILE=in.blast GENE_LENGTHS_FILE=human_OH_3_gene_lengths.txt
 # craetes output files automatically

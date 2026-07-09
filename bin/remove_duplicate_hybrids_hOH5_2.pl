@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # inputs reference file with microRNAs and mRNAs ranked according to some criteria, and .hyb file
 # outputs filtered .hyb file, with exactly one line per seq_ID

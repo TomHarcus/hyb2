@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # version 1.3 changes:	to improve speed, when merging hybrids, compare only hybrids within the same pair of genes
 

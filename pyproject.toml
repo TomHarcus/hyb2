@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hyb2"
+version = "0.1.0"
+description = "Python port of the HYB2 RNA proximity-ligation pipeline"
+requires-python = ">=3.10"
+readme = "README.md"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+# Not wired into PATH as `hyb2` yet -- the legacy bin/hyb2 Bash orchestrator
+# stays authoritative until every stage it calls has been ported and
+# parity-checked against fixtures/. Invoke this during migration via
+# `python -m hyb2`.
+[project.scripts]
+hyb2-py = "hyb2.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

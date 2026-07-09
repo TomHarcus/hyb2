@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 my $total_cnt_decompressed = 0;
 my %cnt = ();

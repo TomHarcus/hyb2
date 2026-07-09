@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # Ct2B_GK_3.pl: removed bug that caused the program to crash when a header line started with zero
 #		added option HYBRID_SS_MIN to print 5th rather than 8th item from header lines (for hybrid-ss-min)

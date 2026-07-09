@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # example: make_hybrid_annotation_table.pl in.1 in.2 > out.txt
 # reads any number of files in the format:

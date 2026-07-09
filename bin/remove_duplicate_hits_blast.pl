@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # inputs reference file with genes ranked according to some criteria, and .blast file
 # outputs filtered .blast file, with exactly one line per seq_ID

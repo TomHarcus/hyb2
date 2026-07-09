@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/home/tom/miniconda3/envs/hyb2/bin/perl
 
 # inputs hyb file, with coordinates of predicted RNA stems
 # outputs a file in the format "F 1 100 5", which can be used as a list of constraints for hybrid-ss-min
