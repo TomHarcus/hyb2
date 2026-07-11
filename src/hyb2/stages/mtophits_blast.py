@@ -6,7 +6,6 @@ value get dropped
 
 """
 
-from __future__ import annotations
 
 import sys
 

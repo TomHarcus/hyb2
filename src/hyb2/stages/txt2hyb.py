@@ -6,7 +6,6 @@ Looks up read ID from tab file and substitutes into hyb files second column
 
 """
 
-from __future__ import annotations
 
 import sys
 

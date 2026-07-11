@@ -4,7 +4,6 @@ Converts multi-line FASTA to one tab-separated "header\\tsequence" record
 per line
 """
 
-from __future__ import annotations
 
 import sys
 

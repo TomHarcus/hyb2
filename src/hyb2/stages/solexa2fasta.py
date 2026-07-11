@@ -4,7 +4,6 @@ Converts fastq file to fasta file
 
 """
 
-from __future__ import annotations
 
 import sys
 

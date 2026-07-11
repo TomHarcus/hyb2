@@ -5,7 +5,6 @@ type1:type2   collapsed   all
 
 """
 
-from __future__ import annotations
 
 import sys
 

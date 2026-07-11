@@ -5,8 +5,6 @@ identical nucleotides (AAAAAAAAAAAAAAA, CCCCCCCCCCCCCCC, etc)
 
 """
 
-from __future__ import annotations
-
 import sys
 import re
 

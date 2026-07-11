@@ -5,8 +5,6 @@ biotype   collapsed   all
 
 """
 
-from __future__ import annotations
-
 import sys
 
 def blast_stats_2(text: str) -> str:

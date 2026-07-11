@@ -7,7 +7,6 @@ bin/ until they're ported into hyb2.stages and validated against
 fixtures/. See fixtures/README.md for the parity-testing harness.
 """
 
-from __future__ import annotations
 
 import argparse
 import sys
