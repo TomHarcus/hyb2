@@ -45,9 +45,9 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 
 ## TIER 1 — the spine (`hyb2_sam_composition.sh`) — DO NOW
 
-- [COMPLETE] 1. `create_reference_file.pl` — leaf
-- [ ] 2. `histogram.pl` — leaf (used twice; also needed in Tier 2)
-- [ ] 3. `collapse_blast_2.sh` — leaf (port, or keep shelling to Grzegorz's memory-safe version)
+- [x] 1. `create_reference_file.pl` — leaf
+- [x] 2. `histogram.pl` — leaf (used twice; also needed in Tier 2)
+- [x] 3. `collapse_blast_2.sh` — leaf (port, or keep shelling to Grzegorz's memory-safe version)
 - [ ] 4. `Hybrid_long.pm` → 5 — port only the ~7 methods `remove_duplicate` uses, as a small `Hybrid` class
 - [ ] 5. `remove_duplicate_hybrids_hOH5_2.pl` — needs #4
 - [ ] 6. `get_mtop_hybrids.pl` — leaf, self-contained; the core chimera caller (biggest single unit)
