@@ -1,4 +1,4 @@
-"""Port of bin/remove_duplicate_hybrids_hOH5_2.pl (Tier 1 #5).
+"""Port of bin/remove_duplicate_hybrids_hOH5_2.pl 
 
 Takes the ranking reference (from create_reference_file) plus a .hyb, keeps
 exactly one best hybrid per read ID. Ranking criteria (in order): sum of the
@@ -14,7 +14,7 @@ Parity: fixtures/sam_composition_run/test.ua.hyb
 import sys
 import re
 
-from hyb2.models import Hybrid  # noqa: F401  (used once implemented)
+from hyb2.models import Hybrid  
 
 
 def get_ordered_ranks(name1, name2, rank):

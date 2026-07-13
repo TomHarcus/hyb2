@@ -1,4 +1,4 @@
-"""Port of bin/histogram.pl (Tier 1 #2).
+"""Port of bin/histogram.pl 
 
 Tallies counts of identical input lines/keys and emits a frequency table. Used
 twice by the sam_composition pipeline (gene-pair counts, single-read top-hit

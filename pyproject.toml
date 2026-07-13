@@ -19,6 +19,7 @@ dev = ["pytest"]
 # `python -m hyb2`.
 [project.scripts]
 hyb2-py = "hyb2.cli:main"
+hyb2-sam-composition = "hyb2.pipelines.sam_composition:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

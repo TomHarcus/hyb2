@@ -1,10 +1,15 @@
-"""CLI skeleton for the Python port of bin/hyb2.
+"""CLI skeleton reserved for the top-level `hyb2` mega-orchestrator port.
 
-Flags mirror bin/hyb2's getopts string ("i:d:o:v:m:h:a:b:q:x:y:l:j:e:r:")
-so the eventual replacement is a drop-in for users. During migration this
-does not run the pipeline itself -- individual stages are called out to
-bin/ until they're ported into hyb2.stages and validated against
-fixtures/. See fixtures/README.md for the parity-testing harness.
+This is the placeholder for porting `bin/hyb2` specifically -- the big
+orchestrator that fans out to mapping, sam2hyb, folding, coverage, compare,
+etc. (Tier 3 / dead-last in MIGRATION_ORDER.md). It is NOT the chimera-calling
+spine: that is `hyb2_sam_composition.sh`, already ported and runnable via
+`hyb2.pipelines.sam_composition` (entry point `hyb2-sam-composition`).
+
+Flags here mirror bin/hyb2's getopts string ("i:d:o:v:m:h:a:b:q:x:y:l:j:e:r:")
+so the eventual replacement is a drop-in for users. `main()` is a stub
+(raises NotImplementedError) until Tier 3 begins; `test_cli.py` pins the
+intended flag surface in the meantime.
 """
 
 

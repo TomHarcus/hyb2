@@ -1,4 +1,4 @@
-"""Adopt bin/sam2blast_3 (Tier 1, already Python).
+"""Adopt bin/sam2blast_3 
 
 bin/sam2blast_3 is already Python 3 -- this is an ADOPT, not a translation:
 move its logic here (SAM -> blast, with the mapped-sequence column and the
@@ -6,17 +6,95 @@ bit-score / e-value computation), add the iterable/main shape used by the other
 stages, and keep byte-parity with the current script.
 
 Parity: fixtures/sam_composition_run/test.blast
-"""
 
-from __future__ import annotations
+Original script already written in Python, just some shape changes
+"""
 
 import sys
 from typing import Iterable, Iterator
+import re
+from math import exp, log
 
 
 def sam2blast(lines: Iterable[str]) -> Iterator[str]:
-    # TODO(tier1): port bin/sam2blast_3.print_line / main here.
-    raise NotImplementedError
+    dblen = 0
+    for line in lines:
+        li = line.strip()
+        if not li.startswith("@"):
+            arr = li.split()
+            if (int(arr[1]) in [0,256]):
+                yield print_line(arr, 'f', dblen)
+            elif (int(arr[1]) in [16,272]):
+                yield print_line(arr, 'r', dblen)
+            elif (int(arr[1]) == 4):
+                pass
+            else:
+                raise Exception("unknown flag %s" % arr[1])
+        elif li.startswith("@SQ"):
+            dblen += int(li.split("LN:")[1])
+
+def print_line(arr, flag, dblen):
+    cigar, mismatches, gaps, identity = [], 0, 0, 0
+    cigar_num = re.findall(r'\d+',arr[5])
+    cigar_op = re.findall(r'\D',arr[5])
+    ref_len = 0
+    for i in range(len(cigar_op)):
+        if cigar_op[i] == "M":
+            [cigar.append(1) for j in range(int(cigar_num[i]))]
+            ref_len += int(cigar_num[i])
+        elif cigar_op[i] == "I":
+            [cigar.append(1) for j in range(int(cigar_num[i]))]
+            gaps += 1
+        elif cigar_op[i] == "S":
+            [cigar.append(0) for j in range(int(cigar_num[i]))]
+        elif cigar_op[i] == "H":
+            [cigar.append(0) for j in range(int(cigar_num[i]))]
+        elif cigar_op[i] == "D":
+            ref_len += int(cigar_num[i])
+            gaps += 1
+        else:
+            raise Exception("unknown cigar operator %s" % cigar_op[i])
+    align_start, align_end = 0, len(cigar)
+    len_read = len(cigar)
+    for x in cigar:
+        if x == 1:
+            break
+        align_start += 1
+    for x in reversed(cigar):
+        if x == 1:
+            break
+        align_end -= 1
+    len_align = align_end - align_start
+    ref_start = int(arr[3])
+    if (flag == 'f'):
+        ref_end = ref_start + ref_len -1
+    elif (flag == 'r'): 
+        ref_end = ref_start
+        ref_start = ref_start + ref_len -1
+        align_start, align_end = len_read - align_end, len_read - align_start
+    mismatches = int([x for x in arr if x.startswith("NM:i:")]
+                             [0].split("NM:i:")[1])
+    identity = ((abs(align_end - align_start) - mismatches )/ 
+                       float(len_align) ) * 100
+    align_score = int(re.split(r'AS:i:',
+                      [x for x in arr if re.search(r'^AS:i:', x)][0])[1])
+    #ungapped l, k, h, n, m = 1.33, 0.621, 1.12, dblen, len_read
+    l, k, h, n, m = 1.28, 0.46, 0.85, dblen, len_read
+    np = n-log(k*n*m)/h
+    mp = m-log(k*n*m)/h
+    if mp < 0:
+        mp = 0.1
+    bit_score = ((l*float(align_score))-log(k))/log(2)
+    # alternative evalue formula, gives 0's for small numbers
+    # u = (log(k*mp*np))/l
+    # evalue = 1-exp(-exp(-l*(float(align_score)-u)))
+    evalue = mp*np*2**-bit_score
+    return ('%s\t%s\t%.2f\t%i\t%i\t%i\t%i\t%i\t%i\t%i\t%.2g\t%.1f\t%s'%(
+           arr[0], arr[2], identity, len_align, 
+           mismatches, gaps, align_start+1, align_end, ref_start, ref_end,
+           evalue, bit_score, arr[9]) + "\n")
+
+    
 
 
 def main(argv: list[str] | None = None) -> int:

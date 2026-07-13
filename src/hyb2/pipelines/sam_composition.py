@@ -18,16 +18,16 @@ while the collapse -> mtophits -> reference branch only builds the ranking
 .ref consumed by remove_duplicate. Keep those two data paths separate.
 """
 
-from __future__ import annotations
-
 import argparse
 import sys
 
-# Stage imports (filled in as each stage is ported):
-# from hyb2.stages import (
-#     sam2blast, collapse_blast, mtophits_blast, create_reference_file,
-#     get_mtop_hybrids, remove_duplicate_hybrids, histogram,
-# )
+from hyb2.stages.sam2blast import sam2blast
+from hyb2.stages.collapse_blast import collapse_blast
+from hyb2.stages.mtophits_blast import deduplicate_by_second_fragement_start
+from hyb2.stages.create_reference_file import create_reference
+from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
+from hyb2.stages.remove_duplicate_hybrids import remove_duplicate_hybrids
+from hyb2.stages.histogram import histogram
 
 
 def run(
@@ -41,16 +41,57 @@ def run(
     max_overlap: int = 4,
 ) -> None:
     """Drive the pipeline. See module docstring for the three modes."""
-    # TODO(tier1): once stages land, wire:
-    #   1. sam2blast(in_sam)                       -> <out>.blast
-    #   2. collapse_blast | mtophits_blast          -> <out>_mtophits.blast
-    #   3. create_reference_file                    -> <out>_mtophits.ref
-    #   4. get_mtop_hybrids(<out>.blast, ...)       -> <out>.hyb
-    #   5. remove_duplicate_hybrids(ref, hyb)       -> <out>.ua.hyb
-    #   6. histogram(cut -f4,10 ua.hyb)             -> <out>.ua.hyb_stats_by_gene.txt
-    #   7. histogram(single-read filter of sam)     -> <out>_tophit_by_gene.txt
-    #   8. hyb2_composition_pies (Python; get from Grzegorz)
-    raise NotImplementedError("sam_composition pipeline not yet wired -- Tier 1 in progress")
+    
+    out = in_sam[:-4] if in_sam.endswith(".sam") else in_sam
+
+    blast = out + ".blast"
+    with open(in_sam) as fin, open(blast, "w") as fout:
+        fout.writelines(sam2blast(fin))
+
+    collapse = out + ".collapse.blast"
+    with open(blast) as fin, open(collapse, "w") as fout:
+        fout.writelines(collapse_blast(fin))
+
+    mtophits = out + "_mtophits.blast"
+    with open(collapse) as f:
+        text = deduplicate_by_second_fragement_start(f.read())
+
+    with open(mtophits, "w") as fout:
+        fout.write(text)
+
+    ref = out + "_mtophits.ref"
+    with open(mtophits) as fin, open(ref, "w") as fout:
+        fout.writelines(create_reference(fin))
+
+    hyb = out + ".hyb"
+    with open(blast) as fin, open(hyb, "w") as fout:
+        fout.writelines(get_mtop_hybrids (
+            fin, blast_threshold=blast_threshold, mode=mode, max_overlap=max_overlap, max_hits=hmax
+        ))
+    
+    ua = out + ".ua.hyb"
+    with open(ref) as r, open(hyb) as h, open(ua, "w") as fout:
+        fout.writelines(remove_duplicate_hybrids(r, h, prefer_mim=True))
+
+    gene_stats = out + ".ua.hyb_stats_by_gene.txt"
+    with open(ua) as fin, open(gene_stats, "w") as fout:
+        cut = (f"{c[3]}\t{c[9]}\n" for c in (line.rstrip("\n").split("\t") for line in fin))
+        fout.writelines(histogram(cut))
+
+    tophit = out + "_tophit_by_gene.txt"
+    def _single_reads(sam):
+        for line in sam:
+            if line.startswith("@"):
+                continue
+            c = line.split("\t")
+            flag = int(c[1])
+            if (flag // 4) % 2 == 0 and (flag // 256) % 2 == 0:
+                yield c[2] + "\n"
+    
+    with open(in_sam) as fin, open(tophit, "w") as fout:
+        fout.writelines(histogram(_single_reads(fin)))
+
+    """hyb2_composition_pies.py not here yet"""
 
 
 def build_parser() -> argparse.ArgumentParser:

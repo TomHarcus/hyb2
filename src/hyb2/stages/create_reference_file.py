@@ -1,4 +1,4 @@
-"""Port of bin/create_reference_file.pl (Tier 1 #1).
+"""Port of bin/create_reference_file.pl 
 
 Reads a *_mtophits.blast, emits the ranking reference table (gene name +
 criteria) consumed by remove_duplicate_hybrids. No dependencies.

@@ -1,4 +1,4 @@
-"""Port of collapse_blast_2.sh (Tier 1 #3).
+"""Port of collapse_blast_2.sh 
 
 WHAT IT DOES (plain English): removes duplicate rows, keeping exactly one row per
 unique (gene = col 2, mapped sequence = col 13) pair. That is the whole job --
