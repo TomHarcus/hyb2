@@ -27,7 +27,6 @@ GOLDEN_OUTPUTS = [
 ]
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="Tier 1: pipeline not yet wired")
 def test_sam_composition_pipeline_matches_golden(fixtures_dir, tmp_path, strip_hyb_header):
     sam = tmp_path / "test.sam"
     shutil.copy(fixtures_dir / "test.sam", sam)

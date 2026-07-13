@@ -8,7 +8,6 @@ import pytest
 from hyb2.stages.sam2blast import sam2blast
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="Tier 1: stage not yet ported")
 def test_sam2blast_matches_golden(fixtures_dir):
     with (fixtures_dir / "test.sam").open() as f:
         produced = "".join(sam2blast(f))

@@ -12,7 +12,6 @@ import pytest
 from hyb2.stages.histogram import histogram
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="Tier 1: stage not yet ported")
 def test_histogram_gene_pair_matches_golden(fixtures_dir):
     ua = (fixtures_dir / "test.ua.hyb").read_text().splitlines()
     # pipeline step 7: cut -f4,10  (1-indexed cols 4 and 10 -> py indices 3, 9)

@@ -49,7 +49,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 2. `histogram.pl` — leaf (used twice; also needed in Tier 2)
 - [x] 3. `collapse_blast_2.sh` — leaf (port, or keep shelling to Grzegorz's memory-safe version)
 - [x] 4. `Hybrid_long.pm` → 5 — port only the ~7 methods `remove_duplicate` uses, as a small `Hybrid` class
-- [ ] 5. `remove_duplicate_hybrids_hOH5_2.pl` — needs #4
+- [x] 5. `remove_duplicate_hybrids_hOH5_2.pl` — needs #4
 - [ ] 6. `get_mtop_hybrids.pl` — leaf, self-contained; the core chimera caller (biggest single unit)
 - [ ] 7. `hyb2_sam_composition.sh` — orchestrator; needs 1–6 + the two already-Python.
        Fold `_antisense` (MODE=1) and `sense_antisense` variants in as flags.

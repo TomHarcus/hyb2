@@ -10,7 +10,6 @@ import pytest
 from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
 
 
-@pytest.mark.xfail(raises=NotImplementedError, strict=False, reason="Tier 1: stage not yet ported")
 def test_get_mtop_hybrids_matches_golden(fixtures_dir, strip_hyb_header):
     with (fixtures_dir / "test.blast").open() as f:
         produced = "".join(
