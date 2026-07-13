@@ -13,34 +13,55 @@ the used subset):
 When Tier 2 needs Hybrid_long_2.pm (used by combine_hyb_merge_touching.pl),
 add a second class here.
 """
-
-from __future__ import annotations
-
+import re
 
 class Hybrid:
     """A single .hyb record. Port of bin/Hybrid_long.pm."""
 
     def __init__(self) -> None:
-        raise NotImplementedError
+        self._seq_ID = None
+        self._bit1_nm = None
+        self._bit2_nm = None
+        self._bit1_eval = None
+        self._bit2_eval = None
+        self._line = None
+        self._experiment = None
 
-    def initialize_hyb(self, line: str, *args) -> "Hybrid | None":
+    def initialize_hyb(self, line: str, exp=None, *_ignored) -> bool:
         """Parse one .hyb line into this object; return None to skip (as the
         Perl `initialize_hyb ... or next` idiom does)."""
-        raise NotImplementedError
+        line = line.rstrip("\n")
+        f = line.split("\t")
+
+        self._seq_ID = f[0] if len(f) > 0 else None
+        self._bit1_nm = f[3] if len(f) > 3 else None
+        self._bit1_eval = f[8] if len(f) > 8 else None
+        self._bit2_nm = f[9] if len(f) > 9 else None
+        self._bit2_eval = f[14] if len(f) > 14 else None
+
+        self._line = line
+        self._experiment = exp 
+
+        return True
+
 
     def seq_ID(self) -> str:
-        raise NotImplementedError
+        return self._seq_ID
 
     def get_bit_names(self) -> tuple[str, str]:
-        raise NotImplementedError
+        return (self._bit1_nm, self._bit2_nm)
 
-    def match_bit_name(self, suffix: str) -> str | None:
-        """Return a bit name matching `suffix` (e.g. '_mRNA', '_microRNA'), else None."""
-        raise NotImplementedError
+    def match_bit_name(self, nm) -> str | None:
+        """Return the bit name matching regex nm (e.g: _mRNA), else None"""
+        if re.search(nm, self._bit1_nm):
+            return self._bit1_nm
+        elif re.search(nm, self._bit2_nm):
+            return self._bit2_nm
+        return None
 
     def sum_e_values(self) -> float:
-        raise NotImplementedError
+        return float(self._bit1_eval) + float(self._bit2_eval)
 
     def line(self) -> str:
         """The original record text, for output."""
-        raise NotImplementedError
+        return self._line
