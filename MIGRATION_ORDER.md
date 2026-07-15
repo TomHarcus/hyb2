@@ -60,7 +60,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 
 - [ ] 8. `ct2bps_2.awk` — leaf
 - [x] 9. `hyb2constraints.pl` — leaf
-- [ ] 10. `hyb2fasta_bits_allRNAs.awk` — leaf
+- [x] 10. `hyb2fasta_bits_allRNAs.awk` — leaf
 - [ ] 11. `add_dG_hyb_2.pl` — leaf (free-energy annotation)
 - [ ] 12. `make_nicer_vienna_hOH5.awk` — leaf (vienna formatting)
 - [ ] 13. `Ct2B_GK_3.pl` — leaf
