@@ -3,7 +3,6 @@
 Takes hyb file as input, predicte RNA stem coordinates
 Output file in form "F 1 100 5", which can be used as a list of constraints for hybrid-ss-min
 
-***UNTESTED RIGHT NOW***
 
 """
 

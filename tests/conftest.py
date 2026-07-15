@@ -15,6 +15,8 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 BIN = REPO_ROOT / "bin"
 FIXTURES = REPO_ROOT / "fixtures" / "sam_composition_run"
+TIER2_FIXTURES = REPO_ROOT / "fixtures" / "tier2_run"
+FOLDING_FIXTURES = REPO_ROOT / "fixtures" / "folding_run"
 
 
 @pytest.fixture
@@ -34,6 +36,25 @@ def fixtures_dir() -> Path:
     if not FIXTURES.exists():
         pytest.skip(f"fixtures not generated; run scripts/generate_sam_composition_baseline.sh")
     return FIXTURES
+
+
+@pytest.fixture
+def tier2_fixtures_dir() -> Path:
+    """Golden outputs from scripts/generate_tier2_baseline.sh (the folding-
+    adjacent Tier 2 stages). Skips the test if they haven't been generated."""
+    if not TIER2_FIXTURES.exists():
+        pytest.skip("tier2 fixtures not generated; run scripts/generate_tier2_baseline.sh")
+    return TIER2_FIXTURES
+
+
+@pytest.fixture
+def folding_fixtures_dir() -> Path:
+    """Real RNA-folding oracle from scripts/generate_folding_baseline.sh
+    (ViennaRNA .ct/.vienna on the test data, plus legacy parser goldens).
+    Requires ViennaRNA installed to (re)generate; skips otherwise."""
+    if not FOLDING_FIXTURES.exists():
+        pytest.skip("folding fixtures not generated; run scripts/generate_folding_baseline.sh (needs ViennaRNA)")
+    return FOLDING_FIXTURES
 
 
 def run_legacy(cmd: list[str], stdin_text: str | None = None) -> str:
