@@ -245,12 +245,13 @@ class Hybrid2:
 
     def print_hyb(self) -> str:
         
-        # Perl silently coerces non-numeric dG to 0.00 here
-        # This outputs "." instead rather than fabricate a value
-        try:
-            dG = f"{float(self._dG):.2f}"
-        except (TypeError, ValueError):
+        if self._dG is None:
             dG = "."
+        else:
+            try:
+                dG = f"{float(self._dG):.2f}"
+            except (TypeError, ValueError):
+                dG = "0.00"
 
 
         out = "\t".join([
@@ -276,12 +277,13 @@ class Hybrid2:
 
     def print_hyb_15_columns(self) -> str:
         
-        # Perl silently coerces non-numeric dG to 0.00 here
-        # This outputs "." instead rather than fabricate a value
-        try:
-            dG = f"{float(self._dG):.2f}"
-        except (TypeError, ValueError):
+        if self._dG is None:
             dG = "."
+        else:
+            try:
+                dG = f"{float(self._dG):.2f}"
+            except (TypeError, ValueError):
+                dG = "0.00"
 
 
         out = "\t".join([
