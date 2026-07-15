@@ -136,6 +136,15 @@ class Hybrid2:
             m = re.search(r"(^|;)two_way_merged=([0-9]+)", last_column)
             if m:
                 self._twoway_overlap = int(m.group(2))
+            # NOTE, legacy quirk (verified against the real Perl interpreter,
+            # reproduced deliberately): seq_IDs_in_cluster is SERIALIZED with
+            # commas (join(",", seq_ID_list) at the print_hyb_15_columns call
+            # site) but DESERIALIZED here with split(";"). Since the captured
+            # value has no semicolons in it, split(";", ...) returns it as a
+            # single-element list -- e.g. "readA,readB,readC" stays one
+            # element, not three. This looks like a join/split mismatch bug
+            # in the original .pm, not an intentional format choice, but it's
+            # what the legacy code actually does, so it's preserved here.
             m = re.search(r"(^|;)seq_IDs_in_cluster=([^;]+)", last_column)
             if m:
                 self._seq_ID_list = m.group(2).split(";")
@@ -145,34 +154,204 @@ class Hybrid2:
         return True
     
     def check_hit_names(self, nm1, nm2) -> bool:
-        pass
+        if (re.search(nm1, self._bit1_nm) and re.search(nm2, self._bit2_nm)) or \
+           (re.search(nm2, self._bit1_nm) and re.search(nm1, self._bit2_nm)):
+            return True
+        return False
     
-    def count(self) -> int:
-        pass
-
+    def count(self, count=None) -> int:
+        if count is not None:
+            self._count = count
+        return self._count
+    
     def found_overlap(self, fnd=None) -> int:
-        pass
+        if fnd is not None:
+            self._found_overlap = fnd
+        return self._found_overlap
+    
 
     def get_sorted_bit_names(self) -> str:
-        pass
+        return self._sorted_bit_nm
 
-    def merge_with(self, other) -> None:
-        pass
+    def _weighted_mean(self, a, b, wa, wb):
+        if wa is not None and wb is not None:
+            return (a * wa + b * wb) / (wa + wb)
+        
+        return (a + b) / 2
+    
+    def _to_float(self, v):
+        try:
+            return float(v)
+        except (TypeError, ValueError):
+            return 0.0
+    
+    def merge_with(self, other) -> bool:
+        self._dG = self._weighted_mean(
+            self._to_float(self._dG), 
+            self._to_float(other._dG), 
+            self._count, 
+            other._count
+        )
 
-    def print_hyb(self) -> None:
-        pass
+        self._count += other._count
 
-    def print_hyb_15_columns(self) -> None:
-        pass
+        if (
+            self._bit1_st <= self._bit1_end and
+            other._bit1_st <= other._bit1_end
+        ):
+            self._bit1_st = min(self._bit1_st, other._bit1_st)
+            self._bit1_end = max(self._bit1_end, other._bit1_end)
+
+        elif (
+            self._bit1_st > self._bit1_end and
+            other._bit1_st > other._bit1_end
+        ):
+            self._bit1_st = max(self._bit1_st, other._bit1_st)
+            self._bit1_end = min(self._bit1_end, other._bit1_end)
+
+        else:
+            raise ValueError("internal error: attempted merging features with opposite orientations")
+        
+
+        if (
+            self._bit2_st <= self._bit2_end and
+            other._bit2_st <= other._bit2_end
+        ):
+            self._bit2_st = min(self._bit2_st, other._bit2_st)
+            self._bit2_end = max(self._bit2_end, other._bit2_end)
+
+        elif (
+            self._bit2_st > self._bit2_end and
+            other._bit2_st > other._bit2_end
+        ):
+            self._bit2_st = max(self._bit2_st, other._bit2_st)
+            self._bit2_end = min(self._bit2_end, other._bit2_end)
+
+        else:
+            raise ValueError("internal error: attempted merging features with opposite orientations")
+        
+
+        self._bit1_st_in_rd = self._bit1_end_in_rd = self._bit2_st_in_rd = \
+        self._bit2_end_in_rd = self._bit1_eval = self._bit2_eval = "."
+
+        self._found_overlap += 1
+
+        if self._experiment != other._experiment:
+            self._experiment = f"{self._experiment}_{other._experiment}"
+
+        self._seq_ID_list = self._seq_ID_list + other._seq_ID_list
+
+        return True
+
+    def print_hyb(self) -> str:
+        
+        # Perl silently coerces non-numeric dG to 0.00 here
+        # This outputs "." instead rather than fabricate a value
+        try:
+            dG = f"{float(self._dG):.2f}"
+        except (TypeError, ValueError):
+            dG = "."
+
+
+        out = "\t".join([
+            self._seq_ID,
+            self._seq,
+            dG,
+            self._bit1_nm,
+            self._bit1_st_in_rd,
+            self._bit1_end_in_rd,
+            str(self._bit1_st),
+            str(self._bit1_end),
+            self._bit1_eval,
+            self._bit2_nm,
+            self._bit2_st_in_rd,
+            self._bit2_end_in_rd,
+            str(self._bit2_st),
+            str(self._bit2_end),
+            self._bit2_eval,
+            str(self._count)
+        ])
+
+        return out
+
+    def print_hyb_15_columns(self) -> str:
+        
+        # Perl silently coerces non-numeric dG to 0.00 here
+        # This outputs "." instead rather than fabricate a value
+        try:
+            dG = f"{float(self._dG):.2f}"
+        except (TypeError, ValueError):
+            dG = "."
+
+
+        out = "\t".join([
+            self._seq_ID,
+            self._seq,
+            dG,
+            self._bit1_nm,
+            self._bit1_st_in_rd,
+            self._bit1_end_in_rd,
+            str(self._bit1_st),
+            str(self._bit1_end),
+            self._bit1_eval,
+            self._bit2_nm,
+            self._bit2_st_in_rd,
+            self._bit2_end_in_rd,
+            str(self._bit2_st),
+            str(self._bit2_end),
+            self._bit2_eval
+        ])
+
+        return out
 
     def reverse_bit_order(self) -> bool:
-        pass
+        temp_bit1_nm = self._bit1_nm
+        self._bit1_nm = self._bit2_nm
+        self._bit2_nm = temp_bit1_nm
+
+        temp_bit1_st = self._bit1_st
+        temp_bit1_end = self._bit1_end
+
+        self._bit1_st = self._bit2_st
+        self._bit1_end = self._bit2_end
+
+        self._bit2_st = temp_bit1_st
+        self._bit2_end = temp_bit1_end
+
+        self._bit1_st_in_rd = self._bit1_end_in_rd = self._bit2_st_in_rd = \
+        self._bit2_end_in_rd = self._bit1_eval = self._bit2_eval = "."
+
+        return True
+
 
     def seq_ID_list(self) -> list[str]:
-        pass
+        return self._seq_ID_list
 
     def twoway_overlap(self, ovlp=None) -> int:
-        pass
+        if ovlp is not None:
+            self._twoway_overlap = ovlp
+        return self._twoway_overlap
 
     def touches(self, other) -> bool:
-        pass
+        if (
+            self._bit1_nm != other._bit1_nm or 
+            self._bit2_nm != other._bit2_nm
+        ):
+            return False
+        
+        if (
+            self._bit1_st > self._bit1_end or
+            other._bit1_st > other._bit1_end or
+            self._bit2_st > self._bit2_end or
+            other._bit2_st > other._bit2_end
+        ):
+            return False
+        
+        if (
+            other._bit1_st != self._bit1_end + 1 or
+            other._bit2_end != self._bit2_st - 1
+        ):
+            return False
+        
+        return True
+
