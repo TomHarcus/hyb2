@@ -55,9 +55,32 @@ paste -d "&" "$TIER2/test.ua.bit_1.fasta" "$TIER2/test.ua.bit_2.fasta" \
 echo "[2/3] b2ct: test.ua.cofold.vienna -> test.ua.cofold.ct"
 "$B2CT" < test.ua.cofold.vienna | sed 's/ENERGY =/dG =/g' > test.ua.cofold.ct
 
-echo "[3/3] ct2bps_2.awk: test.ua.cofold.ct -> test.ua.cofold.bps (parser golden)"
+echo "[3/5] ct2bps_2.awk: test.ua.cofold.ct -> test.ua.cofold.bps (parser golden)"
 # Golden for the ct2bps_2 port: legacy awk output on the real .ct above.
 awk -f "$REPO_ROOT/bin/ct2bps_2.awk" test.ua.cofold.ct > test.ua.cofold.bps
+
+# Everything below reproduces the bp2hyb feed from comradesMakeConstraints_2:
+#   ct2bps | histogram > basepair_scores           (line 61)
+#   awk 'printed<=1000 && in-window' > fragment     (line 64)  <- caps the input
+#   bp2hyb.sh < fragment > ranked_interactions      (line 65)
+# The cap matters: bp2hyb reformats each base pair into an all-"RNA" chimera, so
+# every record lands in a single combine bucket -> combine is O(n^2). The real
+# pipeline never feeds it more than ~1000 lines; feeding the full ~172k basepair
+# scores makes the legacy Perl combine effectively never finish. We also pre-sort
+# the scores so the frozen fragment fixture is reproducible (bp2hyb re-sorts
+# internally, so this does not change its output).
+PERL_BIN="${PERL:-perl}"
+export PATH="$REPO_ROOT/bin:$PATH" LC_ALL=C   # bp2hyb.sh shells out to combine_hyb_merge_touching.pl
+
+echo "[4/5] histogram + fragment cap -> test.fragment_scores.txt (bp2hyb input, ~1000 lines)"
+awk -f "$REPO_ROOT/bin/ct2bps_2.awk" test.ua.cofold.ct \
+    | "$PERL_BIN" "$REPO_ROOT/bin/histogram.pl" \
+    | sort -k1,1n -k2,2n \
+    | awk 'printed<=1000 && $1>=1 && $1<=10298 && $2>=1 && $2<=10298{print;printed++}' \
+    > test.fragment_scores.txt
+
+echo "[5/5] bp2hyb.sh: test.fragment_scores.txt -> test.ranked_interactions.txt (bp2hyb golden)"
+bash "$REPO_ROOT/bin/bp2hyb.sh" < test.fragment_scores.txt > test.ranked_interactions.txt
 
 echo "done -> $OUT"
 ls -la "$OUT"
