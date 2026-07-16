@@ -73,7 +73,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 20. `bp_score.sh` — needs #14
 - [ ] 21. `comradesFold2` — needs #13  ← **CoupleFold folding-backend switch point**
 - [ ] 22. `comradesScore` — needs #20, #21
-- [ ] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19
+- [x] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19
        ← **CoupleFold support-matrix point (Phase 3)**
 - [ ] 24. `plot_VARNA` — needs #15, #16
 - [ ] 25. `hyb2_fold` — orchestrator; needs all above

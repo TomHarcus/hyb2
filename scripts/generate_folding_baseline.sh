@@ -79,8 +79,27 @@ awk -f "$REPO_ROOT/bin/ct2bps_2.awk" test.ua.cofold.ct \
     | awk 'printed<=1000 && $1>=1 && $1<=10298 && $2>=1 && $2<=10298{print;printed++}' \
     > test.fragment_scores.txt
 
-echo "[5/5] bp2hyb.sh: test.fragment_scores.txt -> test.ranked_interactions.txt (bp2hyb golden)"
+echo "[5/6] bp2hyb.sh: test.fragment_scores.txt -> test.ranked_interactions.txt (bp2hyb golden)"
 bash "$REPO_ROOT/bin/bp2hyb.sh" < test.fragment_scores.txt > test.ranked_interactions.txt
+
+echo "[6/6] comradesMakeConstraints_2 on a small window -> comrades_mini golden (end-to-end)"
+# End-to-end golden for the comrades_make_constraints pipeline. Deliberately a
+# SMALL input (20 chimeras): with so few base pairs the printed<=1000 fragment
+# cap never truncates, so the histogram tie-order is irrelevant and the whole
+# pipeline is deterministic -- giving a stable byte-exact golden. (On a dense
+# window the cap would select 1000 rows in histogram order, which differs
+# between the Perl and Python histograms -- see the ordering-fragility note.)
+# The legacy script rm's its intermediates and writes them into cwd, so run it
+# in a scratch dir and copy out only mini.hyb + the folding_constraints golden.
+CMC_REF="$REPO_ROOT/data/Zika_18S_formatted.fasta"
+mini_dir="$(mktemp -d)"
+head -20 "$TIER2/test.ua.hyb" > "$mini_dir/mini.hyb"
+cp "$CMC_REF" "$mini_dir/ref.fasta"
+( cd "$mini_dir" && PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" LC_ALL=C \
+    bash "$REPO_ROOT/bin/comradesMakeConstraints_2" -i mini.hyb -f ref.fasta -b 1 -e 10298 -r 1 >/dev/null 2>&1 )
+cp "$mini_dir/mini.hyb" comrades_mini.hyb
+cp "$mini_dir/mini.1-10298_folding_constraints.txt" comrades_mini.folding_constraints
+rm -rf "$mini_dir"
 
 echo "done -> $OUT"
 ls -la "$OUT"

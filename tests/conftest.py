@@ -7,6 +7,7 @@ for Tier 1 is being confirmed with Grzegorz before test_*.py files are added.
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -55,6 +56,20 @@ def folding_fixtures_dir() -> Path:
     if not FOLDING_FIXTURES.exists():
         pytest.skip("folding fixtures not generated; run scripts/generate_folding_baseline.sh (needs ViennaRNA)")
     return FOLDING_FIXTURES
+
+
+@pytest.fixture
+def vienna_bin() -> str:
+    """Directory containing ViennaRNA's RNAcofold/b2ct, for pipeline tests that
+    actually fold. Prefers PATH, falls back to the hyb2 conda env; skips if
+    neither has it."""
+    exe = shutil.which("RNAcofold")
+    if exe is not None:
+        return str(Path(exe).parent)
+    candidate = Path.home() / "miniconda3" / "envs" / "hyb2" / "bin" / "RNAcofold"
+    if candidate.exists():
+        return str(candidate.parent)
+    pytest.skip("ViennaRNA (RNAcofold) not found on PATH or in the hyb2 env")
 
 
 def run_legacy(cmd: list[str], stdin_text: str | None = None) -> str:
