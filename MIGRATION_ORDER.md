@@ -58,7 +58,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 
 ## TIER 2 — folding + CoupleFold hook (`hyb2_fold`)
 
-- [ ] 8. `ct2bps_2.awk` — leaf
+- [x] 8. `ct2bps_2.awk` — leaf
 - [x] 9. `hyb2constraints.pl` — leaf
 - [x] 10. `hyb2fasta_bits_allRNAs.awk` — leaf
 - [ ] 11. `add_dG_hyb_2.pl` — leaf (free-energy annotation)
