@@ -71,7 +71,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 18. `combine_hyb_merge_touching.pl` — needs #17
 - [x] 19. `bp2hyb.sh` — needs #18
 - [ ] 20. `bp_score.sh` — needs #14
-- [ ] 21. `comradesFold2` — needs #13  ← **CoupleFold folding-backend switch point**
+- [x] 21. `comradesFold2` — needs #13  ← **CoupleFold folding-backend switch point**
 - [ ] 22. `comradesScore` — needs #20, #21
 - [x] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19
        ← **CoupleFold support-matrix point (Phase 3)**
