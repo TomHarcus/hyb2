@@ -1,5 +1,9 @@
 """ Port of comradesMakeConstraints_2
 
+Folds each chimeric read pairs arm sequences with RNAcofold, tallies basepair frequencies across 
+all chimeras in a given reference window, and outputs the top-N most frequent basepairs as folding 
+constraints for that region
+
 """
 
 import argparse, subprocess, sys, os
