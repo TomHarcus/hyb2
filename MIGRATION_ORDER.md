@@ -64,13 +64,13 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 11. `add_dG_hyb_2.pl` — leaf (free-energy annotation)
 - [ ] 12. `make_nicer_vienna_hOH5.awk` — leaf (vienna formatting)
 - [ ] 13. `Ct2B_GK_3.pl` — leaf
-- [ ] 14. `make_VARNA_scores_2.sh` — leaf
+- [x] 14. `make_VARNA_scores_2.sh` — leaf
 - [ ] 15. `svg_mod_coord.sh` — leaf
 - [ ] 16. `VARNAcmd.sh` — thin wrapper to the VARNA jar (keep/port wrapper, not VARNA)
 - [x] 17. `Hybrid_long_2.pm` → 18 — v2 module, distinct from #4
 - [x] 18. `combine_hyb_merge_touching.pl` — needs #17
 - [x] 19. `bp2hyb.sh` — needs #18
-- [ ] 20. `bp_score.sh` — needs #14
+- [x] 20. `bp_score.sh` — needs #14
 - [x] 21. `comradesFold2` — needs #13  ← **CoupleFold folding-backend switch point**
 - [ ] 22. `comradesScore` — needs #20, #21
 - [x] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19

@@ -124,6 +124,9 @@ cp "$CMC_REF" "$mv_dir/ref.fasta"
 cp "$mv_dir/mini.basepair_scores.txt" make_varna.basepair_scores.txt
 cp "$mv_dir/mini.bps" make_varna.bps
 cp "$mv_dir/mini__mini.VARNA_scores.txt" make_varna.VARNA_scores.golden
+# the constrained-fold .ct is also the bp_score test input (bp_score extracts
+# the same .bps from it via manifest offset=9999, len=10300, tail=301).
+cp "$mv_dir/ref_10000-10300.fasta.ct" make_varna.ct
 rm -rf "$mv_dir"
 
 echo "done -> $OUT"
