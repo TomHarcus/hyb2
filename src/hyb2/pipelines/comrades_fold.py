@@ -10,7 +10,8 @@ outputs: .vienna + .ct
 import subprocess, random, shutil, sys, argparse
 
 def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vienna",
-        vienna_bin=None):
+        vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=0.5,
+        beta=0.0, normalize="log", beam_size=100):
     
     """
     cluster array job code would live here
@@ -20,6 +21,20 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     current_constraints = f"{in_fasta}.aux"
     ct_output = f"{in_fasta}.ct"
     vienna_output = f"{in_fasta}.vienna"
+
+    if fold == "cplfold":
+        if basepair_scores is None or begin is None or end is None:
+            raise ValueError("cplfold needs basepair_scores + begin/end")
+        
+        _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
+                      alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
+                      vienna_bin=vienna_bin)
+        
+        if output_id:
+            for path in (ct_output, vienna_output):
+                shutil.copy(path, f"{path}.{output_id}")
+        
+        return (vienna_output, ct_output)
 
     if current_constraints == in_constraints:
         raise ValueError("name your constraint file something else")
@@ -43,8 +58,6 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         if fold == "vienna":
             _fold_vienna_constrained(in_fasta, current_constraints, ct_output, vienna_bin)
         elif fold == "unafold":
-            raise NotImplementedError("not implemented yet")
-        elif fold == "cplfold":
             raise NotImplementedError("not implemented yet")
         else:
             raise ValueError("not a valid folding algorithm")
@@ -70,8 +83,6 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     if fold == "vienna":
         _fold_vienna_constrained(in_fasta, current_constraints, ct_output, vienna_bin, vienna_output=vienna_output)
     elif fold == "unafold":
-        raise NotImplementedError("not implemented yet")
-    elif fold == "cplfold":
         raise NotImplementedError("not implemented yet")
     else:
         raise ValueError("not a valid folding algorithm")
@@ -102,6 +113,87 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
     ct = subprocess.run([b + "b2ct"], input=vienna,
                         capture_output=True, text=True).stdout
     
+    ct = ct.replace("ENERGY =", "dG =")
+
+    with open(ct_output, "w") as fout:
+        fout.write(ct)
+
+def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
+                  alpha, beta, normalize, beam_size, vienna_bin):
+    import numpy as np
+    from hyb2 import config
+
+    if config.CPLFOLD_DIR not in sys.path:
+        sys.path.insert(0, config.CPLFOLD_DIR)
+    
+    from CPLfold import two_phase_pseudoknot_fold
+
+    with open(in_fasta) as f:
+        lines = f.readlines()
+        gene_name = lines[0][1:].rstrip()
+        seq = lines[1].rstrip().replace("T", "U")
+        n = len(seq)
+
+        if n != end - begin + 1:
+                raise ValueError("wrong format")
+
+    matrix = np.zeros((n, n))
+
+    with open(basepair_scores) as f:
+        lines = f.readlines()
+
+        for line in lines:
+            elements = line.split()
+
+            if len(elements) < 3:
+                continue
+
+            i, j, count = int(elements[0]), int(elements[1]), float(elements[2])
+
+            if not (begin <= i <= end and begin <= j <= end):
+                continue
+            
+            v = np.log1p(count) if normalize == "log" else count
+
+            matrix[i-begin, j-begin] = v
+            matrix[j-begin, i-begin] = v
+
+    results = two_phase_pseudoknot_fold(
+        seq,
+        bonus_matrix=matrix,
+        alpha=alpha,
+        beta=beta,
+        beam_size=beam_size,
+        verbose=False
+    )
+
+    if not results:
+        raise ValueError("CPLfold returned no structures")
+    
+    best = results[0]
+    structure = best["structure"]
+    energy = best.get("energy")
+
+    if energy is None:
+        energy = 0.0
+
+    vienna = f">{gene_name}\n{seq}\n{structure} ({energy})\n"
+
+    if vienna_output is not None:
+        with open(vienna_output, "w") as fout:
+            fout.write(vienna)
+
+    b = (vienna_bin.rstrip("/") + "/") if vienna_bin else ""
+
+    # b2ct only understands nested () -- it silently emits nothing on pseudoknot
+    # brackets. Strip [ ] -> . so the .ct carries the nested pairs (crossings are
+    # kept in the full .vienna above)
+    nested = structure.replace("[", ".").replace("]", ".")
+    ct_input = f">{gene_name}\n{seq}\n{nested} ({energy})\n"
+
+    ct = subprocess.run([b + "b2ct"], input=ct_input,
+                        capture_output=True, text=True).stdout
+
     ct = ct.replace("ENERGY =", "dG =")
 
     with open(ct_output, "w") as fout:
