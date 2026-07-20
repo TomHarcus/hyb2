@@ -66,7 +66,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 13. `Ct2B_GK_3.pl` — leaf
 - [x] 14. `make_VARNA_scores_2.sh` — leaf
 - [ ] 15. `svg_mod_coord.sh` — leaf
-- [ ] 16. `VARNAcmd.sh` — thin wrapper to the VARNA jar (keep/port wrapper, not VARNA)
+- [x] 16. `VARNAcmd.sh` — thin wrapper to the VARNA jar (keep/port wrapper, not VARNA)
 - [x] 17. `Hybrid_long_2.pm` → 18 — v2 module, distinct from #4
 - [x] 18. `combine_hyb_merge_touching.pl` — needs #17
 - [x] 19. `bp2hyb.sh` — needs #18
