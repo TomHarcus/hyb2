@@ -101,5 +101,30 @@ cp "$mini_dir/mini.hyb" comrades_mini.hyb
 cp "$mini_dir/mini.1-10298_folding_constraints.txt" comrades_mini.folding_constraints
 rm -rf "$mini_dir"
 
+echo "[7/7] make_VARNA_scores_2.sh -> make_varna.* (per-position colour-score golden)"
+# make_VARNA_scores colours a folded structure's base pairs by their experimental
+# support. Two inputs: basepair_scores (-i) and a .bps of the folded pairs (-b).
+# The .bps must come from a CONSTRAINT-HONOURING fold, so it needs the Python
+# comrades_fold (greedy loop) -- a one-shot RNAfold with all constraints at once
+# is infeasible and folds nothing, and the legacy comradesFold2 is the buggy
+# no-op (unconstrained), either of which gives a trivial all-zero golden.
+# Window begin=10000 e=10300 so both arms of a real chimera fall in-fragment.
+mv_dir="$(mktemp -d)"
+head -20 "$TIER2/test.ua.hyb" > "$mv_dir/mini.hyb"
+cp "$CMC_REF" "$mv_dir/ref.fasta"
+(
+  cd "$mv_dir"
+  export PYTHONPATH="$REPO_ROOT/src" PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" LC_ALL=C
+  "$VIENNA_BIN/python" -c "from hyb2.pipelines.comrades_make_constraints import run; run('mini.hyb','ref.fasta',10000,10300, vienna_bin='$VIENNA_BIN')" >/dev/null 2>&1
+  "$VIENNA_BIN/python" -c "from hyb2.pipelines.comrades_fold import run; run('mini.10000-10300_folding_constraints.txt','ref_10000-10300.fasta', fold='vienna', vienna_bin='$VIENNA_BIN')" >/dev/null 2>&1
+  # .bps from the constrained fold, genome coords (OFFSET = begin-1 = 9999)
+  awk -v OFFSET=9999 'NR==1{print $1 "\t" $5}$1<$5 && NR>1{print $1+OFFSET "\t" $5+OFFSET}' ref_10000-10300.fasta.ct > mini.bps
+  bash "$REPO_ROOT/bin/make_VARNA_scores_2.sh" -m 1000000 -l 10300 -t 301 -i mini.basepair_scores.txt -b mini.bps
+)
+cp "$mv_dir/mini.basepair_scores.txt" make_varna.basepair_scores.txt
+cp "$mv_dir/mini.bps" make_varna.bps
+cp "$mv_dir/mini__mini.VARNA_scores.txt" make_varna.VARNA_scores.golden
+rm -rf "$mv_dir"
+
 echo "done -> $OUT"
 ls -la "$OUT"
