@@ -129,5 +129,26 @@ cp "$mv_dir/mini__mini.VARNA_scores.txt" make_varna.VARNA_scores.golden
 cp "$mv_dir/ref_10000-10300.fasta.ct" make_varna.ct
 rm -rf "$mv_dir"
 
+# svg_mod_coord oracle: VARNA renders make_varna.ct -> SVG, then the legacy
+# svg_mod_coord.sh relabels it (branch 1 = single strand, branch 3 = two strand).
+# Needs Java + the VARNA jar; skipped with a warning if either is missing.
+VARNA_JAR="${VARNA_JAR:-$REPO_ROOT/VARNA/build/jar/VARNAcmd.jar}"
+if command -v java >/dev/null 2>&1 && [ -f "$VARNA_JAR" ]; then
+    echo "[8/8] VARNA -> svg ; svg_mod_coord.sh -> svg_mod.* goldens (branch 1 + 3)"
+    svg_dir="$(mktemp -d)"
+    cp make_varna.ct "$svg_dir/frag.ct"
+    ( cd "$svg_dir"
+      java -jar "$VARNA_JAR" -i frag.ct -bpStyle simple -spaceBetweenBases "0.6" -o frag.svg >/dev/null 2>&1
+      bash "$REPO_ROOT/bin/svg_mod_coord.sh" -i frag.svg -x 100 && cp frag_plot.svg branch1
+      rm -f frag_plot.svg
+      bash "$REPO_ROOT/bin/svg_mod_coord.sh" -i frag.svg -x 100 -y 5000 -l 150 && cp frag_plot.svg branch3 )
+    cp "$svg_dir/frag.svg" svg_mod.input.svg
+    cp "$svg_dir/branch1" svg_mod.branch1.golden
+    cp "$svg_dir/branch3" svg_mod.branch3.golden
+    rm -rf "$svg_dir"
+else
+    echo "[8/8] SKIPPED svg_mod_coord oracle (java or VARNA jar not found)"
+fi
+
 echo "done -> $OUT"
 ls -la "$OUT"
