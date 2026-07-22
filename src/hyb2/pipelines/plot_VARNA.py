@@ -25,9 +25,10 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     header = ct_lines[0].split()[4]
     scores = [line.strip() for line in open(score) if line.rstrip() != ""]
     colorscores = ",".join(scores)
-    smax = max(int(s) for s in scores)
+    smax = max(scores, key=float)
+    sm = float(smax)
 
-    colorstyle = f"0.00:#FFFFFF,{smax*0.2:g}:#4747FF,{smax*0.55:g}:#1CFF47,{smax*0.65:g}:#FFFF47,{smax*0.9:g}:#FF4747,{smax}:#B64747"
+    colorstyle = f"0.00:#FFFFFF,{sm*0.2:g}:#4747FF,{sm*0.55:g}:#1CFF47,{sm*0.65:g}:#FFFF47,{sm*0.9:g}:#FF4747,{sm}:#B64747"
     
     varna_cmd = [
         "java", "-jar", VARNA,
@@ -35,7 +36,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
         "-bpStyle", "simple",
         "-colorMap", colorscores,
         "-colorMapMin", "0",
-        "-colorMapMax", str(smax),
+        "-colorMapMax", smax,
         "-colorMapStyle", colorstyle,
         "-title", header,
         "-spaceBetweenBases", "0.6"

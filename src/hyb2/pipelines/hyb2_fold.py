@@ -12,13 +12,19 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
     if FOLD is None:
         FOLD = 1
 
+    fold = {1: "vienna", "1": "vienna", 0: "unafold", "0": "unafold"}.get(FOLD, FOLD)
+
     if VARNA is None:
         VARNA = varna_jar()
 
     fasta_1 = FASTA_1
     fasta_2 = None
 
-    shutil.copy(fasta_1, "./")
+    try:
+        shutil.copy(fasta_1, "./")
+    except shutil.SameFileError:
+        pass
+
     if fasta_2:
         shutil.copy(fasta_2, "./")
     else:
@@ -39,7 +45,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2)
         _fasta_extraction(fasta_1, GENE_1, X1, length, out_fasta)
-        _fold(out_file, out_fasta, span, FOLD, vienna_bin, basepair_scores=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
