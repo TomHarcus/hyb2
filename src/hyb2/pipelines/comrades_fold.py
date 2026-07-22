@@ -185,20 +185,46 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
 
     b = (vienna_bin.rstrip("/") + "/") if vienna_bin else ""
 
-    # b2ct only understands nested () -- it silently emits nothing on pseudoknot
-    # brackets. Strip [ ] -> . so the .ct carries the nested pairs (crossings are
-    # kept in the full .vienna above)
-    nested = structure.replace("[", ".").replace("]", ".")
-    ct_input = f">{gene_name}\n{seq}\n{nested} ({energy})\n"
-
-    ct = subprocess.run([b + "b2ct"], input=ct_input,
-                        capture_output=True, text=True).stdout
-
-    ct = ct.replace("ENERGY =", "dG =")
+    ct = _dot_to_ct(gene_name, seq, structure, energy)
 
     with open(ct_output, "w") as fout:
         fout.write(ct)
 
+def _dot_to_bpmap(dot):
+    """Dot-bracket -> {position: partner} pseudoknot aware pair map. Crossing pairs
+    resolve correctly (b2ct can't). Adapted from IPyRSSA's Structure.dot2bpmap
+    Link: https://github.com/lipan6461188/IPyRSSA -- per Ke Wang's suggestion
+    """
+    stack, bpmap = [], {}
+
+    for idx, sym in enumerate(dot):
+        if sym in "([{<":
+            stack.append((idx + 1, sym))
+        elif sym in ".-_=:,":
+            continue
+        else:
+            for i in range(len(stack) - 1, -1, -1):
+                if stack[i][1] + sym in ("()", "[]", "{}", "<>"):
+                    j = stack.pop(i)[0]
+                    bpmap[idx + 1] = j
+                    bpmap[j] = idx + 1
+                    break
+
+    return bpmap
+    
+def _dot_to_ct(name, seq, structure, energy):
+    """Writes a pseudoknot-aware .ct (b2ct silently drops the crossing pairs).
+    VARNA renders the crossing from this .ct
+    """
+    bpmap = _dot_to_bpmap(structure)
+    n = len(seq)
+
+    lines = [f"{n:5d} dG = {energy}\t{name}\n"]
+    for i in range(1, n+1):
+        pair = bpmap.get(i, 0)
+        lines.append(f"{i:5d} {seq[i-1]} {i-1:7d} {i+1 if i < n else 0:4d} {pair:4d} {i:4d}\n")
+
+    return "".join(lines)
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
