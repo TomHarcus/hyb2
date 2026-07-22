@@ -44,14 +44,11 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
             o1.write(bit1_rec)
             o2.write(bit2_rec)
 
-    if fold == "vienna":
+    if fold in ("vienna", "cplfold"):
         _fold_vienna(bit1, bit2, ct, vienna_bin)
 
     elif fold == "unafold":
         _fold_unafold(bit1, bit2)
-    
-    elif fold == "cplfold":
-        raise NotImplementedError("CPLFold backend not done yet")
     
     else:
         raise ValueError(f"unknown folder: {fold}")

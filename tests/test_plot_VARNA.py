@@ -9,7 +9,7 @@ The interactive/GUI mode is not tested (nothing to diff); only the headless
 .ct -> SVG -> svg_mod_coord path.
 """
 
-from hyb2.stages.plot_VARNA import plot_VARNA
+from hyb2.pipelines.plot_VARNA import plot_VARNA
 
 
 def test_plot_VARNA_headless_matches_golden(folding_fixtures_dir, varna_jar, tmp_path, monkeypatch):
