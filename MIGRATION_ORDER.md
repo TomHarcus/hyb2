@@ -65,7 +65,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 12. `make_nicer_vienna_hOH5.awk` — leaf (vienna formatting)
 - [ ] 13. `Ct2B_GK_3.pl` — leaf
 - [x] 14. `make_VARNA_scores_2.sh` — leaf
-- [ ] 15. `svg_mod_coord.sh` — leaf
+- [x] 15. `svg_mod_coord.sh` — leaf
 - [x] 16. `VARNAcmd.sh` — thin wrapper to the VARNA jar (keep/port wrapper, not VARNA)
 - [x] 17. `Hybrid_long_2.pm` → 18 — v2 module, distinct from #4
 - [x] 18. `combine_hyb_merge_touching.pl` — needs #17
@@ -75,7 +75,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 22. `comradesScore` — needs #20, #21
 - [x] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19
        ← **CoupleFold support-matrix point (Phase 3)**
-- [ ] 24. `plot_VARNA` — needs #15, #16
+- [x] 24. `plot_VARNA` — needs #15, #16
 - [ ] 25. `hyb2_fold` — orchestrator; needs all above
 
 ## TIER 3 — remaining README commands + glue

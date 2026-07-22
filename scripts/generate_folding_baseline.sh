@@ -146,8 +146,21 @@ if command -v java >/dev/null 2>&1 && [ -f "$VARNA_JAR" ]; then
     cp "$svg_dir/branch1" svg_mod.branch1.golden
     cp "$svg_dir/branch3" svg_mod.branch3.golden
     rm -rf "$svg_dir"
+
+    echo "[9/9] plot_VARNA -> plot_varna.golden (headless: .ct -> VARNA -> svg_mod_coord)"
+    pv_dir="$(mktemp -d)"
+    cp make_varna.ct "$pv_dir/frag.ct"
+    cp make_varna.VARNA_scores.txt "$pv_dir/s__frag.VARNA_scores.txt" 2>/dev/null \
+        || cp make_varna.VARNA_scores.golden "$pv_dir/s__frag.VARNA_scores.txt"
+    ( cd "$pv_dir" && PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" \
+        bash "$REPO_ROOT/bin/plot_VARNA" -i frag.ct -s s__frag.VARNA_scores.txt \
+             -j "$VARNA_JAR" -x 100 -l 150 >/dev/null 2>&1 )
+    cp make_varna.ct plot_varna.ct
+    cp make_varna.VARNA_scores.golden plot_varna.scores.txt 2>/dev/null || true
+    cp "$pv_dir/s.frag_plot.svg" plot_varna.golden
+    rm -rf "$pv_dir"
 else
-    echo "[8/8] SKIPPED svg_mod_coord oracle (java or VARNA jar not found)"
+    echo "[8-9/9] SKIPPED svg_mod_coord + plot_VARNA oracles (java or VARNA jar not found)"
 fi
 
 echo "done -> $OUT"

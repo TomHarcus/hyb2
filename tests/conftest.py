@@ -72,6 +72,18 @@ def vienna_bin() -> str:
     pytest.skip("ViennaRNA (RNAcofold) not found on PATH or in the hyb2 env")
 
 
+@pytest.fixture
+def varna_jar() -> str:
+    """Path to the VARNA jar, for tests that actually render (plot_VARNA).
+    Skips if java or the jar is missing."""
+    if shutil.which("java") is None:
+        pytest.skip("java not found")
+    jar = REPO_ROOT / "VARNA" / "build" / "jar" / "VARNAcmd.jar"
+    if not jar.exists():
+        pytest.skip("VARNA jar not found")
+    return str(jar)
+
+
 def run_legacy(cmd: list[str], stdin_text: str | None = None) -> str:
     """Run a legacy bin/ script (perl/awk/bash) and return its stdout. Kept for
     ad-hoc use; the Tier 1 suite diffs against captured golden fixtures rather
