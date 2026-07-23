@@ -35,7 +35,8 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
     if GENE_2 is None and y_coord is not None and (x_coord > y_coord):
         raise ValueError("Intramolecular Folding x_coord must be lower than y_coord")
-    
+
+    # short range intramolecular folding
     if y_coord is None and GENE_2 is None:
         X1 = x_coord
         X2 = x_coord + length - 1
@@ -43,12 +44,13 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         out_fasta = f"{GENE_1}_{X1}-{X2}.fasta"
         span = length
 
-        _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2)
+        _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2=None, y_coord=None, Y1=None, Y2=None, length=None)
         _fasta_extraction(fasta_1, GENE_1, X1, length, out_fasta)
         _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
+    # long range intramolecular folding
     elif GENE_2 is None:
         X1 = x_coord
         X2 = x_coord + length - 1
@@ -58,74 +60,182 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         out_fasta = f"{GENE_1}_{X1}-{X2}_{Y1}-{Y2}.fasta"
         span = length + length + 100
 
-        _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length)
-        _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta)
+        _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=False)
+        _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
         _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                   VARNA, interactive)
 
+    # homodimer folding
+    elif GENE_1 == GENE_2:
+        X1 = x_coord
+        X2 = x_coord + length - 1
+        Y1 = y_coord
+        Y2 = y_coord + length - 1
+        out_file = in_hyb.replace(".hyb", f"_{GENE_1}_{X1}-{X2}_homodimer.hyb")
+        out_fasta = f"{GENE_1}_{X1}-{X2}_homodimer.fasta"
+        span = length + length + 100
+
+        _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=True)
+        _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
+                    VARNA, interactive)
+
+    # intermolecular folding
+    else:
+        X1 = x_coord
+        X2 = x_coord + length - 1
+        Y1 = y_coord
+        Y2 = y_coord + length - 1
+        out_file = in_hyb.replace(".hyb", f"_{GENE_1}-{X1}-{X2}_{GENE_2}-{Y1}-{Y2}.hyb")
+        out_fasta = f"{GENE_1}-{X1}-{X2}_{GENE_2}-{Y1}-{Y2}.fasta"
+        span = length + length + 100
+
+        _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y2, length)
+        _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
+                    VARNA, interactive)
+
     
 
 
-def _transform(in_hyb, out_file, GENE, x_coord, X1, X2):
+def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y2, length):
 
     with open(in_hyb) as fin, open(out_file, "w") as fout:
-        for line in fin:
-            c = line.rstrip("\n").split("\t")
+        if GENE_2 is None:
+            for line in fin:
+                c = line.rstrip("\n").split("\t")
 
-            if (re.search(GENE, c[3]) and re.search(GENE, c[9])
-                and int(c[6]) >= X1 and int(c[7]) <= X2
-                and int(c[12]) >= X1 and int(c[13]) <= X2):
+                if (re.search(GENE_1, c[3]) and re.search(GENE_1, c[9])
+                    and int(c[6]) >= X1 and int(c[7]) <= X2
+                    and int(c[12]) >= X1 and int(c[13]) <= X2):
 
-                out = [
-                    c[0], c[1], c[2], c[3], c[4], c[5],
-                    str(int(c[6]) - x_coord + 1),
-                    str(int(c[7]) - x_coord + 1),
-                    c[8], c[9], c[10],
-                    "12",
-                    str(int(c[12]) - x_coord + 1),
-                    str(int(c[13]) - x_coord + 1)
-                ]
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - x_coord + 1),
+                        str(int(c[7]) - x_coord + 1),
+                        c[8], c[9], c[10],
+                        "12",
+                        str(int(c[12]) - x_coord + 1),
+                        str(int(c[13]) - x_coord + 1)
+                    ]
 
-                fout.write("\t".join(out) + "\n")
+                    fout.write("\t".join(out) + "\n")
 
-def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, Y2, length):
+        else:
+            for line in fin:
+                c = line.rstrip("\n").split("\t")
+
+                if (re.search(GENE_1, c[3]) and int(c[6]) >= X1 
+                    and int(c[7]) <= X2 and re.search(GENE_2, c[9]) 
+                    and int(c[12]) >= Y1 and int(c[13]) <= Y2):
+
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - x_coord + 1),
+                        str(int(c[7]) - x_coord + 1),
+                        c[8], c[3], c[10],
+                        "12",
+                        str(int(c[12]) - y_coord + length + 101),
+                        str(int(c[13]) - y_coord + length + 101)
+                    ]
+
+                    fout.write("\t".join(out) + "\n")
+
+                if (re.search(GENE_1, c[9]) and int(c[12]) >= X1 
+                    and int(c[13]) <= X2 and re.search(GENE_2, c[3]) 
+                    and int(c[6]) >= Y1 and int(c[7]) <= Y2):
+
+                    out = [
+                        c[0], c[1], c[2], c[9], c[4], c[5],
+                        str(int(c[6]) - y_coord + length + 101),
+                        str(int(c[7]) - y_coord + length + 101),
+                        c[8], c[9], c[10],
+                        "12",
+                        str(int(c[12]) - x_coord + 1),
+                        str(int(c[13]) - x_coord + 1)
+                    ]
+
+                    fout.write("\t".join(out) + "\n")
+
+
+def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer):
 
     with open(in_hyb) as fin, open(out_file, "w") as fout:
-        for line in fin:
-            c = line.rstrip("\n").split("\t")
 
-            if (re.search(GENE, c[3]) and re.search(GENE, c[9])
-                and int(c[6]) >= X1 and int(c[7]) <= X2
-                and int(c[12]) >= Y1 and int(c[13]) <= Y2):
+        if not homodimer:
+            for line in fin:
+                c = line.rstrip("\n").split("\t")
 
-                out = [
-                    c[0], c[1], c[2], c[3], c[4], c[5],
-                    str(int(c[6]) - x_coord + 1),
-                    str(int(c[7]) - x_coord + 1),
-                    c[8], c[9], c[10],
-                    "12",
-                    str(int(c[12]) - y_coord + length + 101),
-                    str(int(c[13]) - y_coord + length + 101)
-                ]
+                if (re.search(GENE, c[3]) and re.search(GENE, c[9])
+                    and int(c[6]) >= X1 and int(c[7]) <= X2
+                    and int(c[12]) >= Y1 and int(c[13]) <= Y2):
 
-                fout.write("\t".join(out) + "\n")
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - x_coord + 1),
+                        str(int(c[7]) - x_coord + 1),
+                        c[8], c[9], c[10],
+                        "12",
+                        str(int(c[12]) - y_coord + length + 101),
+                        str(int(c[13]) - y_coord + length + 101)
+                    ]
 
-            if (re.search(GENE, c[3]) and re.search(GENE, c[9])
-                and int(c[12]) >= X1 and int(c[13]) <= X2
-                and int(c[6]) >= Y1 and int(c[7]) <= Y2):
+                    fout.write("\t".join(out) + "\n")
 
-                out = [
-                    c[0], c[1], c[2], c[3], c[4], c[5],
-                    str(int(c[6]) - y_coord + length + 101),
-                    str(int(c[7]) - y_coord + length + 101),
-                    c[8], c[9], c[10], 
-                    "12",
-                    str(int(c[12]) - x_coord + 1),
-                    str(int(c[13]) - x_coord + 1)
-                ]
+                if (re.search(GENE, c[3]) and re.search(GENE, c[9])
+                    and int(c[12]) >= X1 and int(c[13]) <= X2
+                    and int(c[6]) >= Y1 and int(c[7]) <= Y2):
 
-                fout.write("\t".join(out) + "\n")
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - y_coord + length + 101),
+                        str(int(c[7]) - y_coord + length + 101),
+                        c[8], c[9], c[10], 
+                        "12",
+                        str(int(c[12]) - x_coord + 1),
+                        str(int(c[13]) - x_coord + 1)
+                    ]
+
+                    fout.write("\t".join(out) + "\n")
+
+        else:
+            for line in fin:
+                c = line.rstrip("\n").split("\t")
+
+                if (int(c[6]) >= X1 and int(c[7]) <= X2
+                    and int(c[12]) >= Y1 and int(c[13]) <= Y2
+                    and int(c[15]) >=5):
+
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - x_coord + 1),
+                        str(int(c[7]) - x_coord + 1),
+                        c[8], c[9], c[10],
+                        "12",
+                        str(int(c[12]) - y_coord + length + 101),
+                        str(int(c[13]) - y_coord + length + 101)
+                    ]
+
+                    fout.write("\t".join(out) + "\n")
+
+                if (int(c[12]) >= X1 and int(c[13]) <= X2
+                    and int(c[6]) >= Y1 and int(c[7]) <= Y2
+                    and int(c[15]) >=5):
+
+                    out = [
+                        c[0], c[1], c[2], c[3], c[4], c[5],
+                        str(int(c[6]) - y_coord + length + 101),
+                        str(int(c[7]) - y_coord + length + 101),
+                        c[8], c[9], c[10], 
+                        "12",
+                        str(int(c[12]) - x_coord + 1),
+                        str(int(c[13]) - x_coord + 1),
+                    ]
+
+                    fout.write("\t".join(out) + "\n")
                 
 
                 
@@ -166,12 +276,17 @@ def _fragment(fasta, gene, start, length):
 
     return name, fragment
 
-def _fasta_extraction_two_region(fasta, GENE, X1, Y1, length, out_fasta):
+def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_2):
 
     padding = "A"*50 + "T"*50
 
-    name, seqX = _fragment(fasta, GENE, X1, length)
-    _, seqY = _fragment(fasta, GENE, Y1, length)
+    name, seqX = _fragment(fasta, GENE_1, X1, length)
+
+    if GENE_2 is None:
+        _, seqY = _fragment(fasta, GENE_1, Y1, length)
+
+    else:
+        _, seqY = _fragment(fasta, GENE_2, Y1, length)
 
     with open(out_fasta, "w") as f:
         f.write(f"{name}\n{seqX}{padding}{seqY}\n")
