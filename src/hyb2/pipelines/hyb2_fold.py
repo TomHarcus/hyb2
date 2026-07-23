@@ -3,7 +3,7 @@
 
 """
 
-import os, shutil, re, glob, math
+import os, shutil, re, glob, math, argparse, sys
 
 from hyb2.config import varna_jar
 
@@ -46,7 +46,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2=None, y_coord=None, Y1=None, Y2=None, length=None)
         _fasta_extraction(fasta_1, GENE_1, X1, length, out_fasta)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
@@ -62,7 +62,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=False)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                   VARNA, interactive)
 
@@ -78,7 +78,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=True)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -94,7 +94,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y2, length)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _fold(out_file, out_fasta, span, fold, vienna_bin)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -291,7 +291,7 @@ def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_
     with open(out_fasta, "w") as f:
         f.write(f"{name}\n{seqX}{padding}{seqY}\n")
 
-def _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None):
+def _fold(out_file, out_fasta, span, fold, vienna_bin):
     
     from hyb2.pipelines import comrades_make_constraints, comrades_fold
 
@@ -339,10 +339,13 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
 
     log2 = name.replace("_scores.txt", "_log2scores.txt")
 
+    # legacy: awk '{print log($1+1)/log(2)}' | sed 's/-inf/0/g;s/^-.*/0/g'
+    # awk prints with OFMT = %.6g; sed zeroes -inf / negatives.
     with open(name) as fin, open(log2, "w") as fout:
         for x in fin:
-            v = math.log2(float(x) + 1) if x.strip() else 0
-            fout.write(f"{0 if v < 0 else v}\n")
+            v = math.log2(float(x) + 1) if x.strip() else 0.0
+            val = 0.0 if v < 0 else v
+            fout.write(f"{val:.6g}\n")
 
     ct_top = vname.replace(".VARNA_scores.txt", ".ct")
     from hyb2.pipelines.plot_VARNA import plot_VARNA
@@ -354,5 +357,48 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     print("assign scores: comradesScore -i <basepair_scores> -f <out_fasta>")
 
 
-    
+def build_parser() -> argparse.ArgumentParser:
+    # getopts "i:a:b:d:x:y:l:j:0:r:" in the legacy bin/hyb2_fold
+    p = argparse.ArgumentParser(
+        prog="hyb2-fold",
+        description="fold an RNA fragment / interaction and render it with VARNA",
+        add_help=False,
+    )
+
+    p.add_argument("--help", action="help", help="Show this help message and exit")
+    p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
+    p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1", help="gene of interest / first strand (required)")
+    p.add_argument("-b", dest="gene_2", default=None, metavar="GENE_2", help="second gene (intermolecular folding)")
+    p.add_argument("-d", dest="fasta_1", required=True, metavar="REFERENCE.FASTA", help="reference FASTA (required)")
+    p.add_argument("-x", dest="x_coord", type=int, required=True, help="start coordinate of the first fragment")
+    p.add_argument("-y", dest="y_coord", type=int, default=None, help="start coordinate of the second fragment (long-range / homodimer / intermolecular)")
+    p.add_argument("-l", dest="length", type=int, required=True, help="fragment length")
+    p.add_argument("-j", dest="varna", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.varna_jar())")
+    p.add_argument("-0", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
+    p.add_argument("-r", dest="fold", default=None, help="folding backend: vienna|unafold|cplfold (or 1/0); default vienna")
+
+    return p
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    run(
+        args.in_hyb,
+        args.gene_1,
+        args.gene_2,
+        args.fasta_1,
+        args.x_coord,
+        args.y_coord,
+        args.length,
+        args.varna,
+        args.interactive == "1",
+        args.fold,
+    )
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
 
