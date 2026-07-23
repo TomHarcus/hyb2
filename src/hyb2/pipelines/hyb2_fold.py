@@ -49,6 +49,21 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
+    elif GENE_2 is None:
+        X1 = x_coord
+        X2 = x_coord + length - 1
+        Y1 = y_coord
+        Y2 = y_coord + length - 1
+        out_file = in_hyb.replace(".hyb", f"_{GENE_1}_{X1}-{X2}_{Y1}-{Y2}.hyb")
+        out_fasta = f"{GENE_1}_{X1}-{X2}_{Y1}-{Y2}.fasta"
+        span = length + length + 100
+
+        _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length)
+        _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None)
+        _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
+                  VARNA, interactive)
+
     
 
 
@@ -74,11 +89,51 @@ def _transform(in_hyb, out_file, GENE, x_coord, X1, X2):
 
                 fout.write("\t".join(out) + "\n")
 
-def _fasta_extraction(fasta_1, GENE, X1, length, out_fasta):
+def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, Y2, length):
+
+    with open(in_hyb) as fin, open(out_file, "w") as fout:
+        for line in fin:
+            c = line.rstrip("\n").split("\t")
+
+            if (re.search(GENE, c[3]) and re.search(GENE, c[9])
+                and int(c[6]) >= X1 and int(c[7]) <= X2
+                and int(c[12]) >= Y1 and int(c[13]) <= Y2):
+
+                out = [
+                    c[0], c[1], c[2], c[3], c[4], c[5],
+                    str(int(c[6]) - x_coord + 1),
+                    str(int(c[7]) - x_coord + 1),
+                    c[8], c[9], c[10],
+                    "12",
+                    str(int(c[12]) - y_coord + length + 101),
+                    str(int(c[13]) - y_coord + length + 101)
+                ]
+
+                fout.write("\t".join(out) + "\n")
+
+            if (re.search(GENE, c[3]) and re.search(GENE, c[9])
+                and int(c[12]) >= X1 and int(c[13]) <= X2
+                and int(c[6]) >= Y1 and int(c[7]) <= Y2):
+
+                out = [
+                    c[0], c[1], c[2], c[3], c[4], c[5],
+                    str(int(c[6]) - y_coord + length + 101),
+                    str(int(c[7]) - y_coord + length + 101),
+                    c[8], c[9], c[10], 
+                    "12",
+                    str(int(c[12]) - x_coord + 1),
+                    str(int(c[13]) - x_coord + 1)
+                ]
+
+                fout.write("\t".join(out) + "\n")
+                
+
+                
+def _fasta_extraction(fasta, GENE, X1, length, out_fasta):
     
     records, cur = {}, None
 
-    for l in open(fasta_1).read().splitlines():
+    for l in open(fasta).read().splitlines():
         if l.startswith(">"):
             cur = l
             records[cur] = ""
@@ -92,6 +147,34 @@ def _fasta_extraction(fasta_1, GENE, X1, length, out_fasta):
 
     with open(out_fasta, "w") as f:
         f.write(f"{name}\n{fragment}\n")
+
+def _fragment(fasta, gene, start, length):
+
+    records, cur = {}, None
+
+    for l in open(fasta).read().splitlines():
+        if l.startswith(">"):
+            cur = l
+            records[cur] = ""
+
+        elif cur is not None:
+            records[cur] += l.strip()
+
+    header, seq = next((h, s) for h, s in records.items() if gene in h)
+    name = header.split()[0]
+    fragment = seq[start - 1: start - 1 + length]
+
+    return name, fragment
+
+def _fasta_extraction_two_region(fasta, GENE, X1, Y1, length, out_fasta):
+
+    padding = "A"*50 + "T"*50
+
+    name, seqX = _fragment(fasta, GENE, X1, length)
+    _, seqY = _fragment(fasta, GENE, Y1, length)
+
+    with open(out_fasta, "w") as f:
+        f.write(f"{name}\n{seqX}{padding}{seqY}\n")
 
 def _fold(out_file, out_fasta, span, fold, vienna_bin, basepair_scores=None):
     
