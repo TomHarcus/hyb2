@@ -1,5 +1,7 @@
 """ Port of hyb2_fold
 
+create input hyb and fasta files for long-range comradesFold (intramolecular) / folding between 2 independent RNA strands (intermolecular)
+generates RNA secondary structure of short- and long-range intramolecular- and intermolecular interactions and homodimers
 
 """
 

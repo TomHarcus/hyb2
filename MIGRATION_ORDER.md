@@ -76,7 +76,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 23. `comradesMakeConstraints_2` — needs #8, #9, #10, `histogram.pl`, `fasta2tab`, #19
        ← **CoupleFold support-matrix point (Phase 3)**
 - [x] 24. `plot_VARNA` — needs #15, #16
-- [ ] 25. `hyb2_fold` — orchestrator; needs all above
+- [x] 25. `hyb2_fold` — orchestrator; needs all above
 
 ## TIER 3 — remaining README commands + glue
 
