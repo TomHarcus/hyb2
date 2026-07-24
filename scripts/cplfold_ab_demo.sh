@@ -57,26 +57,32 @@ SCORES="in.basepair_scores.txt"       # support matrix (genome coords)
 echo "[setup] fragment len $(awk 'NR==2{print length($0)}' "$FRAG"), $(grep -c . "$SCORES") score rows"
 echo
 
-# fold(label, extra-flags...) -> runs comrades_fold cplfold, prints structure + energy
+# fold(label, extra-flags...) -> runs comrades_fold cplfold, prints structure + energy.
+# On failure it prints the error and continues to the next fold (does not abort).
 fold () {
     local label="$1"; shift
     cp "$FRAG" "frag.fasta"
-    PYTHONPATH="$REPO_ROOT/src" PATH="$VIENNA_BIN:$PATH" "$PY" -m hyb2.pipelines.comrades_fold \
-        -c none -i frag.fasta -r cplfold -b "$X" -e "$END" "$@" >/dev/null 2>&1
+    rm -f frag.fasta.vienna
+    printf '%-22s folding... ' "$label"; local t0=$(date +%s)
+    if ! PYTHONPATH="$REPO_ROOT/src" PATH="$VIENNA_BIN:$PATH" "$PY" -m hyb2.pipelines.comrades_fold \
+            -c none -i frag.fasta -r cplfold -b "$X" -e "$END" "$@" >fold.log 2>&1; then
+        printf 'FAILED -- last lines of the error:\n'
+        tail -6 fold.log | sed 's/^/   | /'
+        echo
+        return 0
+    fi
     local struct energy pk
     struct=$(sed -n '3p' frag.fasta.vienna | awk '{print $1}')
     energy=$(sed -n '3p' frag.fasta.vienna | grep -oE '\([-0-9.]+\)$' | tr -d '()')
     pk=$(printf '%s' "$struct" | grep -o '\[' | wc -l | tr -d ' ')
-    printf '%-22s energy=%-10s pseudoknot-pairs=%s\n' "$label" "${energy:-N/A}" "$pk"
+    printf 'done in %ss  energy=%-10s pseudoknot-pairs=%s\n' "$(( $(date +%s) - t0 ))" "${energy:-N/A}" "$pk"
     printf '   %s\n' "$struct"
-    [ -n "$OUT" ] && cp frag.fasta.vienna "$OUT/${label}.vienna"   # OUT=dir to keep them
+    if [ -n "$OUT" ]; then cp frag.fasta.vienna "$OUT/${label}.vienna"; fi   # OUT=dir to keep them
+    return 0
 }
 
 echo "=== results (only the bonus handling differs) ==="
 fold "1_no-bonus"
 fold "2_raw_a0.3"  -p "$SCORES" --normalize raw --alpha 0.3
 fold "3_log_a0.5"  -p "$SCORES" --normalize log --alpha 0.5
-echo
-echo "Compare: does the bonus pull in pseudoknot pairs ([ ]) at an energy at or below"
-echo "the no-bonus baseline? raw tends to dominate unless alpha is small; log is steadier."
-echo "Sweep alpha with e.g.:  ... --normalize log --alpha 0.7"
+
