@@ -73,6 +73,38 @@ def vienna_bin() -> str:
 
 
 @pytest.fixture
+def cplfold_env() -> str:
+    """Skip unless CPLfold is importable AND its HotKnots computeEnergy binary
+    runs on this machine. The binary is architecture-specific (must be compiled
+    per machine -- see CLAUDE.md), so a wrong-arch binary raises OSError at exec;
+    we skip rather than fail in that case."""
+    import os
+    import sys as _sys
+    from hyb2 import config
+
+    cpldir = config.CPLFOLD_DIR
+    if not os.path.isdir(cpldir):
+        pytest.skip(f"CPLfold not found at {cpldir}")
+    if cpldir not in _sys.path:
+        _sys.path.insert(0, cpldir)
+    try:
+        import CPLfold  # noqa: F401
+    except Exception as e:
+        pytest.skip(f"CPLfold not importable: {e}")
+
+    exe = os.path.join(cpldir, "Utils", "HotKnots_v2.0", "bin", "computeEnergy")
+    if not os.path.exists(exe):
+        pytest.skip("HotKnots computeEnergy not built")
+    try:
+        subprocess.run([exe], capture_output=True, stdin=subprocess.DEVNULL, timeout=10)
+    except OSError as e:
+        pytest.skip(f"HotKnots computeEnergy not runnable on this architecture: {e}")
+    except subprocess.TimeoutExpired:
+        pass  # runnable (right arch), just waits for input -> good enough
+    return cpldir
+
+
+@pytest.fixture
 def varna_jar() -> str:
     """Path to the VARNA jar, for tests that actually render (plot_VARNA).
     Skips if java or the jar is missing."""

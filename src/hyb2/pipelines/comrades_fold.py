@@ -21,6 +21,11 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     cluster array job code would live here
     """
 
+    if fold is None:
+            fold = "vienna"
+    
+    fold = {1: "vienna", "1": "vienna", 0: "unafold", "0": "unafold"}.get(fold, fold)
+
     shuffled_constraints = f"{in_constraints}.shuf"
     current_constraints = f"{in_fasta}.aux"
     ct_output = f"{in_fasta}.ct"
@@ -264,7 +269,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-i", dest="in_fasta", required=True, metavar="INPUT.FASTA", help="Input FASTA (required)")
     p.add_argument("-o", dest="output_id", default=None, help="output file name")
     p.add_argument("-s", dest="shuffling", help="shuffle constraints")
-    p.add_argument("-r", dest="fold", type=str, default="vienna", help="folder to be used")
+    p.add_argument("-r", dest="fold", default="vienna", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("-p", dest="basepair_scores", default=None, metavar="BASEPAIR_SCORES.TXT", help="cplfold support matrix (i j count); required for -r cplfold")
     p.add_argument("-b", dest="begin", type=int, default=None, help="cplfold window start (required for -r cplfold)")
     p.add_argument("-e", dest="end", type=int, default=None, help="cplfold window end (required for -r cplfold)")

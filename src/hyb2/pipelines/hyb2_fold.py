@@ -16,7 +16,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         max_phase2=CPL_DEFAULTS["max_phase2"], energy_model=CPL_DEFAULTS["energy_model"]):
 
     if FOLD is None:
-        FOLD = 1
+        FOLD = "cplfold"
 
     fold = {1: "vienna", "1": "vienna", 0: "unafold", "0": "unafold"}.get(FOLD, FOLD)
 
@@ -385,7 +385,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-l", dest="length", type=int, required=True, help="fragment length")
     p.add_argument("-j", dest="varna", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.varna_jar())")
     p.add_argument("-0", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
-    p.add_argument("-r", dest="fold", default=None, help="folding backend: vienna|unafold|cplfold (or 1/0); default vienna")
+    p.add_argument("-r", dest="fold", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
     p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
     p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
