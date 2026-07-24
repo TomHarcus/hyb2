@@ -1,0 +1,30 @@
+Welcome to comradesMakeConstraints
+
+Input hybrids file:  test_Zika_virusRNA_1001-1500.hyb
+Reference fasta file:  Zika_virusRNA_1001-1500.fasta
+Fragment start coordinate:  1
+Fragment end coordinate:  500
+
+Welcome to comradesFold2
+
+Input fasta file:  Zika_virusRNA_1001-1500.fasta
+Input constraints file:  test_Zika_virusRNA_1001-1500.1-500_folding_constraints.txt
+Creating constraints file:  Zika_virusRNA_1001-1500.fasta.aux
+Creating shuffled constraints file:  test_Zika_virusRNA_1001-1500.1-500_folding_constraints.txt.shuf
+Calculating Basepair Scores...
+NAME Zika_virusRNA_1001-1500.fasta.ct
+C1 0
+C2 500
+C3 500
+Top scoring structures:
+test__Zika_virusRNA_1001-1500.fasta.VARNA_scores.txt	49894
+>Zika_virusRNA
+TAGGGACTTTGTGGAAGGTATGTCAGGTGGGACTTGGGTTGATATTGTCTTGGAACATGGAGGTTGTGTCACCGTAATGGCACAGGACAAACCGACTGTCGACATAGAGCTGGTTACAACAACAGTCAGCAACATGGCGGAGGTAAGATCCTACTGCTATGAGGCATCAATATCAGACATGGCTTCGGACAGCCGCTGCCCAACACAAGGTGAAGCCTACCTTGACAAGCAATCAGACACTCAATATGTCTGCAAAAGAACGTTAGTGGACAGAGGCTGGGGAAATGGATGTGGACTTTTTGGCAAAGGGAGTCTGGTGACATGCGCTAAGTTTGCATGCTCCAAGAAAATGACCGGGAAGAGCATCCAGCCAGAGAATCTGGAGTACCGGATAATGCTGTCAGTTCATGGCTCCCAGCACAGTGGGATGATCGTTAATGACACAGGACATGAAACTGATGAGAATAGAGCGAAGGTTGAGATAACGCCCAATTCACCAA
+..(((.((((((.((((.((((((.((((.((.....(((((((((((((((...(((...(((......)))...)))...))))))))......))))))).....((((..........))))..((..(((((((((((......))).))))))))..)).))..)))).)))))).))))...(((((.(((((((((.(((((((.....))))))).........((((((.......)))))).........))).).)).))).))))).((...(((((((...((((((((((.......(((((.(.((((((.......))))))).)).)))...)).)))))))).))))))).)).....((((((....))))))....(((((((((((((..(((((......))))).....(((...)))......)))).))))))).))......))))))((((...)))).))).......... (-145.70)
+Open Zika_virusRNA_1001-1500.fasta.vienna in VARNA for more customization options
+Load test__Zika_virusRNA_1001-1500.fasta.VARNA_log2scores.txt as colour coding score in VARNA
+Plotting RNA Secondary Structure...
+Plotting Concluded
+randomized parrallel RNA folding to fold RNA 1000 times using computer cluster:
+qsub comradesFold2 -c test_Zika_virusRNA_1001-1500.1-500_folding_constraints.txt -i Zika_virusRNA_1001-1500.fasta -s 1
+and assign scores to each basepair using: comradesScore -i test_Zika_virusRNA_1001-1500.basepair_scores.txt -f Zika_virusRNA_1001-1500.fasta

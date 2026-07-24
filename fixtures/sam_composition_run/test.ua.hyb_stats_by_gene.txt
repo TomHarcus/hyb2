@@ -1,0 +1,4 @@
+Zika_virusRNA	Zika_virusRNA	8492
+Zika_virusRNA	18S_rRNA	954
+18S_rRNA	Zika_virusRNA	617
+18S_rRNA	18S_rRNA	365

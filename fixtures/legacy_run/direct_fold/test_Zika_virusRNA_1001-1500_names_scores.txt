@@ -1,0 +1,1 @@
+test__Zika_virusRNA_1001-1500.fasta.VARNA_scores.txt 	49894     1 test__Zika_virusRNA_1001-1500.fasta.VARNA_scores.txt

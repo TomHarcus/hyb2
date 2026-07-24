@@ -1,0 +1,2 @@
+Zika_virusRNA	75119
+18S_rRNA	14612

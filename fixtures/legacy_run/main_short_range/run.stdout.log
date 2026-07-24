@@ -1,0 +1,13 @@
+Processing SAM file...
+Converted to hyb format.
+Hyb File Generated.
+Plotting contact density map of Zika_virusRNA ...
+Contact Density Map of Zika_virusRNA Saved
+Plotting zoomed-in contact density map of Zika_virusRNA ...
+Zoomed-in Contact Density Map of Zika_virusRNA Saved
+incorrect option
+incorrect option
+Analysis completed.
+To compare between different datasets and plot differential coverage map, similarity heatmap, and differential structures, use:
+hyb2_compare -i <input.table> -a <GENE_ID> -d <FASTA>
+For more details, run: hyb2_compare

@@ -1,5 +1,5 @@
 # Generated regression fixtures (regenerate with scripts/generate_fixtures.sh)
-fixtures/
+
 
 # Python
 __pycache__/

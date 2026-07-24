@@ -1,0 +1,11 @@
+Warning message:
+package ‘ggplot2’ was built under R version 4.3.3 
+Warning message:
+package ‘data.table’ was built under R version 4.3.3 
+To plot contact density map of second gene, add to command: -b <GENE_ID_2>.
+Warning message:
+package ‘ggplot2’ was built under R version 4.3.3 
+Warning message:
+package ‘data.table’ was built under R version 4.3.3 
+/home/tom/Desktop/hyb2/bin/plot_viewpoint: illegal option -- 1
+/home/tom/Desktop/hyb2/bin/hyb2_fold: illegal option -- 1
