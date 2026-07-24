@@ -13,7 +13,9 @@ from hyb2.config import CPL_DEFAULTS
 
 def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vienna",
         vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=CPL_DEFAULTS["alpha"],
-        beta=CPL_DEFAULTS["beta"], normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"]):
+        beta=CPL_DEFAULTS["beta"], normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
+        energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"], max_phase2=CPL_DEFAULTS["max_phase2"],
+        energy_model=CPL_DEFAULTS["energy_model"]):
     
     """
     cluster array job code would live here
@@ -25,12 +27,13 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     vienna_output = f"{in_fasta}.vienna"
 
     if fold == "cplfold":
-        if basepair_scores is None or begin is None or end is None:
-            raise ValueError("cplfold needs basepair_scores + begin/end")
+        if begin is None or end is None:
+            raise ValueError("cplfold needs begin + end")
         
         _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
                       alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
-                      vienna_bin=vienna_bin)
+                      energy_delta=energy_delta, max_phase1=max_phase1, max_phase2=max_phase2,
+                      energy_model=energy_model, vienna_bin=vienna_bin)
         
         if output_id:
             for path in (ct_output, vienna_output):
@@ -121,7 +124,8 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
         fout.write(ct)
 
 def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
-                  alpha, beta, normalize, beam_size, vienna_bin):
+                  alpha, beta, normalize, beam_size, energy_delta, max_phase1,
+                  max_phase2, energy_model, vienna_bin):
     import numpy as np
     from hyb2 import config
 
@@ -139,26 +143,29 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
         if n != end - begin + 1:
                 raise ValueError("wrong format")
 
-    matrix = np.zeros((n, n))
+    matrix = None
 
-    with open(basepair_scores) as f:
-        lines = f.readlines()
+    if basepair_scores is not None:
+        matrix = np.zeros((n, n))
 
-        for line in lines:
-            elements = line.split()
+        with open(basepair_scores) as f:
+            lines = f.readlines()
 
-            if len(elements) < 3:
-                continue
+            for line in lines:
+                elements = line.split()
 
-            i, j, count = int(elements[0]), int(elements[1]), float(elements[2])
+                if len(elements) < 3:
+                    continue
 
-            if not (begin <= i <= end and begin <= j <= end):
-                continue
-            
-            v = np.log1p(count) if normalize == "log" else count
+                i, j, count = int(elements[0]), int(elements[1]), float(elements[2])
 
-            matrix[i-begin, j-begin] = v
-            matrix[j-begin, i-begin] = v
+                if not (begin <= i <= end and begin <= j <= end):
+                    continue
+                
+                v = np.log1p(count) if normalize == "log" else count
+
+                matrix[i-begin, j-begin] = v
+                matrix[j-begin, i-begin] = v
 
     results = two_phase_pseudoknot_fold(
         seq,
@@ -166,6 +173,10 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
         alpha=alpha,
         beta=beta,
         beam_size=beam_size,
+        energy_delta=energy_delta,
+        max_phase1=max_phase1,
+        max_phase2=max_phase2,
+        energy_model=energy_model,
         verbose=False
     )
 
@@ -261,6 +272,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
     p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
     p.add_argument("--beam-size", dest="beam_size", type=int, default=CPL_DEFAULTS["beam_size"], help="cplfold beam size")
+    p.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
+    p.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
+    p.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
+    p.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
+
 
     return p
 
@@ -278,7 +294,11 @@ def main(argv: list[str] | None = None) -> int:
         alpha=args.alpha,
         beta=args.beta,
         normalize=args.normalize,
-        beam_size=args.beam_size
+        beam_size=args.beam_size,
+        energy_delta=args.energy_delta,
+        max_phase1=args.max_phase1,
+        max_phase2=args.max_phase2,
+        energy_model=args.energy_model
     )
 
     return 0

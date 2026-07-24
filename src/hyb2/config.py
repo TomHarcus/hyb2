@@ -22,4 +22,4 @@ def varna_jar() -> str:
     return (REPO_ROOT / "bin" / "VARNA.dir").read_text().splitlines()[0]
 
 CPLFOLD_DIR = "/home/tom/Desktop/CPLfold"
-CPL_DEFAULTS = {"alpha": 0.5, "beta": 0.0, "normalize": "log", "beam_size": 100}
+CPL_DEFAULTS = {"alpha": 0.5, "beta": 0.0, "normalize": "log", "beam_size": 100, "energy_delta": 5.0, "max_phase1": 10, "max_phase2": 5, "energy_model": "DP09"}
