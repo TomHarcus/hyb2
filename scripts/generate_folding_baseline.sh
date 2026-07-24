@@ -127,6 +127,14 @@ cp "$mv_dir/mini__mini.VARNA_scores.txt" make_varna.VARNA_scores.golden
 # the constrained-fold .ct is also the bp_score test input (bp_score extracts
 # the same .bps from it via manifest offset=9999, len=10300, tail=301).
 cp "$mv_dir/ref_10000-10300.fasta.ct" make_varna.ct
+# comrades_fold golden: the same constrained fold, captured as a standalone
+# regression snapshot (Option B, constraint-honouring != buggy legacy
+# comradesFold2, so baselined FROM THE PORT -- Grzegorz-approved). Inputs =
+# constraints + fragment fasta; goldens = the port's .vienna + .ct.
+cp "$mv_dir/mini.10000-10300_folding_constraints.txt" comrades_fold.constraints
+cp "$mv_dir/ref_10000-10300.fasta"                    comrades_fold.frag.fasta
+cp "$mv_dir/ref_10000-10300.fasta.vienna"             comrades_fold.vienna
+cp "$mv_dir/ref_10000-10300.fasta.ct"                 comrades_fold.ct
 rm -rf "$mv_dir"
 
 # svg_mod_coord oracle: VARNA renders make_varna.ct -> SVG, then the legacy
@@ -162,6 +170,35 @@ if command -v java >/dev/null 2>&1 && [ -f "$VARNA_JAR" ]; then
 else
     echo "[8-9/9] SKIPPED svg_mod_coord + plot_VARNA oracles (java or VARNA jar not found)"
 fi
+
+echo "[10] hyb2_fold mode-1 (port) -> hyb2_fold.mode1.* goldens"
+# hyb2_fold's transform (bin/hyb2_fold line 73) and fragment extraction (line 76)
+# are legacy-faithful awk, so they are captured as PARITY goldens straight from
+# the legacy awk. The fold is comrades_fold Option B (constraint-honouring,
+# deliberately != the buggy legacy comradesFold2), so .vienna/.ct/log2scores are
+# REGRESSION snapshots captured from the port (Grzegorz-approved re-baseline).
+# Window: Zika_virusRNA 3900, len 150 (4 in-window chimeras -> full pipeline, fast fold).
+HF_GENE=Zika_virusRNA; HF_X=3900; HF_L=150; HF_X2=$((HF_X + HF_L - 1))
+# parity golden: legacy transform (line 73)
+awk -v GENE=$HF_GENE -v X1=$HF_X -v X2=$HF_X2 -v X_COORD=$HF_X -v LEN=$HF_L \
+  '{if ($4~GENE && $10~GENE && $7>=X1 && $8<=X2 && $13>=X1 && $14<=X2) print $1"\t"$2"\t"$3"\t"$4"\t"$5"\t"$6"\t"$7-X_COORD+1"\t"$8-X_COORD+1"\t"$9"\t"$10"\t"$11"\t"12"\t"$13-X_COORD+1"\t"$14-X_COORD+1}' \
+  "$TIER2/test.ua.hyb" > hyb2_fold.mode1.transform.golden
+# parity golden: legacy fragment (line 76)
+awk '{if(NR==1){print $0} else {if($0 ~ /^>/){print "\n"$0} else {printf $0}}}' "$CMC_REF" \
+  | grep -A1 $HF_GENE \
+  | awk -v b=$HF_X -v e=$HF_L '{if(/^>/){print $1}else{print substr($0,b,e)}}' > hyb2_fold.mode1.frag.golden
+# port run -> Option B fold snapshots (+ plot svg if VARNA present)
+hf_dir="$(mktemp -d)"
+cp "$TIER2/test.ua.hyb" "$hf_dir/hf.hyb"
+( cd "$hf_dir"
+  export PYTHONPATH="$REPO_ROOT/src"
+  "$VIENNA_BIN/python" -c "from hyb2.pipelines.hyb2_fold import run; run('hf.hyb','$HF_GENE',None,'$CMC_REF',$HF_X,None,$HF_L,'$VARNA_JAR',False,1,vienna_bin='$VIENNA_BIN')" >/dev/null 2>&1 || true )
+cp "$hf_dir/$HF_GENE"_$HF_X-$HF_X2.fasta.vienna hyb2_fold.mode1.vienna
+cp "$hf_dir/$HF_GENE"_$HF_X-$HF_X2.fasta.ct hyb2_fold.mode1.ct
+cp "$hf_dir/hf__$HF_GENE"_$HF_X-$HF_X2.fasta.VARNA_log2scores.txt hyb2_fold.mode1.log2scores
+cp "$hf_dir/hf.$HF_GENE"_$HF_X-$HF_X2.fasta_plot.svg hyb2_fold.mode1.plot.svg 2>/dev/null \
+  || echo "  (no VARNA -> hyb2_fold.mode1.plot.svg skipped)"
+rm -rf "$hf_dir"
 
 echo "done -> $OUT"
 ls -la "$OUT"

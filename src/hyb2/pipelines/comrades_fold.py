@@ -7,11 +7,13 @@ outputs: .vienna + .ct
 
 """
 
-import subprocess, random, shutil, sys, argparse
+import subprocess, random, shutil, sys, argparse, os
+
+from hyb2.config import CPL_DEFAULTS
 
 def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vienna",
-        vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=0.5,
-        beta=0.0, normalize="log", beam_size=100):
+        vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=CPL_DEFAULTS["alpha"],
+        beta=CPL_DEFAULTS["beta"], normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"]):
     
     """
     cluster array job code would live here
@@ -174,8 +176,21 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
     structure = best["structure"]
     energy = best.get("energy")
 
+    # CPLfold returns energy=None when HotKnots' computeEnergy fails (it catches
+    # the error, warns, and leaves energy unset). The commonest cause is an
+    # architecture mismatch in the compiled binary -- e.g. an aarch64 build run
+    # on x86-64 gives "exec format error". Silently writing 0.0 here would emit
+    # a structure with a meaningless energy and corrupt the COMRADES-score
+    # ranking, so fail loudly with the fix instead.
     if energy is None:
-        energy = 0.0
+        hk = os.path.join(config.CPLFOLD_DIR, "Utils", "HotKnots_v2.0")
+        raise RuntimeError(
+            f"CPLfold folded {gene_name!r} but HotKnots could not compute its "
+            f"energy. This usually means the compiled binary {hk}/bin/computeEnergy "
+            f"does not match this machine's architecture. Rebuild it:\n"
+            f"    make -C {hk}\n"
+            f"then verify: `uname -m` vs `file {hk}/bin/computeEnergy`."
+        )
 
     vienna = f">{gene_name}\n{seq}\n{structure} ({energy})\n"
 
@@ -239,6 +254,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-o", dest="output_id", default=None, help="output file name")
     p.add_argument("-s", dest="shuffling", help="shuffle constraints")
     p.add_argument("-r", dest="fold", type=str, default="vienna", help="folder to be used")
+    p.add_argument("-p", dest="basepair_scores", default=None, metavar="BASEPAIR_SCORES.TXT", help="cplfold support matrix (i j count); required for -r cplfold")
+    p.add_argument("-b", dest="begin", type=int, default=None, help="cplfold window start (required for -r cplfold)")
+    p.add_argument("-e", dest="end", type=int, default=None, help="cplfold window end (required for -r cplfold)")
+    p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
+    p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
+    p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
+    p.add_argument("--beam-size", dest="beam_size", type=int, default=CPL_DEFAULTS["beam_size"], help="cplfold beam size")
 
     return p
 
@@ -249,7 +271,14 @@ def main(argv: list[str] | None = None) -> int:
         args.in_fasta,
         output_id=args.output_id,
         shuffling=(args.shuffling=="1"),
-        fold=args.fold
+        fold=args.fold,
+        basepair_scores=args.basepair_scores,
+        begin=args.begin,
+        end=args.end,
+        alpha=args.alpha,
+        beta=args.beta,
+        normalize=args.normalize,
+        beam_size=args.beam_size
     )
 
     return 0
