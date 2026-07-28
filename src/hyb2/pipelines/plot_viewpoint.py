@@ -51,7 +51,10 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                     f"{in_hyb.replace(".hyb", "")}_{gene_1}.gplot"],
                     check=True)
 
-    
+
+    """
+    still got all the branches to add
+    """
 
 
 

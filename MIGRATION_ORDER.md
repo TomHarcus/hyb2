@@ -89,8 +89,8 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 29. `plot_hybrids_3.awk`
 - [x] 30. `hyb2_coverage` — needs #29
 - [ ] 31. `plot_cdm`, `plot_all_cdm` — thin R wrappers
-- [ ] 32. `hyb2blast.awk`
-- [ ] 33. `blast2gplot.pl`
+- [x] 32. `hyb2blast.awk`
+- [x] 33. `blast2gplot.pl`
 - [ ] 34. `plot_viewpoint` — needs #32, #33
 - [ ] 35. `make_hybrid_annotation_table.pl`
 - [ ] 36. `plot_differential_map`, `plot_similarity_map` — thin R/py wrappers
