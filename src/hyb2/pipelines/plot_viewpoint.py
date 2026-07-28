@@ -2,9 +2,11 @@
 
 """
 
-import re
+import re, subprocess
 from pathlib import Path
 from hyb2.stages.hyb2blast import hyb2blast
+from hyb2.stages.blast2gplot import blast2gplot
+from hyb2 import config
 
 def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
@@ -38,6 +40,18 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
     out_blast = in_hyb.replace(".hyb", f"_{gene_1}.blast")
     Path(out_blast).write_text(hyb2blast(filtered))
+
+    blast2gplot(exp=in_hyb.replace(".hyb", ""), n_genes=1, 
+                ref_blast_file=f"{gene_1}_ref.blast",
+                blast_file=out_blast,
+                gene_lengths_file=f"{gene_1}.length.txt")
+
+
+    subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                    f"{in_hyb.replace(".hyb", "")}_{gene_1}.gplot"],
+                    check=True)
+
+    
 
 
 
