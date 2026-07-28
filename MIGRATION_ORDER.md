@@ -86,8 +86,8 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [ ] 28. `bowtie2_fastq2sam`, `bowtie2_fastq.gz2sam`, `bowtie2_fasta2sam` — need #26, #27, `solexa2fasta` (done)
 
 *Coverage / plotting wrappers (R stays):*
-- [ ] 29. `plot_hybrids_3.awk`
-- [ ] 30. `hyb2_coverage` — needs #29
+- [x] 29. `plot_hybrids_3.awk`
+- [x] 30. `hyb2_coverage` — needs #29
 - [ ] 31. `plot_cdm`, `plot_all_cdm` — thin R wrappers
 - [ ] 32. `hyb2blast.awk`
 - [ ] 33. `blast2gplot.pl`

@@ -18,6 +18,7 @@ BIN = REPO_ROOT / "bin"
 FIXTURES = REPO_ROOT / "fixtures" / "sam_composition_run"
 TIER2_FIXTURES = REPO_ROOT / "fixtures" / "tier2_run"
 FOLDING_FIXTURES = REPO_ROOT / "fixtures" / "folding_run"
+COVERAGE_FIXTURES = REPO_ROOT / "fixtures" / "coverage_run"
 
 
 @pytest.fixture
@@ -70,6 +71,15 @@ def vienna_bin() -> str:
     if candidate.exists():
         return str(candidate.parent)
     pytest.skip("ViennaRNA (RNAcofold) not found on PATH or in the hyb2 env")
+
+
+@pytest.fixture
+def coverage_fixtures_dir() -> Path:
+    """Legacy plot_hybrids_3.awk parity oracle from
+    scripts/generate_coverage_baseline.sh. Skips if not generated."""
+    if not COVERAGE_FIXTURES.exists():
+        pytest.skip("coverage fixtures not generated; run scripts/generate_coverage_baseline.sh")
+    return COVERAGE_FIXTURES
 
 
 @pytest.fixture
