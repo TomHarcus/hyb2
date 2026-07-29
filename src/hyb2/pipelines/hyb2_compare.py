@@ -34,12 +34,56 @@ def print_help():
 
     return 0
 
+import subprocess
+from pathlib import Path
+from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
+
+def _num(s):
+    try: return float(s)
+    except ValueError: return 0.0
+
 def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FASTA, 
                  VARNA, FOLDING):
 
-    
+    rows = [tuple(l.split()) for l in open(input_table) if l.strip()] 
 
-    pass
+    for x, y, z in rows:
+        
+        name = y.replace(".contact.txt", "")
+
+        lines = [l.rstrip("\n").split("\t") for l in open(y) if not l.startswith("#")]
+
+        lines.sort(key=lambda c: _num(c[2]), reverse=True)
+
+        content = "\n".join(f"{c[0]}_{c[1]}\t{name}={c[2]}" for c in lines) + "\n"
+        Path(f"{name}.forTable.txt").write_text(content)
+
+    fortable_files = [y.replace(".contact.txt", ".forTable.txt")
+                        for (x, y, z) in rows]
+
+    Path(f"{out}.forTable.list.txt").write_text("\n".join(fortable_files) + "\n")
+
+    names = [y.replace(".contact.txt", "") for (x, y, z) in rows]
+    header = ("#seq_ID\t" + "\t".join(names)).replace("-", "_")
+    Path(f"{out}.table.txt").write_text(header + "\n")
+
+    body = [r.replace("NA", "0") for r in make_hybrid_annotation_table(fortable_files).splitlines()[1:]]
+
+    with open(f"{out}.table.txt", "a") as f:
+        f.write("\n".join(body) + "\n")
+
+    names_table = "\n".join(
+        f"{y.replace(".contact.txt", "")}\t{z}".replace("-", "_")
+        for (x, y, z) in rows
+    ) + "\n"
+
+    Path(f"{out}_names.table").write_text(names_table)
+
+    subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
+                    f"{out}.table.txt", f"{out}_names.table",
+                    str(min_reads)],
+                    check=True)
+   
 
 def build_parser() -> argparse.ArgumentParser:
     
