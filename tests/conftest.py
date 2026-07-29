@@ -19,6 +19,7 @@ FIXTURES = REPO_ROOT / "fixtures" / "sam_composition_run"
 TIER2_FIXTURES = REPO_ROOT / "fixtures" / "tier2_run"
 FOLDING_FIXTURES = REPO_ROOT / "fixtures" / "folding_run"
 COVERAGE_FIXTURES = REPO_ROOT / "fixtures" / "coverage_run"
+VIEWPOINT_FIXTURES = REPO_ROOT / "fixtures" / "viewpoint_run"
 
 
 @pytest.fixture
@@ -80,6 +81,15 @@ def coverage_fixtures_dir() -> Path:
     if not COVERAGE_FIXTURES.exists():
         pytest.skip("coverage fixtures not generated; run scripts/generate_coverage_baseline.sh")
     return COVERAGE_FIXTURES
+
+
+@pytest.fixture
+def viewpoint_fixtures_dir() -> Path:
+    """Legacy hyb2blast.awk / blast2gplot.pl parity oracles from
+    scripts/generate_viewpoint_baseline.sh. Skips if not generated."""
+    if not VIEWPOINT_FIXTURES.exists():
+        pytest.skip("viewpoint fixtures not generated; run scripts/generate_viewpoint_baseline.sh")
+    return VIEWPOINT_FIXTURES
 
 
 @pytest.fixture

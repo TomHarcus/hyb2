@@ -2,7 +2,7 @@
 
 """
 
-import re, subprocess
+import re, subprocess, os, argparse, sys
 from pathlib import Path
 from hyb2.stages.hyb2blast import hyb2blast
 from hyb2.stages.blast2gplot import blast2gplot
@@ -14,6 +14,8 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
     lines = open(db_1).read().splitlines()
     len_1 = None
+
+    stem = in_hyb.replace(".hyb", "")
 
     for i, line in enumerate(lines):
         if re.search(gene_1, line):
@@ -38,24 +40,109 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
             if re.search(gene_1, columns[3]) and re.search(gene_1, columns[9]):
                 filtered.append(line)
 
-    out_blast = in_hyb.replace(".hyb", f"_{gene_1}.blast")
+    out_blast = f"{stem}_{gene_1}.blast"
     Path(out_blast).write_text(hyb2blast(filtered))
 
-    blast2gplot(exp=in_hyb.replace(".hyb", ""), n_genes=1, 
+    
+
+    blast2gplot(exp=stem, n_genes=1, 
                 ref_blast_file=f"{gene_1}_ref.blast",
                 blast_file=out_blast,
                 gene_lengths_file=f"{gene_1}.length.txt")
 
 
     subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
-                    f"{in_hyb.replace(".hyb", "")}_{gene_1}.gplot"],
+                    f"{stem}_{gene_1}.gplot"],
                     check=True)
 
+    homodimers = in_hyb.replace(".hyb", "_homodimers.hyb")
 
-    """
-    still got all the branches to add
-    """
+    if os.path.isfile(homodimers) and os.path.getsize(homodimers) > 0:
+        with open(homodimers) as f:
+            lines = f.read().splitlines()
+            filtered = []
+            for line in lines:
+                columns = line.split("\t")
+                if re.search(gene_1, columns[3]) and re.search(gene_1, columns[9]):
+                    filtered.append(line)
+        
+        out_homodimers_blast = f"{stem}_{gene_1}_homodimers.blast"
+    
+        Path(out_homodimers_blast).write_text(hyb2blast(filtered))
 
+        blast2gplot(exp=f"{stem}_homodimers", n_genes=1, 
+                    ref_blast_file=f"{gene_1}_ref.blast",
+                    blast_file=out_homodimers_blast,
+                    gene_lengths_file=f"{gene_1}.length.txt")
+
+        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                        f"{stem}_homodimers_{gene_1}.gplot"],
+                        check=True)
+
+
+    if gene_2:
+
+        with open(in_hyb) as f:
+            filtered = [l for l in f if re.search(gene_1, l) and re.search(gene_2, l)]
+        
+        blast_g1_g2 = f"{stem}_{gene_1}_{gene_2}.blast"
+        Path(blast_g1_g2).write_text(hyb2blast(filtered))
+
+        blast2gplot(exp=f"{stem}_{gene_2}", n_genes=1, 
+                    ref_blast_file=f"{gene_1}_ref.blast",
+                    blast_file=blast_g1_g2,
+                    gene_lengths_file=f"{gene_1}.length.txt")
+
+        lines = open(db_1).read().splitlines()
+        len_2 = None
+
+        for i, line in enumerate(lines):
+            if re.search(gene_2, line):
+                len_2 = len(lines[i+1])
+                break
+
+        with open(f"{gene_2}.length.txt", "w") as f:
+            f.write(f"{gene_2}\t{len_2}\n")
+
+
+        with open(in_hyb) as f:
+            blast_rows = hyb2blast(f).splitlines()
+        
+        ref = next((l for l in blast_rows if re.search(gene_2, l)), "")
+        Path(f"{gene_2}_ref.blast").write_text(ref + "\n")
+
+        blast2gplot(exp=f"{stem}_{gene_1}", n_genes=1, 
+                    ref_blast_file=f"{gene_2}_ref.blast",
+                    blast_file=blast_g1_g2,
+                    gene_lengths_file=f"{gene_2}.length.txt")
+
+        
+        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                        f"{stem}_{gene_2}_{gene_1}.gplot"],
+                        check=True)
+
+        
+        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                        f"{stem}_{gene_1}_{gene_2}.gplot"],
+                        check=True)
+        
+def build_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(prog="plot-viewpoint", add_help=False)
+    p.add_argument("--help", action="help", help="Show this help message and exit")
+    p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB")
+    p.add_argument("-d", dest="db_1", required=True, metavar="REFERENCE.FASTA")
+    p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1")
+    p.add_argument("-b", dest="gene_2", default=None, metavar="GENE_2")
+
+    return p
+
+def main(argv=None):
+    a = build_parser().parse_args(argv)
+    plot_viewpoint(a.in_hyb, a.db_1, a.gene_1, a.gene_2)
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
 
 
 
