@@ -72,8 +72,9 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     with open(f"{out}.table.txt", "a") as f:
         f.write("\n".join(body) + "\n")
 
+    nm = y.replace(".contact.txt", "")
     names_table = "\n".join(
-        f"{y.replace(".contact.txt", "")}\t{z}".replace("-", "_")
+        f"{nm}\t{z}".replace("-", "_")
         for (x, y, z) in rows
     ) + "\n"
 
@@ -83,6 +84,8 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
                     f"{out}.table.txt", f"{out}_names.table",
                     str(min_reads)],
                     check=True)
+
+    
    
 
 def build_parser() -> argparse.ArgumentParser:
