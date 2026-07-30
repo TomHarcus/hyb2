@@ -85,8 +85,43 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
                     str(min_reads)],
                     check=True)
 
+    deseq_output = []
+    for line in open(f"DESeq_{out}.txx").read().splitlines()[1:]:
+        line = line.replace('"', "")
+        columns = line.split()
+
+        deseq_output.append(f"{columns[0]}\tbaseMean={columns[1]};log2FoldChange={columns[2]};lfcSE={columns[3]};stat={columns[4]};pvalue={columns[5]};padj={columns[6]}")
+        
+    Path(f"{out}.tmp1").write_text("\n".join(deseq_output) + "\n")
+
+    lines = open(f"{out}.table.txt").read().splitlines()
+    val = lines[0].split("\t")[1:]
+    transpose_output = []
+    for line in lines[1:]:
+        columns = line.split("\t")
+        counts = columns[1:]
+        transpose_output.append(columns[0] + "\t" + "".join(f"{n}={c};" for n, c in zip(val, counts)))
+
+    Path(f"{out}.tmp2").write_text("\n".join(transpose_output) + "\n")
+
+    merged = make_hybrid_annotation_table([f"{out}.tmp2", f"{out}.tmp1"]).splitlines()
+    header, data = merged[0], merged[1:]
+
+    kept = []
+    for row in data:
+        columns = row.split("\t")
+        if columns[-1] == "NA" or float(columns[-1]) >= 0.05:
+            continue
+        kept.append(row)
+
+    kept.sort(key=lambda r: float(r.split("\t")[-1]))
+
+    Path(f"DESeq_{out}_significant.txx").write_text("\n".join([header] + kept) + "\n")
+
     
-   
+
+
+
 
 def build_parser() -> argparse.ArgumentParser:
     
