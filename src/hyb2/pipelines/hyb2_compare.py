@@ -34,9 +34,10 @@ def print_help():
 
     return 0
 
-import subprocess, math
+import subprocess, math, re, glob
 from pathlib import Path
 from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
+from hyb2.stages.DESeq_interaction_split_select import split_select
 
 def _num(s):
     try: return float(s)
@@ -72,9 +73,8 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     with open(f"{out}.table.txt", "a") as f:
         f.write("\n".join(body) + "\n")
 
-    nm = y.replace(".contact.txt", "")
     names_table = "\n".join(
-        f"{nm}\t{z}".replace("-", "_")
+        f"{y.replace(".contact.txt", "")}\t{z}".replace("-", "_")
         for (x, y, z) in rows
     ) + "\n"
 
@@ -163,6 +163,93 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
 
     subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
                     f"{out}.contact.txt", str(LIMIT)], check=True)
+
+    split_select(out, interaction_range)
+
+
+    for sign in ("pos", "neg"):
+        f = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
+        Path(f).write_text(
+            Path(f).read_text().replace("0\t0\t0.0\t0.0", "x\ty\tlog2FoldChange\tpadj")
+        )
+
+    for sign in ("pos", "neg"):
+        src = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
+        windows = []
+        for row in Path(src).read_text().splitlines()[1:]:       
+            c = row.split("\t")
+            x, y = int(c[0]), int(c[1])
+            windows.append(f"{x-150}\t{x+150}\t{y-150}\t{y+150}\t{c[2]}\t{c[3]}")
+        body = ["x1\tx2\ty1\ty2\tlog2FoldChange\tpadj"] + windows   
+        body = [re.sub(r"-.[0-9]+\t", "1\t", ln, count=1) for ln in body]  
+        body = [ln.replace("\t\t", "\t-") for ln in body]        
+        Path(f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt").write_text(
+            "\n".join(body) + "\n"
+        )
+
+    value = [contact.replace(".contact.txt", "") for (hyb, contact, cond) in rows]
+
+    for sign in ("pos", "neg"):
+        hm = f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt"
+        for row in Path(hm).read_text().splitlines()[1:11]:       # awk NR>1 && NR<12
+            c = row.split("\t")
+            subprocess.run(
+                ["Rscript", config.rscript("contact_density_map_zoom.R"),
+                 c[0], c[1], c[2], c[3], str(LIMIT), *value],
+                check=True,
+            )
+
+    condition_one_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_one"]
+    condition_two_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_two"]
+
+    if FOLDING == 1:
+        _fold_enriched(condition_one_files, "pos", out, interaction_range, GENE, FASTA, VARNA)
+        _fold_enriched(condition_two_files, "neg", out, interaction_range, GENE, FASTA, VARNA)
+    else:
+        print("Use Options -0 to -9, and -j to Plot RNA Secondary Structures for Enriched Interactions")
+
+    print("Comparison Completed")
+
+
+def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
+    """Port of bin/hyb2_compare lines 137-141 (the FOLDING==1 branch, one condition).
+    Builds a <IN>.<sign>.hyb of GENE-GENE chimeras for each condition file, then folds
+    the top-10 enriched interactions of every heatmap. NOTE (faithful legacy quirk): the
+    fold loop uses `in_hyb` = the LAST condition file, exactly as the legacy $IN leaks out
+    of the build loop above it."""
+    in_hyb = None
+    for src in condition_files:                                 
+        filtered = []
+        for path in glob.glob(src + "*"):                      
+            for line in open(path):
+                c = line.split("\t")
+                if len(c) >= 10 and re.search(GENE, c[3]) and re.search(GENE, c[9]):
+                    filtered.append(line.rstrip("\n"))
+        in_hyb = src.replace("hyb", f"{sign}.hyb", 1)          
+        Path(in_hyb).write_text("\n".join(filtered) + "\n")
+
+    for hm in glob.glob(f"{out}_{rng}*enrichment.heatmap.txt"):  
+        lines = Path(hm).read_text().splitlines()
+        for i, row in enumerate(lines):
+            if not (1 < i + 1 < 12):                             
+                continue
+            c = row.split("\t")
+            if int(c[0]) > int(c[2]):                           
+                x1, y1 = int(c[2]), int(c[0])
+            elif int(c[0]) < int(c[2]):
+                x1, y1 = int(c[0]), int(c[2])
+            else:
+                continue
+            res = y1 - x1
+            cmd = [sys.executable, "-m", "hyb2.pipelines.hyb2_fold",
+                   "-i", in_hyb, "-a", GENE, "-d", FASTA, "-x", str(x1 + 1)]
+            if 300 > res:                                        
+                cmd += ["-l", str(res + 300)]
+            else:                                                
+                cmd += ["-y", str(y1 + 1), "-l", "300"]
+            if VARNA:
+                cmd += ["-j", VARNA]
+            subprocess.run(cmd, check=True)
 
 
 def build_parser() -> argparse.ArgumentParser:
