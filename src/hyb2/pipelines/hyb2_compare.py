@@ -34,7 +34,7 @@ def print_help():
 
     return 0
 
-import subprocess
+import subprocess, math
 from pathlib import Path
 from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
 
@@ -118,9 +118,51 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
 
     Path(f"DESeq_{out}_significant.txx").write_text("\n".join([header] + kept) + "\n")
 
-    
+  
+    emitted = []
+    for row in open(f"DESeq_{out}_significant.txx").read().splitlines():
+        cols = row.split()
 
+        if float(cols[-5]) < 0:
+            emitted.append(f"{cols[0]}\t{math.log(float(cols[-1]))/math.log(10):.6g}\t{cols[-5]}\t{cols[-1]}")
 
+        elif float(cols[-5]) > 0:
+            emitted.append(f"{cols[0]}\t{-1*math.log(float(cols[-1]))/math.log(10):f}\t{cols[-5]}\t{cols[-1]}")
+
+    tail = emitted[1:]
+
+    tail = [r.replace("_", "\t") for r in tail]
+    tail = ["x\ty\tlogpadj\tlog2FoldChange\tpadj"] + tail
+
+    Path(f"DESeq_{out}_significant.padj_heatmap.txt").write_text("\n".join(tail) + "\n")
+
+    subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
+                    f"DESeq_{out}_significant.padj_heatmap.txt", out],
+                    check=True)
+
+    merged = "".join(open(y).read() for (x, y, z) in rows)
+    Path(f"{out}.merge.txt").write_text(merged)
+
+  
+    groups = {}
+    for line in open(f"{out}.merge.txt").read().splitlines():
+        if any(c.isalpha() for c in line):
+            continue
+
+        cols = line.split()
+        if len(cols) < 3:
+            continue
+
+        key = (cols[0], cols[1])
+
+        groups.setdefault(key, []).append(cols[2])
+
+    out_rows = [f"{a}\t{b}\t{min(counts, key=float)}" for (a,b), counts in groups.items() if len(counts) > 1]
+
+    Path(f"{out}.contact.txt").write_text("\n".join(out_rows) + "\n")
+
+    subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
+                    f"{out}.contact.txt", str(LIMIT)], check=True)
 
 
 def build_parser() -> argparse.ArgumentParser:
