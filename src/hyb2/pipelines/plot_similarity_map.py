@@ -30,12 +30,10 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
     )
     p.add_argument("--help", action="help", help="Show this help message and exit")
-    # condition one (a-d): up to 4 replicate .contact.txt files, minimum 2
     p.add_argument("-a", dest="a1", required=True, metavar="A1.contact.txt", help="condition one, replicate 1 (required)")
     p.add_argument("-b", dest="a2", required=True, metavar="A2.contact.txt", help="condition one, replicate 2 (required)")
     p.add_argument("-c", dest="a3", default=None, metavar="A3.contact.txt", help="condition one, replicate 3")
     p.add_argument("-d", dest="a4", default=None, metavar="A4.contact.txt", help="condition one, replicate 4")
-    # condition two (i-l): up to 4 replicate .contact.txt files, minimum 2
     p.add_argument("-i", dest="b1", required=True, metavar="B1.contact.txt", help="condition two, replicate 1 (required)")
     p.add_argument("-j", dest="b2", required=True, metavar="B2.contact.txt", help="condition two, replicate 2 (required)")
     p.add_argument("-k", dest="b3", default=None, metavar="B3.contact.txt", help="condition two, replicate 3")

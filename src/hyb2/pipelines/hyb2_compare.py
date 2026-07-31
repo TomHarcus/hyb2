@@ -81,72 +81,15 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
 
     Path(f"{out}_names.table").write_text(names_table)
 
-    subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
-                    f"{out}.table.txt", f"{out}_names.table",
-                    str(min_reads)],
-                    check=True)
+    value = [contact.replace(".contact.txt", "") for (hyb, contact, cond) in rows]
+    _differential_map(out, min_reads, interaction_range, LIMIT, value)
 
-    deseq_output = []
-    for line in open(f"DESeq_{out}.txx").read().splitlines()[1:]:
-        line = line.replace('"', "")
-        columns = line.split()
-
-        deseq_output.append(f"{columns[0]}\tbaseMean={columns[1]};log2FoldChange={columns[2]};lfcSE={columns[3]};stat={columns[4]};pvalue={columns[5]};padj={columns[6]}")
-        
-    Path(f"{out}.tmp1").write_text("\n".join(deseq_output) + "\n")
-
-    lines = open(f"{out}.table.txt").read().splitlines()
-    val = lines[0].split("\t")[1:]
-    transpose_output = []
-    for line in lines[1:]:
-        columns = line.split("\t")
-        counts = columns[1:]
-        transpose_output.append(columns[0] + "\t" + "".join(f"{n}={c};" for n, c in zip(val, counts)))
-
-    Path(f"{out}.tmp2").write_text("\n".join(transpose_output) + "\n")
-
-    merged = make_hybrid_annotation_table([f"{out}.tmp2", f"{out}.tmp1"]).splitlines()
-    header, data = merged[0], merged[1:]
-
-    kept = []
-    for row in data:
-        columns = row.split("\t")
-        if columns[-1] == "NA" or float(columns[-1]) >= 0.05:
-            continue
-        kept.append(row)
-
-    kept.sort(key=lambda r: float(r.split("\t")[-1]))
-
-    Path(f"DESeq_{out}_significant.txx").write_text("\n".join([header] + kept) + "\n")
-
-  
-    emitted = []
-    # skip the header (splitlines()[1:]): the legacy runs it through the awk too,
-    # where "log2FoldChange">"0" is a true STRING comparison so the header hits the
-    # >0 branch and is then dropped by `awk 'NR>1'` -- i.e. NR>1 removes the header,
-    # not a data row. Skipping it here is the equivalent, so there is NO extra [1:].
-    for row in open(f"DESeq_{out}_significant.txx").read().splitlines()[1:]:
-        cols = row.split()
-
-        if float(cols[-5]) < 0:
-            emitted.append(f"{cols[0]}\t{math.log(float(cols[-1]))/math.log(10):.6g}\t{cols[-5]}\t{cols[-1]}")
-
-        elif float(cols[-5]) > 0:
-            emitted.append(f"{cols[0]}\t{-1*math.log(float(cols[-1]))/math.log(10):f}\t{cols[-5]}\t{cols[-1]}")
-
-    tail = [r.replace("_", "\t") for r in emitted]
-    tail = ["x\ty\tlogpadj\tlog2FoldChange\tpadj"] + tail
-
-    Path(f"DESeq_{out}_significant.padj_heatmap.txt").write_text("\n".join(tail) + "\n")
-
-    subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
-                    f"DESeq_{out}_significant.padj_heatmap.txt", out],
-                    check=True)
-
+    # similarity map -- independent of the differential/enrichment outputs, so it runs
+    # after _differential_map (functionally-equivalent reorder from the legacy interleave).
     merged = "".join(open(y).read() for (x, y, z) in rows)
     Path(f"{out}.merge.txt").write_text(merged)
 
-    # clean global-min per (x,y) key -- deliberate deviation from the legacy awk
+    # clean global-min per (x,y) key - deliberate deviation from the legacy awk
     # chain; see stages/similarity.py for why (needs Greg's sign-off + re-baseline).
     out_rows = similarity_contact(open(f"{out}.merge.txt").read().splitlines())
 
@@ -154,41 +97,6 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
 
     subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
                     f"{out}.contact.txt", str(LIMIT)], check=True)
-
-    split_select(out, interaction_range)
-
-
-    for sign in ("pos", "neg"):
-        f = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
-        Path(f).write_text(
-            Path(f).read_text().replace("0\t0\t0.0\t0.0", "x\ty\tlog2FoldChange\tpadj")
-        )
-
-    for sign in ("pos", "neg"):
-        src = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
-        windows = []
-        for row in Path(src).read_text().splitlines()[1:]:       
-            c = row.split("\t")
-            x, y = int(c[0]), int(c[1])
-            windows.append(f"{x-150}\t{x+150}\t{y-150}\t{y+150}\t{c[2]}\t{c[3]}")
-        body = ["x1\tx2\ty1\ty2\tlog2FoldChange\tpadj"] + windows   
-        body = [re.sub(r"-.[0-9]+\t", "1\t", ln, count=1) for ln in body]  
-        body = [ln.replace("\t\t", "\t-") for ln in body]        
-        Path(f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt").write_text(
-            "\n".join(body) + "\n"
-        )
-
-    value = [contact.replace(".contact.txt", "") for (hyb, contact, cond) in rows]
-
-    for sign in ("pos", "neg"):
-        hm = f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt"
-        for row in Path(hm).read_text().splitlines()[1:11]:       # awk NR>1 && NR<12
-            c = row.split("\t")
-            subprocess.run(
-                ["Rscript", config.rscript("contact_density_map_zoom.R"),
-                 c[0], c[1], c[2], c[3], str(LIMIT), *value],
-                check=True,
-            )
 
     condition_one_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_one"]
     condition_two_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_two"]
@@ -200,6 +108,99 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
         print("Use Options -0 to -9, and -j to Plot RNA Secondary Structures for Enriched Interactions")
 
     print("Comparison Completed")
+
+
+def _differential_map(out, min_reads, interaction_range, LIMIT, value):
+    """The DESeq differential pipeline shared by hyb2_compare and plot_differential_map:
+    DESeq_run.R -> reformat -> significance filter -> padj heatmap ->
+    differential_coverage_map.R -> split_select -> enrichment -> top-10 zoom. Assumes
+    <out>.table.txt and <out>_names.table already exist (each caller builds those its own
+    way - table-driven vs positional condition assignment). `value` is the list of
+    contact-file stems handed to the zoom R script. Does NOT include the similarity map or
+    the folding branch (both hyb2_compare-only)."""
+
+    subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
+                    f"{out}.table.txt", f"{out}_names.table",
+                    str(min_reads)],
+                    check=True)
+
+    deseq_output = []
+    for line in open(f"DESeq_{out}.txx").read().splitlines()[1:]:
+        line = line.replace('"', "")
+        columns = line.split()
+        deseq_output.append(f"{columns[0]}\tbaseMean={columns[1]};log2FoldChange={columns[2]};lfcSE={columns[3]};stat={columns[4]};pvalue={columns[5]};padj={columns[6]}")
+    Path(f"{out}.tmp1").write_text("\n".join(deseq_output) + "\n")
+
+    lines = open(f"{out}.table.txt").read().splitlines()
+    val = lines[0].split("\t")[1:]
+    transpose_output = []
+    for line in lines[1:]:
+        columns = line.split("\t")
+        counts = columns[1:]
+        transpose_output.append(columns[0] + "\t" + ";".join(f"{n}={c}" for n, c in zip(val, counts)))
+    Path(f"{out}.tmp2").write_text("\n".join(transpose_output) + "\n")
+
+    merged = make_hybrid_annotation_table([f"{out}.tmp2", f"{out}.tmp1"]).splitlines()
+    header, data = merged[0], merged[1:]
+
+    kept = []
+    for row in data:
+        columns = row.split("\t")
+        if columns[-1] == "NA" or float(columns[-1]) >= 0.05:
+            continue
+        kept.append(row)
+    kept.sort(key=lambda r: float(r.split("\t")[-1]))
+    Path(f"DESeq_{out}_significant.txx").write_text("\n".join([header] + kept) + "\n")
+
+    emitted = []
+    # skip the header (splitlines()[1:]): the legacy runs it through the awk too, where
+    # "log2FoldChange">"0" is a true STRING comparison so the header hits the >0 branch and
+    # is then dropped by `awk 'NR>1'` - i.e. NR>1 removes the header, not a data row.
+    for row in open(f"DESeq_{out}_significant.txx").read().splitlines()[1:]:
+        cols = row.split()
+        if float(cols[-5]) < 0:
+            emitted.append(f"{cols[0]}\t{math.log(float(cols[-1]))/math.log(10):.6g}\t{cols[-5]}\t{cols[-1]}")
+        elif float(cols[-5]) > 0:
+            emitted.append(f"{cols[0]}\t{-1*math.log(float(cols[-1]))/math.log(10):f}\t{cols[-5]}\t{cols[-1]}")
+    tail = [r.replace("_", "\t") for r in emitted]
+    tail = ["x\ty\tlogpadj\tlog2FoldChange\tpadj"] + tail
+    Path(f"DESeq_{out}_significant.padj_heatmap.txt").write_text("\n".join(tail) + "\n")
+
+    subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
+                    f"DESeq_{out}_significant.padj_heatmap.txt", out],
+                    check=True)
+
+    split_select(out, interaction_range)
+
+    for sign in ("pos", "neg"):
+        f = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
+        Path(f).write_text(
+            Path(f).read_text().replace("0\t0\t0.0\t0.0", "x\ty\tlog2FoldChange\tpadj")
+        )
+
+    for sign in ("pos", "neg"):
+        src = f"{out}_{interaction_range}range_{sign}_enrichment.txt"
+        windows = []
+        for row in Path(src).read_text().splitlines()[1:]:
+            c = row.split("\t")
+            x, y = int(c[0]), int(c[1])
+            windows.append(f"{x-150}\t{x+150}\t{y-150}\t{y+150}\t{c[2]}\t{c[3]}")
+        body = ["x1\tx2\ty1\ty2\tlog2FoldChange\tpadj"] + windows
+        body = [re.sub(r"-.[0-9]+\t", "1\t", ln, count=1) for ln in body]
+        body = [ln.replace("\t\t", "\t-") for ln in body]
+        Path(f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt").write_text(
+            "\n".join(body) + "\n"
+        )
+
+    for sign in ("pos", "neg"):
+        hm = f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt"
+        for row in Path(hm).read_text().splitlines()[1:11]:       # awk NR>1 && NR<12
+            c = row.split("\t")
+            subprocess.run(
+                ["Rscript", config.rscript("contact_density_map_zoom.R"),
+                 c[0], c[1], c[2], c[3], str(LIMIT), *value],
+                check=True,
+            )
 
 
 def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):

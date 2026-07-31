@@ -93,7 +93,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 33. `blast2gplot.pl`
 - [x] 34. `plot_viewpoint` — needs #32, #33
 - [x] 35. `make_hybrid_annotation_table.pl`
-- [ ] 36. `plot_differential_map`, `plot_similarity_map` — thin R/py wrappers
+- [x] 36. `plot_differential_map`, `plot_similarity_map` — thin R/py wrappers
 - [ ] 37. `fasta_hyb2_formatting`, `sam_filt` — leaves
 
 *Top orchestrators — last:*
