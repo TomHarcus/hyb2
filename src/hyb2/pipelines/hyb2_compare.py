@@ -120,7 +120,11 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
 
   
     emitted = []
-    for row in open(f"DESeq_{out}_significant.txx").read().splitlines():
+    # skip the header (splitlines()[1:]): the legacy runs it through the awk too,
+    # where "log2FoldChange">"0" is a true STRING comparison so the header hits the
+    # >0 branch and is then dropped by `awk 'NR>1'` -- i.e. NR>1 removes the header,
+    # not a data row. Skipping it here is the equivalent, so there is NO extra [1:].
+    for row in open(f"DESeq_{out}_significant.txx").read().splitlines()[1:]:
         cols = row.split()
 
         if float(cols[-5]) < 0:
@@ -129,9 +133,7 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
         elif float(cols[-5]) > 0:
             emitted.append(f"{cols[0]}\t{-1*math.log(float(cols[-1]))/math.log(10):f}\t{cols[-5]}\t{cols[-1]}")
 
-    tail = emitted[1:]
-
-    tail = [r.replace("_", "\t") for r in tail]
+    tail = [r.replace("_", "\t") for r in emitted]
     tail = ["x\ty\tlogpadj\tlog2FoldChange\tpadj"] + tail
 
     Path(f"DESeq_{out}_significant.padj_heatmap.txt").write_text("\n".join(tail) + "\n")
