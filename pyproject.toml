@@ -20,6 +20,8 @@ dev = ["pytest"]
 [project.scripts]
 hyb2-py = "hyb2.cli:main"
 hyb2-sam-composition = "hyb2.pipelines.sam_composition:main"
+hyb2-coverage = "hyb2.pipelines.hyb2_coverage:main"
+plot-cdm = "hyb2.pipelines.hyb2_coverage:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
