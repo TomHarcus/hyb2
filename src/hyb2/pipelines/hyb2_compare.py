@@ -38,6 +38,7 @@ import subprocess, math, re, glob
 from pathlib import Path
 from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
 from hyb2.stages.DESeq_interaction_split_select import split_select
+from hyb2.stages.similarity import similarity_contact
 
 def _num(s):
     try: return float(s)
@@ -145,21 +146,9 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     merged = "".join(open(y).read() for (x, y, z) in rows)
     Path(f"{out}.merge.txt").write_text(merged)
 
-  
-    groups = {}
-    for line in open(f"{out}.merge.txt").read().splitlines():
-        if any(c.isalpha() for c in line):
-            continue
-
-        cols = line.split()
-        if len(cols) < 3:
-            continue
-
-        key = (cols[0], cols[1])
-
-        groups.setdefault(key, []).append(cols[2])
-
-    out_rows = [f"{a}\t{b}\t{min(counts, key=float)}" for (a,b), counts in groups.items() if len(counts) > 1]
+    # clean global-min per (x,y) key -- deliberate deviation from the legacy awk
+    # chain; see stages/similarity.py for why (needs Greg's sign-off + re-baseline).
+    out_rows = similarity_contact(open(f"{out}.merge.txt").read().splitlines())
 
     Path(f"{out}.contact.txt").write_text("\n".join(out_rows) + "\n")
 
