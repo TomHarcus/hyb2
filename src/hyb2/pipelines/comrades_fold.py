@@ -8,14 +8,16 @@ outputs: .vienna + .ct
 """
 
 import subprocess, random, shutil, sys, argparse, os
+from pathlib import Path
 
-from hyb2.config import CPL_DEFAULTS
+from hyb2.stages.ct2b_gk3 import ct2b_gk3
+from hyb2 import config
 
 def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vienna",
-        vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=CPL_DEFAULTS["alpha"],
-        beta=CPL_DEFAULTS["beta"], normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
-        energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"], max_phase2=CPL_DEFAULTS["max_phase2"],
-        energy_model=CPL_DEFAULTS["energy_model"]):
+        vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=config.CPL_DEFAULTS["alpha"],
+        beta=config.CPL_DEFAULTS["beta"], normalize=config.CPL_DEFAULTS["normalize"], beam_size=config.CPL_DEFAULTS["beam_size"],
+        energy_delta=config.CPL_DEFAULTS["energy_delta"], max_phase1=config.CPL_DEFAULTS["max_phase1"], 
+        max_phase2=config.CPL_DEFAULTS["max_phase2"], energy_model=config.CPL_DEFAULTS["energy_model"]):
     
     """
     cluster array job code would live here
@@ -68,7 +70,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         if fold == "vienna":
             _fold_vienna_constrained(in_fasta, current_constraints, ct_output, vienna_bin)
         elif fold == "unafold":
-            raise NotImplementedError("not implemented yet")
+            _fold_unafold(in_fasta, ct_output, vienna_output=None)
         else:
             raise ValueError("not a valid folding algorithm")
         
@@ -93,7 +95,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     if fold == "vienna":
         _fold_vienna_constrained(in_fasta, current_constraints, ct_output, vienna_bin, vienna_output=vienna_output)
     elif fold == "unafold":
-        raise NotImplementedError("not implemented yet")
+        _fold_unafold(in_fasta, ct_output, vienna_output=vienna_output)
     else:
         raise ValueError("not a valid folding algorithm")
     
@@ -132,7 +134,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
                   alpha, beta, normalize, beam_size, energy_delta, max_phase1,
                   max_phase2, energy_model, vienna_bin):
     import numpy as np
-    from hyb2 import config
+
 
     if config.CPLFOLD_DIR not in sys.path:
         sys.path.insert(0, config.CPLFOLD_DIR)
@@ -221,6 +223,24 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
     with open(ct_output, "w") as fout:
         fout.write(ct)
 
+def _fold_unafold(in_fasta, ct_output, vienna_output):
+
+    subprocess.run(
+        ["hybrid-ss-min", "-c", in_fasta],
+        capture_output=True, text=True, check=True,
+        env={**os.environ, "UNAFOLDDAT": str(config.UNAFOLD_DIR)}
+    )
+
+    result = f"{in_fasta}.ct"
+    if result != ct_output:
+        shutil.move(result, ct_output)   
+
+    if vienna_output is not None:
+        Path(vienna_output).write_text(ct2b_gk3(Path(ct_output).read_text(),
+                                                hybrid_ss_min=True))
+
+    
+
 def _dot_to_bpmap(dot):
     """Dot-bracket -> {position: partner} pseudoknot aware pair map. Crossing pairs
     resolve correctly (b2ct can't). Adapted from IPyRSSA's Structure.dot2bpmap
@@ -273,14 +293,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-p", dest="basepair_scores", default=None, metavar="BASEPAIR_SCORES.TXT", help="cplfold support matrix (i j count); required for -r cplfold")
     p.add_argument("-b", dest="begin", type=int, default=None, help="cplfold window start (required for -r cplfold)")
     p.add_argument("-e", dest="end", type=int, default=None, help="cplfold window end (required for -r cplfold)")
-    p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
-    p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
-    p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
-    p.add_argument("--beam-size", dest="beam_size", type=int, default=CPL_DEFAULTS["beam_size"], help="cplfold beam size")
-    p.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
-    p.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
-    p.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
-    p.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
+    p.add_argument("--alpha", dest="alpha", type=float, default=config.CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
+    p.add_argument("--beta", dest="beta", type=float, default=config.CPL_DEFAULTS["beta"], help="cplfold bonus weight")
+    p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=config.CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
+    p.add_argument("--beam-size", dest="beam_size", type=int, default=config.CPL_DEFAULTS["beam_size"], help="cplfold beam size")
+    p.add_argument("--energy-delta", dest="energy_delta", type=float, default=config.CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
+    p.add_argument("--max-phase1", dest="max_phase1", type=int, default=config.CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
+    p.add_argument("--max-phase2", dest="max_phase2", type=int, default=config.CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
+    p.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=config.CPL_DEFAULTS["energy_model"], help="cplfold energy model")
 
 
     return p

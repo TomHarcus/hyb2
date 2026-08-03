@@ -4,7 +4,7 @@ Shared paths/ external tool locations
 
 """
 
-import os
+import os, sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -29,3 +29,5 @@ def rscript(name: str) -> str:
 
 CPLFOLD_DIR = "/home/tom/Desktop/CPLfold"
 CPL_DEFAULTS = {"alpha": 0.5, "beta": 0.0, "normalize": "log", "beam_size": 100, "energy_delta": 5.0, "max_phase1": 10, "max_phase2": 5, "energy_model": "DP09"}
+
+UNAFOLD_DIR = Path(sys.prefix)/"share/oligoarrayaux"

@@ -63,7 +63,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 - [x] 10. `hyb2fasta_bits_allRNAs.awk` — leaf
 - [ ] 11. `add_dG_hyb_2.pl` — leaf (free-energy annotation)
 - [ ] 12. `make_nicer_vienna_hOH5.awk` — leaf (vienna formatting)
-- [ ] 13. `Ct2B_GK_3.pl` — leaf
+- [x] 13. `Ct2B_GK_3.pl` — leaf
 - [x] 14. `make_VARNA_scores_2.sh` — leaf
 - [x] 15. `svg_mod_coord.sh` — leaf
 - [x] 16. `VARNAcmd.sh` — thin wrapper to the VARNA jar (keep/port wrapper, not VARNA)
