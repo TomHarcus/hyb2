@@ -4,8 +4,10 @@
 
 from hyb2.stages.make_hyb_db_2 import make_hyb_db_2
 from hyb2.stages.make_comp_fasta import make_comp_fasta
+from hyb2.stages.solexa2fasta import solexa_to_fasta
+from hyb2.stages.fasta2tab import fasta_to_tab
 
-import subprocess
+import subprocess, gzip
 
 from pathlib import Path
 
@@ -21,19 +23,42 @@ def bowtie2_map(in_file, db, out):
 
         print("Bowtie2 mapping...")
 
-        with open(f"{out}.sam", "w") as sam, open(f"{out}.blast.err") as err:
-
-            subprocess.run(
-                ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
-                "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
-                "--rdg", "5,1", "--rfg", "5,1", "-p", "64", "-x", db.replace(".fasta", "", 1),
-                "-f", in_file],
-                stdout=sam,
-                stderr=err,
-                check=True
-            )
+        _bowtie2(db, out, in_file)
         
         print("Mapping concluded")
-        
+
+    elif suffix[-2] == "fastq" and suffix[-1] == "gz":
+
+        if not Path(db.replace("fasta", "tab", 1)).is_file():
+            print("Making database...")
+            make_hyb_db_2(db)
+
+        content = gzip.open(in_file, "rt").read()
+
+        fasta = solexa_to_fasta(content)
+        tab = fasta_to_tab(fasta)
+        comp = make_comp_fasta(tab.splitlines())
+
+        comp_path = f"{out}_comp.fasta"
+        Path(comp_path).write_text(comp)
+
+        print("Bowtie2 mapping...")
+
+        _bowtie2(db, out, comp_path)
+
+        print("Mapping concluded")
 
 
+
+def _bowtie2(db, out, reads):
+    with open(f"{out}.sam", "w") as sam, open(f"{out}.blast.err", "w") as err:
+            
+        subprocess.run(
+            ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
+            "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
+            "--rdg", "5,1", "--rfg", "5,1", "-p", "64", "-x", db.replace(".fasta", "", 1),
+            "-f", reads],
+            stdout=sam,
+            stderr=err,
+            check=True
+        )
