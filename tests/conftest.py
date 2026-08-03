@@ -20,6 +20,7 @@ TIER2_FIXTURES = REPO_ROOT / "fixtures" / "tier2_run"
 FOLDING_FIXTURES = REPO_ROOT / "fixtures" / "folding_run"
 COVERAGE_FIXTURES = REPO_ROOT / "fixtures" / "coverage_run"
 VIEWPOINT_FIXTURES = REPO_ROOT / "fixtures" / "viewpoint_run"
+UNAFOLD_FIXTURES = REPO_ROOT / "fixtures" / "unafold_run"
 
 
 @pytest.fixture
@@ -122,6 +123,36 @@ def cplfold_env() -> str:
     except subprocess.TimeoutExpired:
         pass  # runnable (right arch), just waits for input -> good enough
     return cpldir
+
+
+@pytest.fixture
+def unafold_fixtures_dir() -> Path:
+    """UNAFold (OligoArrayAux) parity oracle from
+    scripts/generate_unafold_baseline.sh. Skips if not generated."""
+    if not UNAFOLD_FIXTURES.exists():
+        pytest.skip("unafold fixtures not generated; run scripts/generate_unafold_baseline.sh")
+    return UNAFOLD_FIXTURES
+
+
+@pytest.fixture
+def unafold_env(monkeypatch) -> str:
+    """Skip unless hybrid-ss-min AND hybrid-min (oligoarrayaux) are runnable.
+    Prepends the hyb2 conda env's bin to PATH so the port's subprocesses find
+    them when the env isn't activated (UNAFOLDDAT is set by the port itself from
+    config.UNAFOLD_DIR). Returns the bin dir."""
+    import os
+
+    bindir = None
+    if shutil.which("hybrid-ss-min") and shutil.which("hybrid-min"):
+        bindir = Path(shutil.which("hybrid-ss-min")).parent
+    else:
+        cand = Path.home() / "miniconda3" / "envs" / "hyb2" / "bin"
+        if (cand / "hybrid-ss-min").exists() and (cand / "hybrid-min").exists():
+            monkeypatch.setenv("PATH", str(cand) + os.pathsep + os.environ.get("PATH", ""))
+            bindir = cand
+    if bindir is None:
+        pytest.skip("hybrid-ss-min/hybrid-min (oligoarrayaux) not found")
+    return str(bindir)
 
 
 @pytest.fixture

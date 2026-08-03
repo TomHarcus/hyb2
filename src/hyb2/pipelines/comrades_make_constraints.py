@@ -6,13 +6,14 @@ constraints for that region
 
 """
 
-import argparse, subprocess, sys, os
+import argparse, subprocess, sys, os, shutil
 from hyb2.stages.fasta2tab import fasta_to_tab
 from hyb2.stages.hyb2fasta_bits_allRNAs import hyb2fasta_bits_allRNAs
 from hyb2.stages.ct2bps_2 import ct2bps_2
 from hyb2.stages.histogram import histogram
 from hyb2.stages.bp2hyb import bp2hyb
 from hyb2.stages.hyb2constraints import hyb2constraints
+from hyb2 import config
 
 def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
         vienna_bin=None):
@@ -48,7 +49,7 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
         _fold_vienna(bit1, bit2, ct, vienna_bin)
 
     elif fold == "unafold":
-        _fold_unafold(bit1, bit2)
+        _fold_unafold(bit1, bit2, ct)
     
     else:
         raise ValueError(f"unknown folder: {fold}")
@@ -108,9 +109,15 @@ def _fold_vienna(bit1, bit2, ct, vienna_bin):
         with open(ct, "w") as fout:
             fout.write(ctdata)
 
-def _fold_unafold(bit1, bit2):
-    raise NotImplementedError("Unafold backend not done yet")
+def _fold_unafold(bit1, bit2, ct):
+    subprocess.run(["hybrid-min", bit1, bit2],
+                   capture_output=True, text=True, check=True,
+                   env={**os.environ, "UNAFOLDDAT": str(config.UNAFOLD_DIR)})
 
+    result = f"{bit1}-{bit2}.ct"
+
+    if result != ct:
+        shutil.move(result, ct)
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
