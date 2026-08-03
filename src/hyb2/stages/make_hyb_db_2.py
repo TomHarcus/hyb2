@@ -12,7 +12,7 @@ def make_hyb_db_2(in_fasta):
         raise FileNotFoundError(f"error: {in_fasta} file not found")
 
     prefix = in_fasta.replace(".fasta", "", 1)
-    subprocess.run(["bowtie2-build", in_fasta, prefix], check=True)
+    subprocess.run(["bowtie2-build", in_fasta, prefix], check=True, stdout=subprocess.DEVNULL)
 
     tab = in_fasta.replace("fasta", "tab", 1)
     with open(in_fasta) as fin:
