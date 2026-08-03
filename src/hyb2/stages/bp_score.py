@@ -20,6 +20,11 @@ def bp_score(coordinates, score, prefix):
 
         nm, c1, c2, c3 = parts[0], parts[1], parts[2], parts[3]
 
+        print(f"Name: {nm}")
+        print(f"C1: {c1}")
+        print(f"C2: {c2}")
+        print(f"C3: {c3}")
+
         offset = int(c1)
         bps_path = nm.replace(".ct", ".bps")
 

@@ -33,6 +33,10 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     ct_output = f"{in_fasta}.ct"
     vienna_output = f"{in_fasta}.vienna"
 
+    print("Welcome to comradesFold2\n")
+    print(f"Input fasta file: {in_fasta}")
+
+
     if fold == "cplfold":
         if begin is None or end is None:
             raise ValueError("cplfold needs begin + end")
@@ -48,8 +52,12 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         
         return (vienna_output, ct_output)
 
+    print(f"Input constraints file: {in_constraints}")
+    print(f"Creating constraints file: {current_constraints}")
+    print(f"Creating shuffled constraints file: {shuffled_constraints}")
+
     if current_constraints == in_constraints:
-        raise ValueError("name your constraint file something else")
+        raise ValueError("name your constraint file something else... Exiting")
 
     with open(in_constraints, "r") as fin, open(shuffled_constraints, "w") as fout: 
         lines = fin.readlines()

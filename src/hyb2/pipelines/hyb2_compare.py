@@ -11,25 +11,25 @@ def print_help():
     print("To compare between datasets:")
     print("hyb2_compare -i <Input.table> -o <Outpud_ID>")
     print("Input.table format:")
-    print("Output1.hyb   Output1.GENE.contact.txt   condition_one")
-    print("Output2.hyb   Output2.GENE.contact.txt   condition_one")
-    print("Output3.hyb   Output3.GENE.contact.txt   condition_two")
-    print("Output4.hyb   Output4.GENE.contact.txt   condition_two")
-    print("You can prepare however many rows you like (at least 2 for each condition), categorized by condition_one and condition_two")
-    print(" ")
-    print("  -i   Input table You MANUALLY GENERATED")
-    print("  -d   Fasta file used for mapping")
-    print("  -a   Gene ID of interest")
-    print("  -j   Directory of VARNAcmd.jar (default set when installing hyb2)")
-    print("  -0   Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
-    print("  -m   DESeq2 chimera count filtering threshold (default=2)")
-    print("  -r   Range to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction")
-    print("  -q   Upper limit for heatmap chimeric count (default=0.95)")
-    print(" ") 
-    print("Currently Not Compatible with Mac-OS-ARM due to several packages not being implemented yet.")
-    print(" ")
-    print("Run hyb2 without options for details about hyb2, hyb2_coverage, and hyb2_app")
-    print(" ")
+    print("Output1.hyb\tOutput1.GENE.contact.txt\tcondition_one")
+    print("Output2.hyb\tOutput2.GENE.contact.txt\tcondition_one")
+    print("Output3.hyb\tOutput3.GENE.contact.txt\tcondition_two")
+    print("Output4.hyb\tOutput4.GENE.contact.txt\tcondition_two")
+    print("You can prepare however many rows you like (at least 2 for each condition), categorized by condition_one and condition_two\n")
+  
+    print("\t-i\tInput table You MANUALLY GENERATED")
+    print("\t-d\tFasta file used for mapping")
+    print("\t-a\tGene ID of interest")
+    print("\t-j\tDirectory of VARNAcmd.jar (default set when installing hyb2)")
+    print("\t-0\tFolding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
+    print("\t-m\tDESeq2 chimera count filtering threshold (default=2)")
+    print("\t-r\tRange to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction")
+    print("\t-q\tUpper limit for heatmap chimeric count (default=0.95)\n")
+
+    print("Currently Not Compatible with Mac-OS-ARM due to several packages not being implemented yet\n")
+
+    print("Run hyb2 without options for details about hyb2, hyb2_coverage, and hyb2_app\n")
+   
     print("Any other queries, email me at laujianyou@live.com")
 
     return 0
@@ -105,7 +105,7 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
         _fold_enriched(condition_one_files, "pos", out, interaction_range, GENE, FASTA, VARNA)
         _fold_enriched(condition_two_files, "neg", out, interaction_range, GENE, FASTA, VARNA)
     else:
-        print("Use Options -0 to -9, and -j to Plot RNA Secondary Structures for Enriched Interactions")
+        print("Use options -0 to -9, and -j to plot RNA secondary structures for enriched interactions")
 
     print("Comparison Completed")
 

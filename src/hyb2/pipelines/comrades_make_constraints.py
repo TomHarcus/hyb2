@@ -29,6 +29,13 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
     ranked = in_hyb.replace(".hyb", "") + f".{begin}-{end}_ranked_interactions.txt"
     constr = ranked.replace("ranked_interactions.txt", "folding_constraints.txt")
 
+    print("Welcome to comradesMakeConstraints\n")
+    print(f"Input hybrids file: {in_hyb}")
+    print(f"Reference fasta file: {ref_fasta}")
+    print(f"Fragment start coordinate: {begin}")
+    print(f"Fragment end coordinate: {end}")
+
+
     with open(ref_fasta) as fin, open(ref_tab, "w") as fout:
         fout.write(fasta_to_tab(fin.read()))
 

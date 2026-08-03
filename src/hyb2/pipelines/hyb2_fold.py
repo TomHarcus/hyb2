@@ -334,6 +334,8 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
 
     from hyb2.stages.bp_score import bp_score
 
+    print("Calculating basepair scores...")
+
     with open(coords) as c:
         bp_score(c, bp_scores, in_hyb)
 
@@ -343,11 +345,22 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     ranked = sorted(scores,
                     key=lambda fn: sum(float(x) for x in open(fn) if x.strip()),
                     reverse=True)
+
+    print("Top scoring structures:")
+
+    for fn in ranked[:10]:
+        s = sum(float(x) for x in open(fn) if x.strip())
+        print(f"{fn}\t{s}")
     
     name = ranked[0]
     vname = name.split("__", 1)[1]
 
+    vienna_top = vname.replace(".VARNA_scores.txt", ".vienna")
+    print(open(vienna_top).read(), end="")
+    print(f"Open {vienna_top} in VARNA for more customization options")
+
     log2 = name.replace("_scores.txt", "_log2scores.txt")
+    print(f"Load {log2} as colour coding score in VARNA")
 
     # legacy: awk '{print log($1+1)/log(2)}' | sed 's/-inf/0/g;s/^-.*/0/g'
     # awk prints with OFMT = %.6g; sed zeroes -inf / negatives.
@@ -360,11 +373,25 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     ct_top = vname.replace(".VARNA_scores.txt", ".ct")
     from hyb2.pipelines.plot_VARNA import plot_VARNA
 
+    if VARNA:
+        print("Plotting RNA secondary structure...")
+    else:
+        print("Use option -j to plot RNA secondary structure")
+
     plot_VARNA(ct_top, log2, VARNA, x_coord=x_coord, y_coord=y_coord,
                length=length, interactive=interactive)
-    
-    print("randomized parallel RNA folding (cluster): qsub comradesFold2 ... -s 1")
-    print("assign scores: comradesScore -i <basepair_scores> -f <out_fasta>")
+
+    # legacy: [ -f ${IN_FILE/hyb/}${vname/.VARNA_scores.txt/_plot.svg} ] || interactive
+    svg = in_hyb.replace("hyb", "", 1) + vname.replace(".VARNA_scores.txt", "_plot.svg")
+    if os.path.isfile(svg) or interactive:
+        print("Plotting Concluded")
+    else:
+        print("Error! Something went wrong.")
+
+    folding_constraints = out_file.replace(".hyb", f".1-{span}_folding_constraints.txt")
+    print("Randomized parallel RNA folding to fold RNA 1000 times using computer cluster:")
+    print(f"qsub comradesFold2 -c {folding_constraints} -i {out_fasta} -s 1")
+    print(f"and assign scores to each basepair using: comradesScore -i {bp_scores} -f {out_fasta}")
 
 
 def build_parser() -> argparse.ArgumentParser:
