@@ -33,9 +33,9 @@ def bowtie2_map(in_file, db, out):
             print("Making database...")
             make_hyb_db_2(db)
 
-        content = gzip.open(in_file, "rt").read()
+        unzipped_in_file = gzip.open(in_file, "rt").read()
 
-        fasta = solexa_to_fasta(content)
+        fasta = solexa_to_fasta(unzipped_in_file)
         tab = fasta_to_tab(fasta)
         comp = make_comp_fasta(tab.splitlines())
 
@@ -48,6 +48,26 @@ def bowtie2_map(in_file, db, out):
 
         print("Mapping concluded")
 
+    elif suffix[-1] == "fastq":
+        if not Path(db.replace("fasta", "tab", 1)).is_file():
+            print("Making database...")
+            make_hyb_db_2(db)
+
+        fasta = solexa_to_fasta(open(in_file).read())
+        tab = fasta_to_tab(fasta)
+        comp = make_comp_fasta(tab.splitlines())
+
+        comp_path = f"{out}_comp.fasta"
+        Path(comp_path).write_text(comp)
+
+        print("Bowtie2 mapping...")
+
+        _bowtie2(db, out, comp_path)
+
+        print("Mapping concluded")
+
+    else:
+        raise ValueError(f"unsupported input format: {in_file}")
 
 
 def _bowtie2(db, out, reads):

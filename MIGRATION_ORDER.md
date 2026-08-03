@@ -81,9 +81,9 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 ## TIER 3 — remaining README commands + glue
 
 *Mapping sub-branch:*
-- [ ] 26. `make_comp_fasta.pl` — use Grzegorz's newer 98-line version
-- [ ] 27. `make_hyb_db_2` — needs `fasta2tab` (done)
-- [ ] 28. `bowtie2_fastq2sam`, `bowtie2_fastq.gz2sam`, `bowtie2_fasta2sam` — need #26, #27, `solexa2fasta` (done)
+- [x] 26. `make_comp_fasta.pl` — use Grzegorz's newer 98-line version
+- [x] 27. `make_hyb_db_2` — needs `fasta2tab` (done)
+- [x] 28. `bowtie2_fastq2sam`, `bowtie2_fastq.gz2sam`, `bowtie2_fasta2sam` — need #26, #27, `solexa2fasta` (done)
 
 *Coverage / plotting wrappers (R stays):*
 - [x] 29. `plot_hybrids_3.awk`
