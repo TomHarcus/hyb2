@@ -33,6 +33,7 @@ from hyb2.stages.histogram import histogram
 def run(
     in_sam: str,
     *,
+    out=None,
     nlines: int | None = None,
     ua_hyb: str | None = None,
     hmax: int = 10,
@@ -43,8 +44,9 @@ def run(
     """Drive the pipeline. See module docstring for the three modes."""
 
     print(f"input={in_sam} (whole file, no copy) h={hmax}", file=sys.stderr)
-    
-    out = in_sam[:-4] if in_sam.endswith(".sam") else in_sam
+
+    if out is None:
+        out = in_sam[:-4] if in_sam.endswith(".sam") else in_sam
 
     blast = out + ".blast"
     with open(in_sam) as fin, open(blast, "w") as fout:

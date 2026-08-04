@@ -122,7 +122,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         else:
             sam = in_file
 
-        sam_composition.run(sam, hmax=hmax, blast_threshold=blast_threshold, max_overlap=max_overlap)
+        sam_composition.run(sam, out=out, hmax=hmax, blast_threshold=blast_threshold, max_overlap=max_overlap)
         print("Hyb file generated")
 
     else:
