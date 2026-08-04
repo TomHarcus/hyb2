@@ -50,25 +50,26 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-r",
         dest="fold",
-        default="vienna",
-        choices=["vienna", "unafold", "couplefold"],
-        help="Folding backend (default=couplefold once integrated; vienna for now)",
+        default="cplfold",
+        choices=["cplfold", "vienna", "unafold", "0", "1"]
     )
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
+    args = build_parser().parse_args(argv)
+    from hyb2.pipelines import hyb2
 
     if args.in_file is None:
-        parser.print_help()
-        return 0
+        return hyb2.print_help()
 
-    raise NotImplementedError(
-        "hyb2-py does not run the pipeline yet -- stages are being ported "
-        "incrementally into hyb2.stages. Use bin/hyb2 for now."
-    )
+    hyb2.run(args.in_file, args.db_1, args.out,
+             hmax=args.hmax, blast_threshold=args.hval, max_overlap=args.gmax,
+             gene_1=args.gene_1, gene_2=args.gene_2, limit=args.limit,
+             x_coord=args.x_coord, y_coord=args.y_coord, length=args.length,
+             varna=args.varna, fold=args.fold)
+
+    return 0
 
 
 if __name__ == "__main__":

@@ -99,7 +99,7 @@ Legend: `[ ]` todo · `[x]` done · `[~]` already Python (adopt/verify only) ·
 *Top orchestrators — last:*
 - [ ] 38. `hyb2_app` — needs `hyb2_coverage`
 - [x] 39. `hyb2_compare` — needs `hyb2`, `hyb2_app`, `hyb2_coverage`, `hyb2_fold`, #35
-- [ ] 40. `hyb2` — the mega-orchestrator, **dead last**
+- [x] 40. `hyb2` — the mega-orchestrator, **dead last**
 
 ## PRUNE — confirm with Grzegorz, then delete (do NOT port)
 
