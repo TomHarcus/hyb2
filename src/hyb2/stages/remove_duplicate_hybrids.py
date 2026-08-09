@@ -8,7 +8,6 @@ higher- then lower-ranked bit in the reference; else keep the first seen.
 Uses the shared Hybrid data class (models.Hybrid), the one cross-file
 dependency in the Tier 1 set.
 
-Parity: fixtures/sam_composition_run/test.ua.hyb
 """
 
 import sys

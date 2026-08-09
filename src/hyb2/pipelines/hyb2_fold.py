@@ -24,6 +24,8 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         VARNA = varna_jar()
 
     fasta_1 = FASTA_1
+
+    # no fast_2 in legacy 
     fasta_2 = None
 
     try:
@@ -119,6 +121,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[6]) >= X1 and int(c[7]) <= X2
                     and int(c[12]) >= X1 and int(c[13]) <= X2):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -139,6 +142,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[7]) <= X2 and re.search(GENE_2, c[9]) 
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -155,6 +159,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[13]) <= X2 and re.search(GENE_2, c[3]) 
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[9], c[4], c[5],
                         str(int(c[6]) - y_coord + length + 101),
@@ -180,6 +185,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[6]) >= X1 and int(c[7]) <= X2
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -196,6 +202,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[12]) >= X1 and int(c[13]) <= X2
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - y_coord + length + 101),
@@ -216,6 +223,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2
                     and int(c[15]) >=5):
 
+                    # plain string 12 follows legacy script
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -228,6 +236,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
 
                     fout.write("\t".join(out) + "\n")
 
+                # plain string 12 follows legacy script
                 if (int(c[12]) >= X1 and int(c[13]) <= X2
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2
                     and int(c[15]) >=5):
@@ -285,6 +294,7 @@ def _fragment(fasta, gene, start, length):
 
 def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_2):
 
+    # seperate the two regions
     padding = "A"*50 + "T"*50
 
     name, seqX = _fragment(fasta, GENE_1, X1, length)

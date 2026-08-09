@@ -15,6 +15,7 @@ def bowtie2_map(in_file, db, out):
 
     suffix = in_file.split(".")
 
+    # check if in_file is a .fasta file
     if suffix[-1] == "fasta":
 
         if not Path(db.replace("fasta", "tab", 1)).is_file():
@@ -27,6 +28,7 @@ def bowtie2_map(in_file, db, out):
         
         print("Mapping concluded")
 
+    # check if in_file is a .fastq.gz file
     elif suffix[-2] == "fastq" and suffix[-1] == "gz":
 
         if not Path(db.replace("fasta", "tab", 1)).is_file():
@@ -48,6 +50,7 @@ def bowtie2_map(in_file, db, out):
 
         print("Mapping concluded")
 
+    # check if in_file is a .fastq file
     elif suffix[-1] == "fastq":
         if not Path(db.replace("fasta", "tab", 1)).is_file():
             print("Making database...")
@@ -69,7 +72,7 @@ def bowtie2_map(in_file, db, out):
     else:
         raise ValueError(f"unsupported input format: {in_file}")
 
-
+# run bowtie2
 def _bowtie2(db, out, reads):
     with open(f"{out}.sam", "w") as sam, open(f"{out}.blast.err", "w") as err:
             

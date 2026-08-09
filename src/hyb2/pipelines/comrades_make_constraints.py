@@ -102,6 +102,7 @@ def _fold_vienna(bit1, bit2, ct, vienna_bin):
     with open(bit1) as f1, open(bit2) as f2:
         pasted = "".join(a.rstrip("\n") + "&" + b2 for a, b2 in zip(f1, f2))
 
+        # run vienna cofold
         cofold = subprocess.run([b + "RNAcofold", "--noconv", "--noPS"],
                                 input=pasted, capture_output=True, text=True,
                                 check=True).stdout
@@ -117,6 +118,8 @@ def _fold_vienna(bit1, bit2, ct, vienna_bin):
             fout.write(ctdata)
 
 def _fold_unafold(bit1, bit2, ct):
+
+    # run unafold
     subprocess.run(["hybrid-min", bit1, bit2],
                    capture_output=True, text=True, check=True,
                    env={**os.environ, "UNAFOLDDAT": str(config.UNAFOLD_DIR)})

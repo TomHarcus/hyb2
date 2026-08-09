@@ -1,7 +1,7 @@
 """Shared data structures for the HYB2 port.
 
 NOTE: this is a deliberate exception to the "one module per bin/ script" rule
-that governs stages/ -- Hybrid_long.pm is a data class used across several
+that governs stages/ - Hybrid_long.pm is a data class used across several
 stages (remove_duplicate_hybrids now, combine_hyb_merge later), not a pipeline
 transform, so it lives here rather than in stages/.
 

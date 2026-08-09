@@ -1,11 +1,6 @@
 """Adopt bin/sam2blast_3 
 
-bin/sam2blast_3 is already Python 3 -- this is an ADOPT, not a translation:
-move its logic here (SAM -> blast, with the mapped-sequence column and the
-bit-score / e-value computation), add the iterable/main shape used by the other
-stages, and keep byte-parity with the current script.
-
-Parity: fixtures/sam_composition_run/test.blast
+bin/sam2blast_3 is already Python 3 - this is an ADOPT, not a translation
 
 Original script already written in Python, just some shape changes
 """

@@ -8,8 +8,7 @@ is buggy: it (a) emits a malformed 4-field first row from its FNR==1 branch, and
 times yields k-1 rows of pairwise-consecutive minima (with non-min values) instead
 of one true minimum. Both feed garbage into similarity_heatmap.R. Instead take the
 clean global minimum count per (x,y) key, one row each.
-NOTE: changes results vs legacy -> needs Greg's sign-off + a re-baselined golden;
-diffing this against the legacy chain won't match.
+NOTE: changes results vs legacy -> diffing this against the legacy chain won't match.
 """
 
 def similarity_contact(merged_lines):

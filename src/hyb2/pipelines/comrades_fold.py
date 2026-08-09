@@ -24,8 +24,9 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     """
 
     if fold is None:
-            fold = "vienna"
-    
+            fold = "cplfold"
+
+    # input fold mapping to preserve legacy inputs: 0 and 1
     fold = {1: "vienna", "1": "vienna", 0: "unafold", "0": "unafold"}.get(fold, fold)
 
     shuffled_constraints = f"{in_constraints}.shuf"
@@ -35,7 +36,6 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
 
     print("Welcome to comradesFold2\n")
     print(f"Input fasta file: {in_fasta}")
-
 
     if fold == "cplfold":
         if begin is None or end is None:
@@ -119,6 +119,7 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
     with open(in_fasta) as fin:
         fasta_text = fin.read()
 
+    # call RNAfolder
     fold = subprocess.run(
         [b + "RNAfold", "--noconv", "--noPS", f"--commands={constraints_file}"],
         input=fasta_text, capture_output=True, text=True
@@ -160,6 +161,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
 
     matrix = None
 
+    # construct cplfold support matrix
     if basepair_scores is not None:
         matrix = np.zeros((n, n))
 
@@ -176,12 +178,14 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
 
                 if not (begin <= i <= end and begin <= j <= end):
                     continue
-                
+
+                # normalize or raw matrix
                 v = np.log1p(count) if normalize == "log" else count
 
                 matrix[i-begin, j-begin] = v
                 matrix[j-begin, i-begin] = v
 
+    # call cplfold
     results = two_phase_pseudoknot_fold(
         seq,
         bonus_matrix=matrix,
@@ -233,6 +237,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
 
 def _fold_unafold(in_fasta, ct_output, vienna_output):
 
+    # call unafold
     subprocess.run(
         ["hybrid-ss-min", "-c", in_fasta],
         capture_output=True, text=True, check=True,

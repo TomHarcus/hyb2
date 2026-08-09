@@ -24,6 +24,7 @@ def add_sequences_to_hyb(tab_file: str, hyb_file: str) -> str:
 
         if read_id in seq_lookup:
             columns[1] = seq_lookup[read_id]
+            # trailing tab before the new line, same behaviour as the legacy awk
             out.append("\t".join(columns) + "\t")
 
     return "\n".join(out) + "\n"

@@ -104,6 +104,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         db = db.replace(".fasta", ".hyb.fasta", 1)
         Path(db).write_text(formatted)
 
+    # split to determine what file type
     ext = in_file.split(".")
     mappable = ext[-1] in ("fasta", "fastq") or ext[-2:] == ["fastq", "gz"]
     hyb_path = f"{out}.hyb"

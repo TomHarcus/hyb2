@@ -1,4 +1,4 @@
-"""Port of bin/get_mtop_hybrids.pl -- the core chimera caller.
+"""Port of bin/get_mtop_hybrids.pl - the core chimera caller.
 
 Reads a .blast (raw, NOT collapsed), groups by read ID, applies MODE / overlap
 / e-value cutoffs, and emits .hyb records for reads with >1 valid bit. Self-
@@ -8,7 +8,6 @@ Legacy FOO=bar switches become keyword args with the same defaults. Note the
 sam_composition pipeline overrides these to blast_threshold=0.1, mode=2,
 max_overlap=4, max_hits=10.
 
-Parity: fixtures/sam_composition_run/test.hyb
 """
 
 import re
@@ -57,7 +56,12 @@ def get_mtop_hybrids(
         
         if int(fld[8]) > int(fld[9]) and mode in (2, 3):
             continue
-
+        # Faithful quirk: this push happens before the overlap
+        # e-value filters below, so a line can land in arr even
+        # though a later filter continues it. Combined with the second push at the 
+        # != curr_blast_threshold branch below, a strictly improving e-value gets
+        # appended twice. Both reproduced deliberately - they change which chimera
+        # pairs get emitted
         if float(fld[10]) <= curr_blast_threshold:
             arr.append(line)
 

@@ -5,8 +5,6 @@ twice by the sam_composition pipeline (gene-pair counts, single-read top-hit
 counts) and again in Tier 2. The Perl uses only core/CPAN modules
 (List::Util, etc.) -> Python builtins; no project-file dependencies.
 
-Parity: fixtures/sam_composition_run/test.ua.hyb_stats_by_gene.txt
-        fixtures/sam_composition_run/test_tophit_by_gene.txt
 """
 
 import sys
@@ -17,7 +15,7 @@ def histogram(lines: Iterable[str]) -> Iterator[str]:
     """Count identical input lines and yield '<key>\\t<count>' rows, ordered by
     count descending.
 
-    Only histogram.pl's default (no-flag) mode is ported -- every HYB2 call site
+    Only histogram.pl's default (no-flag) mode is ported - every HYB2 call site
     invokes it bare. The --numeric/--step/--noise/--tail/--percentual/
     --include-zero options are intentionally omitted (unused dead code).
 

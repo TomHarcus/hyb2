@@ -14,7 +14,7 @@ def filter_homopolymers(text: str) -> str:
     filter_length = 15
 
     for line in text.splitlines():
-        # regex to filter consecutive sequences
+        # regex to filter consecutive sequence runs of A/C/G/T (upper or lower case not mixed) not U
         match = re.search(rf'([AGCTagct])\1{{{filter_length-1}}}', line)
         if match:
             continue

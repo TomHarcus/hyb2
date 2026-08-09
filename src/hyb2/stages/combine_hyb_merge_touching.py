@@ -2,11 +2,11 @@
 
 NOTE on main(): the legacy Perl's FOO=bar switch-parsing line (the one every
 other ported script uses to read EXP/TARGET/GUIDE/etc. from argv) is commented
-out in combine_hyb_merge_touching.pl -- verified directly, not assumed. So in
+out in combine_hyb_merge_touching.pl - verified directly, not assumed. So in
 the actual legacy script today, TARGET/GUIDE/TWO_WAY_MERGE/PRINT_SEQ_IDS can
 never be set from the command line; they're permanently stuck at their
 defaults. main() below re-enables that switch parsing anyway, since the
-underlying function already cleanly supports it via kwargs -- this is a
+underlying function already cleanly supports it via kwargs - this is a
 deliberate, documented enhancement over current legacy behaviour, not a
 translation of something the Perl actually does today.
 """

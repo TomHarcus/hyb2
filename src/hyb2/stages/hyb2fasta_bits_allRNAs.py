@@ -1,13 +1,13 @@
 """ Port of hyb2fasta_bits_allRNAs.awk
 
-Inputs a .tab file with reference sequences and a .hyb file (order matters --
+Inputs a .tab file with reference sequences and a .hyb file (order matters -
 tab first, hyb second, matching the legacy awk's NR==FNR file-1/file-2 idiom).
 Outputs two paired FASTA files: bit_1.fasta (every chimera's first arm) and
 bit_2.fasta (every chimera's second arm), record N in one corresponding to
 record N in the other.
 
 Output filenames are derived from the .hyb path's basename (before its
-extension), same as the legacy script -- that naming lives in main(), not in
+extension), same as the legacy script - that naming lives in main(), not in
 the generator itself, since the generator only needs iterables of lines.
 """
 

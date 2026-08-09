@@ -93,7 +93,8 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     # chain; see stages/similarity.py for why (needs Greg's sign-off + re-baseline).
     out_rows = similarity_contact(open(f"{out}.merge.txt").read().splitlines())
 
-    Path(f"{out}.contact.txt").write_text("\n".join(out_rows) + "\n")
+    # prepends header to top of file
+    Path(f"{out}.contact.txt").write_text("x\ty\tcount\n" + "\n".join(out_rows) + "\n")
 
     subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
                     f"{out}.contact.txt", str(LIMIT)], check=True)

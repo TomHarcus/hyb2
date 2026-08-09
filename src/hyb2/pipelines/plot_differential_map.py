@@ -47,7 +47,7 @@ def plot_differential_map(a1, a2, a3, a4, b1, b2, b3, b4, minimum=2, range=100, 
 
     # NOTE (deviation): _differential_map calls differential_coverage_map.R with
     # (heatmap, out); the legacy plot_differential_map passed (heatmap, A1, B1). Same
-    # deviation carried by hyb2_compare -- parameterize the helper's trailing args if
+    # deviation carried by hyb2_compare - parameterize the helper's trailing args if
     # byte-parity with the legacy R call matters.
     _differential_map(out, minimum, range, limit, names)
 
