@@ -8,10 +8,16 @@ version = "0.1.0"
 description = "Python port of the HYB2 RNA proximity-ligation pipeline"
 requires-python = ">=3.10"
 readme = "README.md"
-dependencies = []
+dependencies = [
+    "numpy",    # cplfold backend (the default): bonus-matrix construction in comrades_fold
+    "pandas",   # hyb2_compare: DESeq_interaction_split_select
+]
 
 [project.optional-dependencies]
 dev = ["pytest"]
+# The cplfold backend additionally needs a local CPLfold clone + a per-machine
+# HotKnots build (not pip-installable -- see README_python_port.md section 2).
+cplfold = ["numba", "scipy"]
 
 # Not wired into PATH as `hyb2` yet -- the legacy bin/hyb2 Bash orchestrator
 # stays authoritative until every stage it calls has been ported and

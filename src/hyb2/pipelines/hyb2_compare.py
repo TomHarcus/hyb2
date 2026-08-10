@@ -75,7 +75,7 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
         f.write("\n".join(body) + "\n")
 
     names_table = "\n".join(
-        f"{y.replace(".contact.txt", "")}\t{z}".replace("-", "_")
+        f"{y.replace('.contact.txt', '')}\t{z}".replace("-", "_")
         for (x, y, z) in rows
     ) + "\n"
 

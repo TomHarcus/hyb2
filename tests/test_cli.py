@@ -15,4 +15,4 @@ def test_parses_legacy_flags():
     assert args.gene_1 == "Zika_virusRNA"
     assert args.x_coord == 1001
     assert args.length == 500
-    assert args.fold == "vienna"  # default until couplefold is integrated (Phase 3)
+    assert args.fold == "cplfold"  # default until couplefold is integrated (Phase 3)
