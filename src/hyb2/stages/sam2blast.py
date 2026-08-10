@@ -10,13 +10,15 @@ from typing import Iterable, Iterator
 import re
 from math import exp, log
 
+_CIGAR_RE = re.compile(r'(\d+)(\D)')
+
 
 def sam2blast(lines: Iterable[str]) -> Iterator[str]:
     dblen = 0
     for line in lines:
-        li = line.strip()
-        if not li.startswith("@"):
-            arr = li.split()
+        #li = line.strip()
+        if not line.startswith("@"):
+            arr = line.split()
             if (int(arr[1]) in [0,256]):
                 yield print_line(arr, 'f', dblen)
             elif (int(arr[1]) in [16,272]):
@@ -25,41 +27,51 @@ def sam2blast(lines: Iterable[str]) -> Iterator[str]:
                 pass
             else:
                 raise Exception("unknown flag %s" % arr[1])
-        elif li.startswith("@SQ"):
-            dblen += int(li.split("LN:")[1])
+        elif line.startswith("@SQ"):
+            dblen += int(line.split("LN:")[1])
 
 def print_line(arr, flag, dblen):
+    """
     cigar, mismatches, gaps, identity = [], 0, 0, 0
     cigar_num = re.findall(r'\d+',arr[5])
     cigar_op = re.findall(r'\D',arr[5])
     ref_len = 0
-    for i in range(len(cigar_op)):
-        if cigar_op[i] == "M":
-            [cigar.append(1) for j in range(int(cigar_num[i]))]
-            ref_len += int(cigar_num[i])
-        elif cigar_op[i] == "I":
-            [cigar.append(1) for j in range(int(cigar_num[i]))]
+    """
+    ref_len = read_len = gaps = 0
+    lead_clip = trail_clip = 0
+    started = False
+
+    
+    # instead of building an array of all bases to find where alignment starts and ends
+    # just use running counters in a single pass
+    for num, op in _CIGAR_RE.findall(arr[5]):
+        n = int(num)
+        if op == "M":
+            ref_len += n
+            read_len += n
+            started = True
+            trail_clip = 0
+        elif op == "I":
+            read_len += n
             gaps += 1
-        elif cigar_op[i] == "S":
-            [cigar.append(0) for j in range(int(cigar_num[i]))]
-        elif cigar_op[i] == "H":
-            [cigar.append(0) for j in range(int(cigar_num[i]))]
-        elif cigar_op[i] == "D":
-            ref_len += int(cigar_num[i])
+            started = True
+            trail_clip = 0
+        elif op == "D":
+            ref_len += n
             gaps += 1
+        elif op == "S" or op == "H":
+            read_len += n
+            if not started:
+                lead_clip += n
+            trail_clip += n
         else:
-            raise Exception("unknown cigar operator %s" % cigar_op[i])
-    align_start, align_end = 0, len(cigar)
-    len_read = len(cigar)
-    for x in cigar:
-        if x == 1:
-            break
-        align_start += 1
-    for x in reversed(cigar):
-        if x == 1:
-            break
-        align_end -= 1
+            raise Exception("unknown cigar operator %s" % op)
+    align_start = lead_clip
+    align_end = read_len - trail_clip
+    len_read = read_len
     len_align = align_end - align_start
+
+
     ref_start = int(arr[3])
     if (flag == 'f'):
         ref_end = ref_start + ref_len -1
@@ -67,12 +79,22 @@ def print_line(arr, flag, dblen):
         ref_end = ref_start
         ref_start = ref_start + ref_len -1
         align_start, align_end = len_read - align_end, len_read - align_start
-    mismatches = int([x for x in arr if x.startswith("NM:i:")]
-                             [0].split("NM:i:")[1])
+
+    # Takes the first NM/AS tag, not the last using the (is None guards)
+    # matches legacy behaviour as without the guards it takes the last occurrence
+    mismatches = align_score = None
+    for x in arr[11:]:
+        if mismatches is None and x.startswith("NM:i:"):
+            mismatches = int(x[5:])
+        elif align_score is None and x.startswith("AS:i:"):
+            align_score = int(x[5:])
+        if align_score is not None and mismatches is not None:
+            break
+
     identity = ((abs(align_end - align_start) - mismatches )/ 
                        float(len_align) ) * 100
-    align_score = int(re.split(r'AS:i:',
-                      [x for x in arr if re.search(r'^AS:i:', x)][0])[1])
+
+
     #ungapped l, k, h, n, m = 1.33, 0.621, 1.12, dblen, len_read
     l, k, h, n, m = 1.28, 0.46, 0.85, dblen, len_read
     np = n-log(k*n*m)/h
