@@ -23,7 +23,7 @@ import sys
 
 from hyb2.stages.sam2blast import sam2blast
 from hyb2.stages.collapse_blast import collapse_blast
-from hyb2.stages.mtophits_blast import deduplicate_by_second_fragement_start
+from hyb2.stages.mtophits_blast import deduplicate_by_second_fragment_start_lines
 from hyb2.stages.create_reference_file import create_reference
 from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
 from hyb2.stages.remove_duplicate_hybrids import remove_duplicate_hybrids
@@ -57,11 +57,8 @@ def run(
         fout.writelines(collapse_blast(fin))
 
     mtophits = out + "_mtophits.blast"
-    with open(collapse) as f:
-        text = deduplicate_by_second_fragement_start(f.read())
-
-    with open(mtophits, "w") as fout:
-        fout.write(text)
+    with open(collapse) as fin, open(mtophits, "w") as fout:
+        fout.writelines(deduplicate_by_second_fragment_start_lines(fin))
 
     ref = out + "_mtophits.ref"
     with open(mtophits) as fin, open(ref, "w") as fout:

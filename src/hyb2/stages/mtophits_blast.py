@@ -15,12 +15,11 @@ variable, so an intervening different-ID row overwrites it. A later row
 that would otherwise match its own ID's first e-value gets dropped.
 """
 
-def deduplicate_by_second_fragement_start(text: str) -> str:
+def deduplicate_by_second_fragment_start_lines(lines):
     counts: dict[str, int] = {}
     current_value = None
-    out: list[str] = []
 
-    for line in text.splitlines():
+    for line in lines:
         columns = line.split("\t")
         read_id = columns[0]
         second_fragment = columns[10]
@@ -29,11 +28,12 @@ def deduplicate_by_second_fragement_start(text: str) -> str:
 
         if counts[read_id] == 1:
             current_value = second_fragment
-            out.append(line)
+            yield line
         elif second_fragment == current_value:
-            out.append(line)
+            yield line
 
-    return "\n".join(out) + "\n"
+def deduplicate_by_second_fragement_start(text: str) -> str:
+    return "\n".join(deduplicate_by_second_fragment_start_lines(text.splitlines())) + "\n"
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
