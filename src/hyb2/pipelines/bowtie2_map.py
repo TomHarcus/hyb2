@@ -4,8 +4,8 @@
 
 from hyb2.stages.make_hyb_db_2 import make_hyb_db_2
 from hyb2.stages.make_comp_fasta import make_comp_fasta
-from hyb2.stages.solexa2fasta import solexa_to_fasta
-from hyb2.stages.fasta2tab import fasta_to_tab
+from hyb2.stages.solexa2fasta import solexa_to_fasta_lines
+from hyb2.stages.fasta2tab import fasta_to_tab_lines
 
 import subprocess, gzip
 
@@ -29,20 +29,21 @@ def bowtie2_map(in_file, db, out):
         print("Mapping concluded")
 
     # check if in_file is a .fastq.gz file
+    # uses generators + streaming so that when reading large input file ram limit doesnt shoot up
     elif suffix[-2] == "fastq" and suffix[-1] == "gz":
 
         if not Path(db.replace("fasta", "tab", 1)).is_file():
             print("Making database...")
             make_hyb_db_2(db)
 
-        unzipped_in_file = gzip.open(in_file, "rt").read()
-
-        fasta = solexa_to_fasta(unzipped_in_file)
-        tab = fasta_to_tab(fasta)
-        comp = make_comp_fasta(tab.splitlines())
-
         comp_path = f"{out}_comp.fasta"
-        Path(comp_path).write_text(comp)
+
+        with gzip.open(in_file, "rt") as fin:
+            fasta = solexa_to_fasta_lines(fin)
+            tab = fasta_to_tab_lines(fasta)
+            comp = make_comp_fasta(tab)
+            Path(comp_path).write_text(comp)
+
 
         print("Bowtie2 mapping...")
 
@@ -51,17 +52,19 @@ def bowtie2_map(in_file, db, out):
         print("Mapping concluded")
 
     # check if in_file is a .fastq file
+    # uses generators + streaming so that when reading large input file ram limit doesnt shoot up
     elif suffix[-1] == "fastq":
         if not Path(db.replace("fasta", "tab", 1)).is_file():
             print("Making database...")
             make_hyb_db_2(db)
 
-        fasta = solexa_to_fasta(open(in_file).read())
-        tab = fasta_to_tab(fasta)
-        comp = make_comp_fasta(tab.splitlines())
-
         comp_path = f"{out}_comp.fasta"
-        Path(comp_path).write_text(comp)
+
+        with open(in_file) as fin:
+            fasta = solexa_to_fasta_lines(fin)
+            tab = fasta_to_tab_lines(fasta)
+            comp = make_comp_fasta(tab)
+            Path(comp_path).write_text(comp)
 
         print("Bowtie2 mapping...")
 

@@ -7,20 +7,19 @@ Converts fastq file to fasta file
 
 import sys
 
-def solexa_to_fasta(text: str) -> str:
-    lines = text.splitlines()
-    out: list[str] = []
-    i = 0
+def solexa_to_fasta_lines(lines):
+    it = iter(lines)
+    for line in it:
+        line = line.rstrip("\n")
+        if line.startswith("@"):
+            seq = next(it).rstrip("\n")
+            yield ">@" + line[1:]
+            yield seq
+            next(it, None)
+            next(it, None)
 
-    while i < len(lines):
-        if lines[i].startswith("@"):
-            # possible bug in solexa2fasta.awk where it keeps the @ symbol
-            out.append(">@" + lines[i][1:])
-            out.append(lines[i+1])
-            i += 4
-        else:
-            i += 1
-    return "\n".join(out) + "\n"
+def solexa_to_fasta(text: str) -> str:
+    return "\n".join(solexa_to_fasta_lines(text.splitlines())) + "\n"
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv

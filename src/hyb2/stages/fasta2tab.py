@@ -8,20 +8,25 @@ per line
 import sys
 
 
-def fasta_to_tab(text: str) -> str:
-    out: list[str] = []
-    first_record = True
-    for line in text.splitlines():
+def fasta_to_tab_lines(lines):
+    header, seq = None, []
+
+    for line in lines:
+        line = line.rstrip("\n")
         if line.startswith("#") or line == "":
             continue
         if line.startswith(">"):
-            header = line[1:]
-            out.append(f"{header}\t" if first_record else f"\n{header}\t")
-            first_record = False
+            if header is not None:
+                yield header + "\t" + "".join(seq)
+            header, seq = line[1:], []
         else:
-            out.append(line)
-    out.append("\n")
-    return "".join(out)
+            seq.append(line)
+
+    if header is not None:
+        yield header + "\t" + "".join(seq)
+
+def fasta_to_tab(text: str) -> str:
+    return "\n".join(fasta_to_tab_lines(text.splitlines())) + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:
