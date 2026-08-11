@@ -27,6 +27,17 @@ def print_help():
     print("\t-e calculate folding energy: 1 to calculate, 0 to skip and save on runtime (default=0)")
     print("\t-r folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
 
+    # folding parameters
+    print("\t-0 interactive mode for VARNA pop-up: 0 to disable, 1 to activate (default=0)")
+    print("\t--alpha cplfold bonus weight (default=0.5)")
+    print("\t--beta cplfold bonus weight (default=0.0)")
+    print("\t--normalize cplfold bonus normalization either 'raw' or 'log' (default='log')")
+    print("\t--beam-size cplfold beam size (default=100)")
+    print("\t--energy-delta cplfold energy delta (default=5.0)")
+    print("\t--max-phase1 cplfold max phase 1 (default=10)")
+    print("\t--max-phase2 cplfold max phase 2 (default=5)")
+    print("\t--energy-model cplfold energy model: 'DP09', 'DP03', 'CC06', 'CC09', 'RE' (default='DP09')")
+
     print("")
 
     print("To only plot contact density map after generating hyb output:")
@@ -88,11 +99,16 @@ from hyb2.pipelines import sam_composition
 from hyb2.pipelines.hyb2_coverage import hyb2_coverage
 from hyb2.pipelines.plot_viewpoint import plot_viewpoint
 from hyb2.pipelines import hyb2_fold
+from hyb2.config import CPL_DEFAULTS
 
 
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
-        gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold):
+        gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
+        interactive=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
+        normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
+        energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
+        max_phase2=CPL_DEFAULTS["max_phase2"], energy_model="energy_model"):
 
     """
     Step 1: 
@@ -182,19 +198,28 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
 
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=None, length=length,
-              VARNA=varna, interactive=0, FOLD=fold)
+              VARNA=varna, interactive=interactive, FOLD=fold,
+              alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
+              energy_delta=energy_delta, max_phase1=max_phase1,
+              max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and not gene_2 and y_coord:
 
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
-              VARNA=varna, interactive=0, FOLD=fold)
+              VARNA=varna, interactive=interactive, FOLD=fold,
+              alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
+              energy_delta=energy_delta, max_phase1=max_phase1,
+              max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and gene_2 and y_coord:
 
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=gene_2, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
-              VARNA=varna, interactive=0, FOLD=fold)
+              VARNA=varna, interactive=interactive, FOLD=fold,
+              alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
+              energy_delta=energy_delta, max_phase1=max_phase1,
+              max_phase2=max_phase2, energy_model=energy_model)
 
     else:
         print("No options specified to generate secondary structure", file=sys.stderr)

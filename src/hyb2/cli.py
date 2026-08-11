@@ -2,11 +2,15 @@
 
 Flags here mirror bin/hyb2's getopts string ("i:d:o:v:m:h:a:b:q:x:y:l:j:e:r:")
 
++ the hy2_fold args specifically cplfold customisation
+
 """
 
 
 import argparse
 import sys
+
+from hyb2.config import CPL_DEFAULTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,18 +37,29 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("-l", dest="length", type=int, help="Length of fragments")
     parser.add_argument("-j", dest="varna", metavar="VARNAcmd.jar", help="Path to VARNAcmd.jar")
     parser.add_argument(
-        "-e",
+        "-e", # for the add_dG_hyb2_2 port
         dest="energy",
         type=int,
         default=0,
         help="Calculate folding energy: 1 on, 0 off (default=0)",
-    )
+    ) 
+    
     parser.add_argument(
         "-r",
         dest="fold",
         default="cplfold",
         choices=["cplfold", "vienna", "unafold", "0", "1"]
     )
+    parser.add_argument("-0", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
+    parser.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
+    parser.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
+    parser.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
+    parser.add_argument("--beam-size", dest="beam_size", type=int, default=CPL_DEFAULTS["beam_size"], help="cplfold beam size")
+    parser.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
+    parser.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
+    parser.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
+    parser.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
+
     return parser
 
 
@@ -59,7 +74,12 @@ def main(argv: list[str] | None = None) -> int:
              hmax=args.hmax, blast_threshold=args.hval, max_overlap=args.gmax,
              gene_1=args.gene_1, gene_2=args.gene_2, limit=args.limit,
              x_coord=args.x_coord, y_coord=args.y_coord, length=args.length,
-             varna=args.varna, fold=args.fold)
+             varna=args.varna, fold=args.fold,
+             interactive=(args.interactive == "1"),
+             alpha=args.alpha, beta=args.beta, normalize=args.normalize,
+             beam_size=args.beam_size, energy_delta=args.energy_delta,
+             max_phase1=args.max_phase1, max_phase2=args.max_phase2,
+             energy_model=args.energy_model)
 
     return 0
 
