@@ -16,7 +16,7 @@ max_overlap:      4                  # -m
 max_hits:         10                 # -h
 
 x_start:          3900               # -x  fold/zoom region start
-# y_start:         5001           # -y  2nd fragment start (long-range / 2-gene modes)
+# y_start:         5001              # -y  2nd fragment start (long-range / 2-gene modes)
 
 length:           300                # -l
 fold_backend:     cplfold            # -r  cplfold | vienna | unafold
