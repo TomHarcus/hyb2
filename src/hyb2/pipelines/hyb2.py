@@ -204,7 +204,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     """
 
     if x_coord and length and not gene_2 and not y_coord:
-        steps.start(f"Folding {gene_1}")
+        steps.start(f"Folding {gene_1} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=None, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,
@@ -213,7 +213,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and not gene_2 and y_coord:
-        steps.start(f"Folding {gene_1}")
+        steps.start(f"Folding {gene_1} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,
@@ -222,7 +222,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and gene_2 and y_coord:
-        steps.start(f"Folding {gene_1} with {gene_2}")
+        steps.start(f"Folding {gene_1} with {gene_2} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=gene_2, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,
