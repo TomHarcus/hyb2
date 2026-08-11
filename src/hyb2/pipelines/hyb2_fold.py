@@ -415,17 +415,18 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     p.add_argument("--help", action="help", help="Show this help message and exit")
-    p.add_argument("-V", "--verbose", action="store_true", help="show detailed ouptut")
-    p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
-    p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1", help="gene of interest / first strand (required)")
-    p.add_argument("-b", dest="gene_2", default=None, metavar="GENE_2", help="second gene (intermolecular folding)")
-    p.add_argument("-d", dest="fasta_1", required=True, metavar="REFERENCE.FASTA", help="reference FASTA (required)")
-    p.add_argument("-x", dest="x_coord", type=int, required=True, help="start coordinate of the first fragment")
-    p.add_argument("-y", dest="y_coord", type=int, default=None, help="start coordinate of the second fragment (long-range / homodimer / intermolecular)")
-    p.add_argument("-l", dest="length", type=int, required=True, help="fragment length")
-    p.add_argument("-j", dest="varna", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.varna_jar())")
-    p.add_argument("-0", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
-    p.add_argument("-r", dest="fold", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
+    p.add_argument("-V", "--verbose", action="store_true", help="show detailed output")
+    p.add_argument("--config", default=None, metavar="RUN.YML", help="YAML config of args, CLI flags override it")
+    p.add_argument("-i", "--input", dest="input", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
+    p.add_argument("-a", "--gene-1", dest="gene_1", required=True, metavar="GENE_1", help="gene of interest / first strand (required)")
+    p.add_argument("-b", "--gene-2", dest="gene_2", default=None, metavar="GENE_2", help="second gene (intermolecular folding)")
+    p.add_argument("-d", "--reference", dest="reference", required=True, metavar="REFERENCE.FASTA", help="reference FASTA (required)")
+    p.add_argument("-x", "--x-start", dest="x_start", type=int, required=True, help="start coordinate of the first fragment")
+    p.add_argument("-y", "--y-start", dest="y_start", type=int, default=None, help="start coordinate of the second fragment (long-range / homodimer / intermolecular)")
+    p.add_argument("-l", "--length", dest="length", type=int, required=True, help="fragment length")
+    p.add_argument("-j", "--varna-jar", dest="varna_jar", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.varna_jar())")
+    p.add_argument("-0", "--interactive", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
+    p.add_argument("-r", "--fold-backend", dest="fold_backend", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
     p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
     p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
@@ -438,20 +439,23 @@ def build_parser() -> argparse.ArgumentParser:
     return p
 
 from hyb2.logsetup import configure_logging
+from hyb2.configfile import parse_with_config
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+
+    args = parse_with_config(build_parser(), argv)
+
     configure_logging(args.verbose)
     run(
-        args.in_hyb,
+        args.input,
         args.gene_1,
         args.gene_2,
-        args.fasta_1,
-        args.x_coord,
-        args.y_coord,
+        args.reference,
+        args.x_start,
+        args.y_start,
         args.length,
-        args.varna,
+        args.varna_jar,
         args.interactive == "1",
-        args.fold,
+        args.fold_backend,
         alpha=args.alpha,
         beta=args.beta,
         normalize=args.normalize,
