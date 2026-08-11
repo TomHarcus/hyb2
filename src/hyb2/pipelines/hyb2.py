@@ -105,12 +105,18 @@ import logging
 
 log = logging.getLogger(__name__)
 
+from hyb2 import ui
+steps = ui.Steps()
+
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
         interactive=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
         max_phase2=CPL_DEFAULTS["max_phase2"], energy_model="energy_model"):
+
+    
+    steps.start("Processing input")
 
     """
     Step 1: 
@@ -153,11 +159,10 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     """
 
     if gene_1:
-
+        steps.start("Contact density maps")
         hyb2_coverage(hyb_path, gene_1, gene_2=None, limit=limit, x1=None, x2=None, y1=None, y2=None)
 
     if gene_2:
-
         hyb2_coverage(hyb_path, gene_1, gene_2, limit=limit, x1=None, x2=None, y1=None, y2=None)
     else:
         log.debug("To plot contact density map of second gene, add to command -b <gene_ID_2>")
@@ -186,9 +191,11 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     # Plot viewpoint graphs of selected genes
 
     if not gene_2:
+        steps.start("Viewpoint graph")
         plot_viewpoint(hyb_path, db, gene_1=gene_1, gene_2=None)
 
     else:
+        steps.start("Viewpoint graph")
         plot_viewpoint(hyb_path, db, gene_1=gene_1, gene_2=gene_2)
 
     """
@@ -197,7 +204,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     """
 
     if x_coord and length and not gene_2 and not y_coord:
-
+        steps.start(f"Folding {gene_1}")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=None, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,
@@ -206,7 +213,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and not gene_2 and y_coord:
-
+        steps.start(f"Folding {gene_1}")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,
@@ -215,7 +222,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               max_phase2=max_phase2, energy_model=energy_model)
 
     elif x_coord and length and gene_2 and y_coord:
-
+        steps.start(f"Folding {gene_1} with {gene_2}")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=gene_2, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
               VARNA=varna, interactive=interactive, FOLD=fold,

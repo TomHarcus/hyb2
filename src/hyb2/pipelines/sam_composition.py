@@ -28,6 +28,7 @@ from hyb2.stages.create_reference_file import create_reference
 from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
 from hyb2.stages.remove_duplicate_hybrids import remove_duplicate_hybrids
 from hyb2.stages.histogram import histogram
+from hyb2 import ui
 
 
 def run(
@@ -48,15 +49,15 @@ def run(
 
     blast = out + ".blast"
     with open(in_sam) as fin, open(blast, "w") as fout:
-        fout.writelines(sam2blast(fin))
+        fout.writelines(sam2blast(ui.progress(fin, in_sam, "sam2blast")))
 
     collapse = out + ".collapse.blast"
     with open(blast) as fin, open(collapse, "w") as fout:
-        fout.writelines(collapse_blast(fin))
+        fout.writelines(collapse_blast(ui.progress(fin, blast, "collapse")))
 
     mtophits = out + "_mtophits.blast"
     with open(collapse) as fin, open(mtophits, "w") as fout:
-        fout.writelines(deduplicate_by_second_fragment_start_lines(fin))
+        fout.writelines(deduplicate_by_second_fragment_start_lines(ui.progress(fin, collapse, "mtophits")))
 
     ref = out + "_mtophits.ref"
     with open(mtophits) as fin, open(ref, "w") as fout:

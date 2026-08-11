@@ -12,6 +12,7 @@ dependencies = [
     "numpy",    # cplfold backend (the default): bonus-matrix construction in comrades_fold
     "pandas",   # hyb2_compare: DESeq_interaction_split_select
     "pyyaml",   # for parsing args in yaml file
+    "tqdm",     # for progress bars
 ]
 
 [project.optional-dependencies]
