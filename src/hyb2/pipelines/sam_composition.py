@@ -43,8 +43,6 @@ def run(
 ) -> None:
     """Drive the pipeline. See module docstring for the three modes."""
 
-    print(f"input={in_sam} (whole file, no copy) h={hmax}", file=sys.stderr)
-
     if out is None:
         out = in_sam[:-4] if in_sam.endswith(".sam") else in_sam
 
@@ -91,8 +89,6 @@ def run(
     
     with open(in_sam) as fin, open(tophit, "w") as fout:
         fout.writelines(histogram(_single_reads(fin)))
-
-    print(f"Done. Outputs prefixed with: {out}", file=sys.stderr)
 
     """hyb2_composition_pies.py not needed ported"""
 

@@ -101,7 +101,9 @@ from hyb2.pipelines.plot_viewpoint import plot_viewpoint
 from hyb2.pipelines import hyb2_fold
 from hyb2.config import CPL_DEFAULTS
 
+import logging
 
+log = logging.getLogger(__name__)
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
@@ -128,22 +130,22 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     if ext[-1] == "hyb":
         out = in_file.replace(".hyb", "", 1)
         hyb_path = in_file
-        print("Hyb format as input detected")
+        log.info("Hyb format as input detected")
 
     elif not Path(hyb_path).is_file():
         if mappable:
             bowtie2_map(in_file, db, out)
-            print("SAM file generated")
+            log.info("SAM file generated")
             sam = f"{out}.sam"
 
         else:
             sam = in_file
 
         sam_composition.run(sam, out=out, hmax=hmax, blast_threshold=blast_threshold, max_overlap=max_overlap)
-        print("Hyb file generated")
+        log.info("Hyb file generated")
 
     else:
-        print("Hyb file exists. Next step.")
+        log.debug("Hyb file exists. Next step.")
 
     """
     Step 2:
@@ -158,7 +160,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
 
         hyb2_coverage(hyb_path, gene_1, gene_2, limit=limit, x1=None, x2=None, y1=None, y2=None)
     else:
-        print("To plot contact density map of second gene, add to command -b <gene_ID_2>", file=sys.stderr)
+        log.debug("To plot contact density map of second gene, add to command -b <gene_ID_2>")
 
 
     if not gene_2 and not y_coord and length:
@@ -179,7 +181,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         hyb2_coverage(hyb_path, gene_1, gene_2, limit=limit, x1=x_coord, x2=x_end, y1=y_coord, y2=y_end)
 
     else:
-        print("To plot zoomed-in contact density map, add to command: -x <x_coord> -y <y_coord> -l <length>", file=sys.stderr)
+        log.info("To plot zoomed-in contact density map, add to command: -x <x_coord> -y <y_coord> -l <length>")
 
     # Plot viewpoint graphs of selected genes
 
@@ -222,9 +224,9 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               max_phase2=max_phase2, energy_model=energy_model)
 
     else:
-        print("No options specified to generate secondary structure", file=sys.stderr)
+        log.info("No options specified to generate secondary structure")
 
-    print("Analysis completed")
-    print("To compare between different datasets and plot differential coverage map, similarity heatmap, and differential structures, use:")
-    print("hyb2_compare -i <input.table> -a <gene_ID> -d <fasta>")
-    print("For more details, run: hyb2_compare")
+    log.info("Analysis completed")
+    log.info("To compare between different datasets and plot differential coverage map, similarity heatmap, and differential structures, use:")
+    log.info("hyb2_compare -i <input.table> -a <gene_ID> -d <fasta>")
+    log.info("For more details, run: hyb2_compare")

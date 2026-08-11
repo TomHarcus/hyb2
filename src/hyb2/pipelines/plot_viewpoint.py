@@ -8,7 +8,12 @@ from hyb2.stages.hyb2blast import hyb2blast
 from hyb2.stages.blast2gplot import blast2gplot
 from hyb2 import config
 
+import logging
+
+
 def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
+
+    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
 
     # legacy DB_2 is unreachable: always == DB_1
 
@@ -53,6 +58,7 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
     subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
                     f"{stem}_{gene_1}.gplot"],
+                    stderr=subprocess.DEVNULL if quiet else None,
                     check=True)
 
     homodimers = in_hyb.replace(".hyb", "_homodimers.hyb")
@@ -77,6 +83,7 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
         subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
                         f"{stem}_homodimers_{gene_1}.gplot"],
+                        stderr=subprocess.DEVNULL if quiet else None,
                         check=True)
 
 
@@ -119,16 +126,19 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
         
         subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
                         f"{stem}_{gene_2}_{gene_1}.gplot"],
+                        stderr=subprocess.DEVNULL if quiet else None,
                         check=True)
 
         
         subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
                         f"{stem}_{gene_1}_{gene_2}.gplot"],
+                        stderr=subprocess.DEVNULL if quiet else None,
                         check=True)
         
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="plot-viewpoint", add_help=False)
     p.add_argument("--help", action="help", help="Show this help message and exit")
+    p.add_argument("-V", "--verbose", action="store_true", help="show detailed output")
     p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB")
     p.add_argument("-d", dest="db_1", required=True, metavar="REFERENCE.FASTA")
     p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1")
@@ -136,8 +146,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     return p
 
+from hyb2.logsetup import configure_logging
 def main(argv=None):
     a = build_parser().parse_args(argv)
+    configure_logging(a.verbose)
     plot_viewpoint(a.in_hyb, a.db_1, a.gene_1, a.gene_2)
     return 0
 

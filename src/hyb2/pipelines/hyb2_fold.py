@@ -9,6 +9,10 @@ import os, shutil, re, glob, math, argparse, sys
 
 from hyb2.config import varna_jar, CPL_DEFAULTS
 
+import logging
+
+log = logging.getLogger(__name__)
+
 def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, interactive, 
         FOLD, vienna_bin=None, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"], 
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
@@ -344,7 +348,7 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
 
     from hyb2.stages.bp_score import bp_score
 
-    print("Calculating basepair scores...")
+    log.debug("Calculating basepair scores...")
 
     with open(coords) as c:
         bp_score(c, bp_scores, in_hyb)
@@ -356,21 +360,19 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
                     key=lambda fn: sum(float(x) for x in open(fn) if x.strip()),
                     reverse=True)
 
-    print("Top scoring structures:")
-
-    for fn in ranked[:10]:
-        s = sum(float(x) for x in open(fn) if x.strip())
-        print(f"{fn}\t{s}")
     
     name = ranked[0]
     vname = name.split("__", 1)[1]
 
     vienna_top = vname.replace(".VARNA_scores.txt", ".vienna")
-    print(open(vienna_top).read(), end="")
-    print(f"Open {vienna_top} in VARNA for more customization options")
+
+    energy = open(vienna_top).read().rstrip().rsplit("(", 1)[-1].rstrip(")")
+    log.info(f"Folded structure: Delta G = {energy} kcal/mol")
+
+    log.debug(f"Open {vienna_top} in VARNA for more customization options")
 
     log2 = name.replace("_scores.txt", "_log2scores.txt")
-    print(f"Load {log2} as colour coding score in VARNA")
+    log.debug(f"Load {log2} as colour coding score in VARNA")
 
     # legacy: awk '{print log($1+1)/log(2)}' | sed 's/-inf/0/g;s/^-.*/0/g'
     # awk prints with OFMT = %.6g; sed zeroes -inf / negatives.
@@ -384,9 +386,9 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     from hyb2.pipelines.plot_VARNA import plot_VARNA
 
     if VARNA:
-        print("Plotting RNA secondary structure...")
+        log.debug("Plotting RNA secondary structure...")
     else:
-        print("Use option -j to plot RNA secondary structure")
+        log.debug("Use option -j to plot RNA secondary structure")
 
     plot_VARNA(ct_top, log2, VARNA, x_coord=x_coord, y_coord=y_coord,
                length=length, interactive=interactive)
@@ -394,14 +396,14 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     # legacy: [ -f ${IN_FILE/hyb/}${vname/.VARNA_scores.txt/_plot.svg} ] || interactive
     svg = in_hyb.replace("hyb", "", 1) + vname.replace(".VARNA_scores.txt", "_plot.svg")
     if os.path.isfile(svg) or interactive:
-        print("Plotting Concluded")
+        log.debug("Plotting Concluded")
     else:
-        print("Error! Something went wrong.")
+        log.debug("Error! Something went wrong.")
 
     folding_constraints = out_file.replace(".hyb", f".1-{span}_folding_constraints.txt")
-    print("Randomized parallel RNA folding to fold RNA 1000 times using computer cluster:")
-    print(f"qsub comradesFold2 -c {folding_constraints} -i {out_fasta} -s 1")
-    print(f"and assign scores to each basepair using: comradesScore -i {bp_scores} -f {out_fasta}")
+    log.debug("Randomized parallel RNA folding to fold RNA 1000 times using computer cluster:")
+    log.debug(f"qsub comradesFold2 -c {folding_constraints} -i {out_fasta} -s 1")
+    log.debug(f"and assign scores to each basepair using: comradesScore -i {bp_scores} -f {out_fasta}")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -413,6 +415,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     p.add_argument("--help", action="help", help="Show this help message and exit")
+    p.add_argument("-V", "--verbose", action="store_true", help="show detailed ouptut")
     p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
     p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1", help="gene of interest / first strand (required)")
     p.add_argument("-b", dest="gene_2", default=None, metavar="GENE_2", help="second gene (intermolecular folding)")
@@ -434,9 +437,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     return p
 
-
+from hyb2.logsetup import configure_logging
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    configure_logging(args.verbose)
     run(
         args.in_hyb,
         args.gene_1,

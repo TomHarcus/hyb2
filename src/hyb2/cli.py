@@ -10,6 +10,7 @@ Flags here mirror bin/hyb2's getopts string ("i:d:o:v:m:h:a:b:q:x:y:l:j:e:r:")
 import argparse
 import sys
 import yaml
+import logging
 
 from hyb2.config import CPL_DEFAULTS
 
@@ -24,6 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
     )
     parser.add_argument("--help", action="help", help="Show this help message and exit")
+    parser.add_argument("-V", "--verbose", action="store_true", help="show detailed stage output")
     parser.add_argument("--config", default=None, metavar="RUN.YML", help="YAML config of args, CLI flags override it")
     parser.add_argument("-i", "--input", dest="input", metavar="INPUT", help="Input fastq/SAM/hyb file")
     parser.add_argument("-d", "--reference", dest="reference", metavar="FASTA", help="Reference fasta used for mapping")
@@ -64,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     return parser
 
+from hyb2.logsetup import configure_logging
 
 def main(argv: list[str] | None = None) -> int:
 
@@ -75,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
 
     parser = build_parser()
 
+    # parse the yaml file if present
     if pre_args.config:
         with open(pre_args.config) as fh:
             cfg = yaml.safe_load(fh) or {}
@@ -87,6 +91,8 @@ def main(argv: list[str] | None = None) -> int:
         parser.set_defaults(**cfg)
 
     args = parser.parse_args(argv)
+
+    configure_logging(args.verbose)
 
     from hyb2.pipelines import hyb2
 

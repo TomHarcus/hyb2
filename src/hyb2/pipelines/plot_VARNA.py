@@ -14,6 +14,10 @@ import sys
 from hyb2.stages.svg_mod_coord import svg_mod_coord
 from hyb2 import config
 
+import logging
+
+log = logging.getLogger(__name__)
+
 def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interactive):
 
     if VARNA is None:
@@ -43,13 +47,14 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     ]
 
     if interactive:
-        subprocess.run(varna_cmd)
-        print("Modify base numbers: svg_mod_coord -i <svg> -x start_coord -y 2nd_strand_coord(only if it exists) -l length_of_fragment")
+        subprocess.run(varna_cmd, stdout=subprocess.DEVNULL if quit else None, stderr=subprocess.DEVNULL if quit else None)
+        log.info("Modify base numbers: svg_mod_coord -i <svg> -x start_coord -y 2nd_strand_coord(only if it exists) -l length_of_fragment")
         return None
     
     else:
         svg = in_file[:-3] + ".svg" if in_file.endswith(".ct") else in_file + ".svg"
-        subprocess.run(varna_cmd + ["-o", svg])
+        subprocess.run(varna_cmd + ["-o", svg],
+                       stdout=subprocess.DEVNULL if quit else None, stderr=subprocess.DEVNULL if quit else None)
 
         prefix = score.split("__")[0]
 

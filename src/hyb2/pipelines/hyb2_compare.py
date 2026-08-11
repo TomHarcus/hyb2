@@ -40,12 +40,17 @@ from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_tabl
 from hyb2.stages.DESeq_interaction_split_select import split_select
 from hyb2.stages.similarity import similarity_contact
 
+import logging
+
+
 def _num(s):
     try: return float(s)
     except ValueError: return 0.0
 
 def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FASTA, 
                  VARNA, FOLDING):
+
+    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
 
     rows = [tuple(l.split()) for l in open(input_table) if l.strip()] 
 
@@ -97,7 +102,7 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     Path(f"{out}.contact.txt").write_text("x\ty\tcount\n" + "\n".join(out_rows) + "\n")
 
     subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
-                    f"{out}.contact.txt", str(LIMIT)], check=True)
+                    f"{out}.contact.txt", str(LIMIT)], stderr=subprocess.DEVNULL if quiet else None, check=True)
 
     condition_one_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_one"]
     condition_two_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_two"]
@@ -123,6 +128,7 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
     subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
                     f"{out}.table.txt", f"{out}_names.table",
                     str(min_reads)],
+                    stderr=subprocess.DEVNULL if quiet else None,
                     check=True)
 
     deseq_output = []
@@ -169,6 +175,7 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
 
     subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
                     f"DESeq_{out}_significant.padj_heatmap.txt", out],
+                    stderr=subprocess.DEVNULL if quiet else None,
                     check=True)
 
     split_select(out, interaction_range)
@@ -200,6 +207,7 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
             subprocess.run(
                 ["Rscript", config.rscript("contact_density_map_zoom.R"),
                  c[0], c[1], c[2], c[3], str(LIMIT), *value],
+                 stderr=subprocess.DEVNULL if quiet else None,
                 check=True,
             )
 
@@ -242,7 +250,7 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
                 cmd += ["-y", str(y1 + 1), "-l", "300"]
             if VARNA:
                 cmd += ["-j", VARNA]
-            subprocess.run(cmd, check=True)
+            subprocess.run(cmd, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -253,6 +261,7 @@ def build_parser() -> argparse.ArgumentParser:
         add_help=False,
     )
     p.add_argument("--help", action="help", help="Show this help message and exit")
+    p.add_argument("-V", "--verbose", action="store_true", help="show detailed output")
     p.add_argument("-i", dest="input_table", required=True, metavar="INPUT.HYB", help="Input table You MANUALLY GENERATED")
     p.add_argument("-o", dest="out", required=True, help="out destination")
     p.add_argument("-m", dest="min_reads", type=int, default=2, help="DESeq2 chimera count filtering threshold (default=2)")
@@ -264,7 +273,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-0", dest="FOLDING", type=int, default=0, help="Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
     return p
 
-
+from hyb2.logsetup import configure_logging
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
 
@@ -273,6 +282,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     args = build_parser().parse_args(argv)
+
+    configure_logging(args.verbose)
+
     hyb2_compare(
         args.input_table, args.out, args.min_reads, args.interaction_range,
         args.LIMIT, args.GENE, args.FASTA, args.VARNA, args.FOLDING

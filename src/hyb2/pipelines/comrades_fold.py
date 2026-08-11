@@ -13,6 +13,10 @@ from pathlib import Path
 from hyb2.stages.ct2b_gk3 import ct2b_gk3
 from hyb2 import config
 
+import logging
+
+log = logging.getLogger(__name__)
+
 def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vienna",
         vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=config.CPL_DEFAULTS["alpha"],
         beta=config.CPL_DEFAULTS["beta"], normalize=config.CPL_DEFAULTS["normalize"], beam_size=config.CPL_DEFAULTS["beam_size"],
@@ -34,8 +38,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     ct_output = f"{in_fasta}.ct"
     vienna_output = f"{in_fasta}.vienna"
 
-    print("Welcome to comradesFold2\n")
-    print(f"Input fasta file: {in_fasta}")
+    log.debug(f"Input fasta file: {in_fasta}")
 
     if fold == "cplfold":
         if begin is None or end is None:
@@ -52,9 +55,9 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         
         return (vienna_output, ct_output)
 
-    print(f"Input constraints file: {in_constraints}")
-    print(f"Creating constraints file: {current_constraints}")
-    print(f"Creating shuffled constraints file: {shuffled_constraints}")
+    log.info(f"Input constraints file: {in_constraints}")
+    log.info(f"Creating constraints file: {current_constraints}")
+    log.info(f"Creating shuffled constraints file: {shuffled_constraints}")
 
     if current_constraints == in_constraints:
         raise ValueError("name your constraint file something else... Exiting")
@@ -157,7 +160,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
         n = len(seq)
 
         if n != end - begin + 1:
-                raise ValueError("wrong format")
+            raise ValueError("wrong format")
 
     matrix = None
 
