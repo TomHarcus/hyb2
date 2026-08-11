@@ -1,0 +1,33 @@
+# hyb2 run config
+# pass with: hyb2-py --config run.yml
+# CLI flags override anything set here for full flexibility
+
+input:            reads.sam          # -i  fastq / SAM / hyb
+reference:        ref.fasta          # -d  reference fasta
+output_id:        myrun              # -o  output prefix
+gene_1:           Zika_virusRNA      # -a  gene of interest
+# gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)
+# heatmap_quantile: 0.95          # -q  CDM contrast cap
+# interactive:     1              # -0  launch VARNA GUI (needs a display)
+# varna_jar:       /path/VARNAcmd.jar   # -j  (auto-resolved by default)
+
+blast_threshold:  0.1                # -v
+max_overlap:      4                  # -m
+max_hits:         10                 # -h
+
+x_start:          3900               # -x  fold/zoom region start
+# y_start:         5001           # -y  2nd fragment start (long-range / 2-gene modes)
+
+length:           300                # -l
+fold_backend:     cplfold            # -r  cplfold | vienna | unafold
+
+# --- CPLfold tuning (only used when fold_backend: cplfold) ---
+alpha:            0.5
+beta:             0.0            
+beam_size:        100
+energy_delta:     5.0
+max_phase1:       10           
+max_phase2:       5              
+energy_model:     DP09
+normalize:        log             # raw | log
+# calc_energy:    0               # -e  (reserved: per-chimera dG, not yet ported)
