@@ -8,7 +8,7 @@ import pytest
 from hyb2.stages.collapse_blast import collapse_blast
 
 
-def test_collapse_blast_matches_golden(fixtures_dir):
-    with (fixtures_dir / "test.blast").open() as f:
-        produced = "".join(collapse_blast(f))
-    assert produced == (fixtures_dir / "test.collapse.blast").read_text()
+def test_collapse_blast_matches_golden(fixtures_dir, tmp_path):
+    out = tmp_path / "collapse.blast"
+    collapse_blast(str(fixtures_dir / "test.blast"), str(out))
+    assert out.read_text() == (fixtures_dir / "test.collapse.blast").read_text()

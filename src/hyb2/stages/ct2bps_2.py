@@ -19,11 +19,9 @@ def ct2bps_2(ct_file):
             last_field = columns[-1]
 
             a = last_field.split("-")
+            n = len(a)
 
-            if len(a) != 2:
-                raise ValueError(f"Expected 2 segments, got {len(a)}: {last_field}")
-
-            i = a[0].split("_")
+            i = a[n // 2 - 1].split("_")
             j = a[-1].split("_")
 
             bit1_st = i[-2]

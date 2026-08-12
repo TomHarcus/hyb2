@@ -52,8 +52,7 @@ def run(
         fout.writelines(sam2blast(ui.progress(fin, in_sam, "sam2blast")))
 
     collapse = out + ".collapse.blast"
-    with open(blast) as fin, open(collapse, "w") as fout:
-        fout.writelines(collapse_blast(ui.progress(fin, blast, "collapse")))
+    collapse_blast(blast, collapse)
 
     mtophits = out + "_mtophits.blast"
     with open(collapse) as fin, open(mtophits, "w") as fout:

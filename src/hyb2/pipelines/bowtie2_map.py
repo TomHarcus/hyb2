@@ -7,7 +7,7 @@ from hyb2.stages.make_comp_fasta import make_comp_fasta
 from hyb2.stages.solexa2fasta import solexa_to_fasta_lines
 from hyb2.stages.fasta2tab import fasta_to_tab_lines
 
-import subprocess, gzip
+import subprocess, gzip, os
 
 from pathlib import Path
 
@@ -82,7 +82,7 @@ def _bowtie2(db, out, reads):
         subprocess.run(
             ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
             "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
-            "--rdg", "5,1", "--rfg", "5,1", "-p", "64", "-x", db.replace(".fasta", "", 1),
+            "--rdg", "5,1", "--rfg", "5,1", "-p", str(os.cpu_count()), "-x", db.replace(".fasta", "", 1),
             "-f", reads],
             stdout=sam,
             stderr=err,
