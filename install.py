@@ -213,8 +213,15 @@ def preflight(conda):
     except subprocess.TimeoutExpired:
         ok("HotKnots computeEnergy executes (arch OK)")
 
+def ensure_tmpdir():
+    tmp = os.environ.get("TMPDIR") or str(Path.home() / "scratch_tmp")
+    os.makedirs(tmp, exist_ok=True)
+    os.environ["TMPDIR"] = tmp
+    ok(f"TMPDIR={tmp}")
+
 def main():
     info(f"HYB2 installer (repo: {REPO})")
+    ensure_tmpdir()
     osname, mac_arm = detect_platform()
     ok(f"platform {osname}{' (Apple Silicon)' if mac_arm else ''}")
 
