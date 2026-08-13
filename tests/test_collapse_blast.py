@@ -5,7 +5,7 @@ Remove the xfail marker once the stage is implemented.
 
 import pytest
 
-from hyb2.stages.collapse_blast import collapse_blast
+from hyb2.chimera.collapse_blast import collapse_blast
 
 
 def test_collapse_blast_matches_golden(fixtures_dir, tmp_path):

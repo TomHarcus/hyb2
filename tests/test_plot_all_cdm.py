@@ -13,8 +13,8 @@ The R call is stubbed so the test needs neither R nor the plotting scripts.
 
 import shutil
 
-from hyb2.pipelines import plot_all_cdm as mod
-from hyb2.stages.plot_hybrids_3 import plot_hybrids_3
+from hyb2.coverage import plot_all_cdm as mod
+from hyb2.coverage.plot_hybrids_3 import plot_hybrids_3
 
 
 def test_wrapper_glue(tier2_fixtures_dir, tmp_path, monkeypatch):

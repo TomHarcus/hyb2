@@ -101,7 +101,7 @@ def cplfold_env() -> str:
     we skip rather than fail in that case."""
     import os
     import sys as _sys
-    from hyb2 import config
+    from hyb2.tools import config
 
     cpldir = config.CPLFOLD_DIR
     if not os.path.isdir(cpldir):

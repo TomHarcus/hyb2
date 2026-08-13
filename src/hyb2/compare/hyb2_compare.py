@@ -3,7 +3,7 @@
 """
 
 import argparse, sys
-from hyb2 import config
+from hyb2.tools import config
 
 def print_help():
     print("No Options Specified!")
@@ -36,9 +36,9 @@ def print_help():
 
 import subprocess, math, re, glob
 from pathlib import Path
-from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
-from hyb2.stages.DESeq_interaction_split_select import split_select
-from hyb2.stages.similarity import similarity_contact
+from hyb2.compare.make_hybrid_annotation_table import make_hybrid_annotation_table
+from hyb2.compare.DESeq_interaction_split_select import split_select
+from hyb2.compare.similarity import similarity_contact
 
 import logging
 
@@ -242,7 +242,7 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
             else:
                 continue
             res = y1 - x1
-            cmd = [sys.executable, "-m", "hyb2.pipelines.hyb2_fold",
+            cmd = [sys.executable, "-m", "hyb2.folding.hyb2_fold",
                    "-i", in_hyb, "-a", GENE, "-d", FASTA, "-x", str(x1 + 1)]
             if 300 > res:                                        
                 cmd += ["-l", str(res + 300)]
@@ -273,7 +273,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-0", dest="FOLDING", type=int, default=0, help="Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
     return p
 
-from hyb2.logsetup import configure_logging
+from hyb2.tools.logsetup import configure_logging
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
 

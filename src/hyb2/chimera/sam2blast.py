@@ -31,7 +31,7 @@ def sam2blast(lines: Iterable[str]) -> Iterator[str]:
             dblen += int(line.split("LN:")[1])
 
 def print_line(arr, flag, dblen):
-    """
+    r"""
     cigar, mismatches, gaps, identity = [], 0, 0, 0
     cigar_num = re.findall(r'\d+',arr[5])
     cigar_op = re.findall(r'\D',arr[5])

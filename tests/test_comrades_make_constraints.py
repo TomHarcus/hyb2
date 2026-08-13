@@ -15,7 +15,7 @@ into tmp_path to keep the repo's data/ and fixtures/ clean.
 
 from pathlib import Path
 
-from hyb2.pipelines.comrades_make_constraints import run
+from hyb2.folding.comrades_make_constraints import run
 
 
 def test_comrades_make_constraints_matches_golden(

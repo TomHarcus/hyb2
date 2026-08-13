@@ -2,10 +2,10 @@
 
 """
 
-from hyb2.stages.make_hyb_db_2 import make_hyb_db_2
-from hyb2.stages.make_comp_fasta import make_comp_fasta
-from hyb2.stages.solexa2fasta import solexa_to_fasta_lines
-from hyb2.stages.fasta2tab import fasta_to_tab_lines
+from hyb2.mapping.make_hyb_db_2 import make_hyb_db_2
+from hyb2.mapping.make_comp_fasta import make_comp_fasta
+from hyb2.mapping.solexa2fasta import solexa_to_fasta_lines
+from hyb2.common.fasta2tab import fasta_to_tab_lines
 
 import subprocess, gzip, os
 

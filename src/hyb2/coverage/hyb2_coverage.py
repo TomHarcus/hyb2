@@ -6,8 +6,8 @@ import argparse
 import subprocess
 import sys
 from pathlib import Path
-from hyb2.stages.plot_hybrids_3 import plot_hybrids_3, swap_gene1_to_arm1
-from hyb2 import config
+from hyb2.coverage.plot_hybrids_3 import plot_hybrids_3, swap_gene1_to_arm1
+from hyb2.tools import config
 
 import logging
 
@@ -109,7 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-z", dest="y2", type=int, default=None, help="zoom window Y end")
     return p
 
-from hyb2.logsetup import configure_logging
+from hyb2.tools.logsetup import configure_logging
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     configure_logging(args.verbose)

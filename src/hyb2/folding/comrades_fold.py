@@ -10,8 +10,8 @@ outputs: .vienna + .ct
 import subprocess, random, shutil, sys, argparse, os
 from pathlib import Path
 
-from hyb2.stages.ct2b_gk3 import ct2b_gk3
-from hyb2 import config
+from hyb2.folding.ct2b_gk3 import ct2b_gk3
+from hyb2.tools import config
 
 import logging
 

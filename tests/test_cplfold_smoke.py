@@ -12,7 +12,7 @@ scripts/generate_folding_baseline.sh (window 10000-10300, len 301). Skips unless
 ViennaRNA + CPLfold + a runnable HotKnots binary are all present.
 """
 
-from hyb2.pipelines.comrades_fold import run
+from hyb2.folding.comrades_fold import run
 
 
 def test_cplfold_backend_runs_with_nondefault_params(

@@ -11,7 +11,7 @@ bp_score writes files next to its inputs, so it runs in tmp_path with bare names
 (the legacy assumes cwd + bare filenames).
 """
 
-from hyb2.stages.bp_score import bp_score
+from hyb2.folding.bp_score import bp_score
 
 
 def test_bp_score_matches_golden(folding_fixtures_dir, tmp_path, monkeypatch):

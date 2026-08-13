@@ -4,9 +4,9 @@
 
 import re, subprocess, os, argparse, sys
 from pathlib import Path
-from hyb2.stages.hyb2blast import hyb2blast
-from hyb2.stages.blast2gplot import blast2gplot
-from hyb2 import config
+from hyb2.viewpoint.hyb2blast import hyb2blast
+from hyb2.viewpoint.blast2gplot import blast2gplot
+from hyb2.tools import config
 
 import logging
 
@@ -146,7 +146,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     return p
 
-from hyb2.logsetup import configure_logging
+from hyb2.tools.logsetup import configure_logging
 def main(argv=None):
     a = build_parser().parse_args(argv)
     configure_logging(a.verbose)

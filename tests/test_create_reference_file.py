@@ -6,7 +6,7 @@ once implemented.
 
 import pytest
 
-from hyb2.stages.create_reference_file import create_reference
+from hyb2.chimera.create_reference_file import create_reference
 
 
 def test_create_reference_matches_golden(fixtures_dir):

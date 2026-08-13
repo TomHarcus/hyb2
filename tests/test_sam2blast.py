@@ -5,7 +5,7 @@ Remove the xfail marker once bin/sam2blast_3 is adopted into the stage.
 
 import pytest
 
-from hyb2.stages.sam2blast import sam2blast
+from hyb2.chimera.sam2blast import sam2blast
 
 
 def test_sam2blast_matches_golden(fixtures_dir):

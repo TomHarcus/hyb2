@@ -13,7 +13,7 @@ Golden + input from scripts/generate_unafold_baseline.sh.
 
 import shutil
 
-from hyb2.pipelines.comrades_make_constraints import run
+from hyb2.folding.comrades_make_constraints import run
 
 
 def test_basepair_scores_match_legacy(unafold_fixtures_dir, unafold_env, repo_root,

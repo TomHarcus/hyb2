@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.mtophits_blast import deduplicate_by_second_fragement_start
+from hyb2.chimera.mtophits_blast import deduplicate_by_second_fragement_start
 
 GROUPED = (
     "READ1\tsubjA\tc3\tc4\tc5\tc6\tc7\tc8\tc9\tc10\t1e-10\n"

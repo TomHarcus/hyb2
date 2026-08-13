@@ -7,7 +7,7 @@ generates RNA secondary structure of short- and long-range intramolecular- and i
 
 import os, shutil, re, glob, math, argparse, sys
 
-from hyb2.config import VARNA_JAR, CPL_DEFAULTS
+from hyb2.tools.config import VARNA_JAR, CPL_DEFAULTS
 
 import logging
 
@@ -314,7 +314,7 @@ def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_
 
 def _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, energy_model):
     
-    from hyb2.pipelines import comrades_make_constraints, comrades_fold
+    from hyb2.folding import comrades_fold
 
     comrades_make_constraints.run(out_file, out_fasta, 1, span,
                                   fold=fold, vienna_bin=vienna_bin)
@@ -346,7 +346,7 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
 
     bp_scores = out_file.replace(".hyb", ".basepair_scores.txt")
 
-    from hyb2.stages.bp_score import bp_score
+    from hyb2.folding.bp_score import bp_score
 
     log.debug("Calculating basepair scores...")
 
@@ -383,7 +383,7 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
             fout.write(f"{val:.6g}\n")
 
     ct_top = vname.replace(".VARNA_scores.txt", ".ct")
-    from hyb2.pipelines.plot_VARNA import plot_VARNA
+    from hyb2.folding.plot_VARNA import plot_VARNA
 
     if VARNA:
         log.debug("Plotting RNA secondary structure...")
@@ -438,8 +438,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     return p
 
-from hyb2.logsetup import configure_logging
-from hyb2.configfile import parse_with_config
+from hyb2.folding import comrades_make_constraints
+from hyb2.tools.logsetup import configure_logging
+from hyb2.tools.configfile import parse_with_config
 def main(argv: list[str] | None = None) -> int:
 
     args = parse_with_config(build_parser(), argv)

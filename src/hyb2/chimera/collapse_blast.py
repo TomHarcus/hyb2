@@ -24,7 +24,7 @@ more reproducible than the legacy shell `sort`, whose order depended on locale.
 
 import sys, subprocess, tempfile, os
 from typing import Iterable, Iterator
-from hyb2 import config
+from hyb2.tools import config
 
 
 def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
@@ -132,78 +132,6 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
 
     for f in (tmpf, numbered, sorted1, deduped, resorted):
         os.remove(f)
-
-
-
-
-
-
-
-"""
-def collapse_blast(lines: Iterable[str]) -> Iterator[str]:
-    # Load every row up front: this needs two passes over the data (the sort
-    # below, then `rows` is reused whole in stage 3), so it can't stay lazy.
-    rows = [l.rstrip("\n") for l in lines]
-
-    # STAGE 1 - sort by column 13 (the mapped sequence) so identical sequences
-    # sit next to each other; duplicates can then be found by comparing each row
-    # to the one before it. Ties break on the whole line (the `, L`).
-    srt = sorted(rows, key=lambda L: (L.split("\t")[12], L))
-
-    # STAGE 2 - the legacy awk's roundabout way of collecting rows into `temp`.
-    # Buffer each run of identical (gene, seq) in `a`; dump it at every boundary.
-    # This block has quirks (drops some rows, odd counting) that DO NOT change the
-    # final result - stage 3 re-adds every original row. It exists only to
-    # reproduce the legacy order/representative that downstream depends on.
-    temp, a, n, l2, l13 = [], {}, 0, None, None
-
-    for i, line in enumerate(srt):
-        c = line.split("\t")
-        g, s = c[1], c[12]          # g = gene (col 2), s = sequence (col 13)
-
-        if i == 0:
-            n = 0
-            a = {0: line}
-
-        # Same (gene, seq) as the previous row -> keep accumulating the run.
-        if g == l2 and s == l13:
-            n += 1
-            a[n] = line
-
-        else:
-            # Boundary (different gene/seq): flush the buffered run into temp.
-            # The current row is deliberately NOT added here - a legacy quirk
-            # that drops "singleton" rows; stage 3 recovers them from `rows`.
-            for k in sorted(a):
-                temp.append(a[k])
-            n = 0
-            a = {}
-
-        l2, l13 = g, s
-
-    # awk END clause: always emit the very last row.
-    if srt:
-        temp.append(srt[-1])
-
-    # STAGE 3 - where the real dedup happens. Concatenate: one prepended row
-    # (the `sed -n '2p'` hack, which lets temp's 2nd row win its group) + temp +
-    # ALL the original rows. Then keep the FIRST time each (gene, seq) appears.
-    # Because every original row is appended, anything stage 2 dropped is still
-    # caught here -> the output is exactly one row per (gene, seq).
-    stream = temp[1:2] + temp + rows
-
-    seen, out = set(), []
-
-    for line in stream:
-        c = line.split("\t")
-        key = (c[1], c[12])
-        if key not in seen:
-            seen.add(key)
-            out.append(line)
-
-    for line in out:
-        yield f"{line}\n"
-"""
 
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv

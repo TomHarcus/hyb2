@@ -9,7 +9,7 @@ also transitively exercises the Hybrid2 class (Hybrid_long_2.pm port) end to
 end, including the deliberately-reproduced join(",")/split(";") quirk.
 """
 
-from hyb2.stages.combine_hyb_merge_touching import combine_hyb_merge_touching
+from hyb2.folding.combine_hyb_merge_touching import combine_hyb_merge_touching
 
 
 def test_combine_hyb_merge_touching_matches_golden(tier2_fixtures_dir):

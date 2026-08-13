@@ -8,7 +8,7 @@ Params match how the golden was built: length=10300, tail=301, max_score=1000000
 Only the core transform is tested; the -s/-p filename derivation is CLI-only glue.
 """
 
-from hyb2.stages.make_VARNA_scores_2 import make_varna_scores
+from hyb2.folding.make_VARNA_scores_2 import make_varna_scores
 
 
 def test_make_varna_scores_matches_golden(folding_fixtures_dir):

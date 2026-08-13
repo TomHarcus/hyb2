@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.hybrid_stats_2 import hybrid_stats_2
+from hyb2.legacy_leaves.hybrid_stats_2 import hybrid_stats_2
 
 
 def _awk_reference(text: str) -> str:

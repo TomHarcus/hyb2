@@ -6,8 +6,8 @@ Both are fully deterministic, so these are byte-exact diffs. viewpoint_graph.R
 Goldens from scripts/generate_viewpoint_baseline.sh.
 """
 
-from hyb2.stages.hyb2blast import hyb2blast
-from hyb2.stages.blast2gplot import blast2gplot
+from hyb2.viewpoint.hyb2blast import hyb2blast
+from hyb2.viewpoint.blast2gplot import blast2gplot
 
 
 def test_hyb2blast_matches_legacy(viewpoint_fixtures_dir, tier2_fixtures_dir):

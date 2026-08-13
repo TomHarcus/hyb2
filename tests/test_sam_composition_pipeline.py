@@ -12,7 +12,7 @@ import shutil
 
 import pytest
 
-from hyb2.pipelines.sam_composition import run
+from hyb2.chimera.sam_composition import run
 
 # .hyb carries a comment header (compare data rows only); everything else is byte-exact.
 GOLDEN_OUTPUTS = [

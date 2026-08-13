@@ -11,8 +11,8 @@ import argparse
 import subprocess
 import sys
 
-from hyb2.stages.svg_mod_coord import svg_mod_coord
-from hyb2 import config
+from hyb2.folding.svg_mod_coord import svg_mod_coord
+from hyb2.tools import config
 
 import logging
 

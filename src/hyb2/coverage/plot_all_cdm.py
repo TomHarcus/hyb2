@@ -4,8 +4,8 @@
 
 import glob, subprocess, argparse, sys
 from pathlib import Path
-from hyb2.stages.plot_hybrids_3 import plot_hybrids_3
-from hyb2 import config
+from hyb2.coverage.plot_hybrids_3 import plot_hybrids_3
+from hyb2.tools import config
 
 def plot_all_cdm(gene, limit=0.95):
 

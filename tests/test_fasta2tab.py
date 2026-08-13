@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.fasta2tab import fasta_to_tab
+from hyb2.common.fasta2tab import fasta_to_tab
 
 
 def test_matches_legacy_awk_output():

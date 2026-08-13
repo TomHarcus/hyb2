@@ -9,7 +9,7 @@ the end-to-end pipeline test.)
 
 import pytest
 
-from hyb2.stages.histogram import histogram
+from hyb2.common.histogram import histogram
 
 
 def test_histogram_gene_pair_matches_golden(fixtures_dir):

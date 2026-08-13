@@ -7,7 +7,7 @@ Params match what hyb2_sam_composition.sh passes. Remove xfail once implemented.
 
 import pytest
 
-from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
+from hyb2.chimera.get_mtop_hybrids import get_mtop_hybrids
 
 
 def test_get_mtop_hybrids_matches_golden(fixtures_dir, strip_hyb_header):

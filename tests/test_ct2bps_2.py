@@ -9,7 +9,7 @@ ct2bps_2() takes the .ct contents as a single string (it splitlines internally)
 and yields "start<TAB>end\\n" base-pair rows.
 """
 
-from hyb2.stages.ct2bps_2 import ct2bps_2
+from hyb2.folding.ct2bps_2 import ct2bps_2
 
 
 def test_ct2bps_2_matches_golden(folding_fixtures_dir):

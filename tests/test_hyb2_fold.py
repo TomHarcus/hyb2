@@ -17,7 +17,7 @@ run() dispatch and needs ViennaRNA + the VARNA jar.
 
 from pathlib import Path
 
-from hyb2.pipelines.hyb2_fold import run, _transform, _fasta_extraction
+from hyb2.folding.hyb2_fold import run, _transform, _fasta_extraction
 
 REPO = Path(__file__).resolve().parents[1]
 REF = REPO / "data" / "Zika_18S_formatted.fasta"

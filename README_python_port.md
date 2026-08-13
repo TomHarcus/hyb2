@@ -52,10 +52,10 @@ Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-coverage`, `plot-c
 | Command | Console script | or `python -m …` |
 |---|---|---|
 | main orchestrator | `hyb2-py` | `hyb2.cli` |
-| coverage / CDM | `hyb2-coverage` | `hyb2.pipelines.hyb2_coverage` |
-| folding | - | `hyb2.pipelines.hyb2_fold` |
-| dataset comparison | - | `hyb2.pipelines.hyb2_compare` |
-| mapping only | - | `hyb2.pipelines.bowtie2_map` |
+| coverage / CDM | `hyb2-coverage` | `hyb2.coverage.hyb2_coverage` |
+| folding | - | `hyb2.folding.hyb2_fold` |
+| dataset comparison | - | `hyb2.compare.hyb2_compare` |
+| mapping only | - | `hyb2.mapping.bowtie2_map` |
 
 Run `hyb2-py` with no args for full flag help.
 
@@ -136,7 +136,7 @@ hyb2-py -i reads.sam -d ref.fasta -o test          # -> test.hyb
 # 2. Then pick any RNA and fold/plot it - spine is skipped:
 hyb2-py -i test.hyb -a RNA_A -x 100  -l 300
 hyb2-py -i test.hyb -a RNA_B -x 500  -l 300
-python -m hyb2.pipelines.hyb2_fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
+python -m hyb2.folding.hyb2_fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
 ```
 Only coverage/viewpoint (CDM) needs no coords: `hyb2-py -i test.hyb -a RNA_A`.
 
@@ -150,7 +150,7 @@ surface** (`--alpha` etc.), so you can tune it from the one-shot pipeline or the
 fold command:
 
 ```bash
-python -m hyb2.pipelines.hyb2_fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
+python -m hyb2.folding.hyb2_fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
     -r cplfold -p test_MyRNA_3900-4199.basepair_scores.txt \
     --alpha 0.5 --beta 0.0 --normalize log --beam-size 100
 ```
@@ -177,7 +177,7 @@ expt_rep1.hyb   expt_rep1.MyRNA.contact.txt   condition_two
 expt_rep2.hyb   expt_rep2.MyRNA.contact.txt   condition_two
 ```
 ```bash
-python -m hyb2.pipelines.hyb2_compare -i input.table -o cmp -a MyRNA -d ref.fasta
+python -m hyb2.compare.hyb2_compare -i input.table -o cmp -a MyRNA -d ref.fasta
 ```
 
 ---

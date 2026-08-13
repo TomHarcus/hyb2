@@ -7,7 +7,7 @@ FASTA files (see scripts/generate_tier2_baseline.sh). The generator yields
 both halves are diffed against their respective goldens.
 """
 
-from hyb2.stages.hyb2fasta_bits_allRNAs import hyb2fasta_bits_allRNAs
+from hyb2.folding.hyb2fasta_bits_allRNAs import hyb2fasta_bits_allRNAs
 
 
 def test_hyb2fasta_bits_allRNAs_matches_golden(tier2_fixtures_dir):

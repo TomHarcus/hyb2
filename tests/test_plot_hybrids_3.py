@@ -9,7 +9,7 @@ The awk emits its bins in hash order and the Python port in insertion order, so 
 output *set* is the parity contract, not byte order -- compared as sorted lines.
 """
 
-from hyb2.stages.plot_hybrids_3 import plot_hybrids_3, swap_gene1_to_arm1
+from hyb2.coverage.plot_hybrids_3 import plot_hybrids_3, swap_gene1_to_arm1
 
 
 def test_single_gene_matches_legacy(coverage_fixtures_dir, tier2_fixtures_dir):

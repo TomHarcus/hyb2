@@ -8,7 +8,7 @@ make_varna_scores to produce that structure's per-position colour scores.
 import argparse
 import sys
 
-from hyb2.stages.make_VARNA_scores_2 import make_varna_scores, _output_name
+from hyb2.folding.make_VARNA_scores_2 import make_varna_scores, _output_name
 
 def bp_score(coordinates, score, prefix):
 

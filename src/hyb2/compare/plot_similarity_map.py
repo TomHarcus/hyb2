@@ -4,8 +4,8 @@
 
 import subprocess, argparse, sys
 from pathlib import Path
-from hyb2.stages.similarity import similarity_contact
-from hyb2 import config
+from hyb2.compare.similarity import similarity_contact
+from hyb2.tools import config
 
 def plot_similarity_map(a1, a2, a3, a4, b1, b2, b3, b4, limit):
 

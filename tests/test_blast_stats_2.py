@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.blast_stats_2 import blast_stats_2
+from hyb2.legacy_leaves.blast_stats_2 import blast_stats_2
 
 MULTI_BIOTYPE = (
     "READ1_5\tHuman|X|GENE_A_typeA\t.\t.\t.\t.\t1\t10\t1\t10\t1e-10\t.\n"

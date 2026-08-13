@@ -12,7 +12,7 @@ import sys
 import yaml
 import logging
 
-from hyb2.config import CPL_DEFAULTS
+from hyb2.tools.config import CPL_DEFAULTS
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -66,8 +66,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     return parser
 
-from hyb2.logsetup import configure_logging
-from hyb2.configfile import parse_with_config
+from hyb2.tools.logsetup import configure_logging
+from hyb2.tools.configfile import parse_with_config
 
 def main(argv: list[str] | None = None) -> int:
 
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
 
     configure_logging(args.verbose)
 
-    from hyb2.pipelines import hyb2
+    from hyb2 import hyb2
 
     if args.input is None:
         return hyb2.print_help()

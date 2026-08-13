@@ -12,7 +12,7 @@ scripts/generate_folding_baseline.sh step 7 (mini window 10000-10300). Needs
 ViennaRNA (RNAfold/b2ct); skips otherwise.
 """
 
-from hyb2.pipelines.comrades_fold import run
+from hyb2.folding.comrades_fold import run
 
 
 def test_comrades_fold_vienna_matches_snapshot(folding_fixtures_dir, vienna_bin,

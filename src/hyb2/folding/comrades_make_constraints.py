@@ -7,13 +7,13 @@ constraints for that region
 """
 
 import argparse, subprocess, sys, os, shutil
-from hyb2.stages.fasta2tab import fasta_to_tab
-from hyb2.stages.hyb2fasta_bits_allRNAs import hyb2fasta_bits_allRNAs
-from hyb2.stages.ct2bps_2 import ct2bps_2
-from hyb2.stages.histogram import histogram
-from hyb2.stages.bp2hyb import bp2hyb
-from hyb2.stages.hyb2constraints import hyb2constraints
-from hyb2 import config
+from hyb2.common.fasta2tab import fasta_to_tab
+from hyb2.folding.hyb2fasta_bits_allRNAs import hyb2fasta_bits_allRNAs
+from hyb2.folding.ct2bps_2 import ct2bps_2
+from hyb2.common.histogram import histogram
+from hyb2.folding.bp2hyb import bp2hyb
+from hyb2.folding.hyb2constraints import hyb2constraints
+from hyb2.tools import config
 import logging
 
 log = logging.getLogger(__name__)

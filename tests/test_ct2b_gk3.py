@@ -6,7 +6,7 @@ Ct2B_GK_3.pl's vienna output on it. Byte-exact -- ct2b_gk3 is fully deterministi
 scripts/generate_unafold_baseline.sh.
 """
 
-from hyb2.stages.ct2b_gk3 import ct2b_gk3
+from hyb2.folding.ct2b_gk3 import ct2b_gk3
 
 
 def test_matches_legacy(unafold_fixtures_dir):

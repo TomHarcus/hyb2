@@ -7,7 +7,7 @@ models.Hybrid, which this stage depends on).
 
 import pytest
 
-from hyb2.stages.remove_duplicate_hybrids import remove_duplicate_hybrids
+from hyb2.chimera.remove_duplicate_hybrids import remove_duplicate_hybrids
 
 
 def test_remove_duplicate_hybrids_matches_golden(fixtures_dir):

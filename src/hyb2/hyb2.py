@@ -93,19 +93,19 @@ from pathlib import Path
 
 import sys
 
-from hyb2.stages.fasta_hyb2_formatting import fasta_hyb2_formatting
-from hyb2.pipelines.bowtie2_map import bowtie2_map
-from hyb2.pipelines import sam_composition
-from hyb2.pipelines.hyb2_coverage import hyb2_coverage
-from hyb2.pipelines.plot_viewpoint import plot_viewpoint
-from hyb2.pipelines import hyb2_fold
-from hyb2.config import CPL_DEFAULTS
+from hyb2.mapping.fasta_hyb2_formatting import fasta_hyb2_formatting
+from hyb2.mapping.bowtie2_map import bowtie2_map
+from hyb2.chimera import sam_composition
+from hyb2.coverage.hyb2_coverage import hyb2_coverage
+from hyb2.viewpoint.plot_viewpoint import plot_viewpoint
+from hyb2.folding import hyb2_fold
+from hyb2.tools.config import CPL_DEFAULTS
 
 import logging
 
 log = logging.getLogger(__name__)
 
-from hyb2 import ui
+from hyb2.tools import ui
 steps = ui.Steps()
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,

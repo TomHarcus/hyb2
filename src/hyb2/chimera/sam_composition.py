@@ -21,14 +21,14 @@ while the collapse -> mtophits -> reference branch only builds the ranking
 import argparse
 import sys
 
-from hyb2.stages.sam2blast import sam2blast
-from hyb2.stages.collapse_blast import collapse_blast
-from hyb2.stages.mtophits_blast import deduplicate_by_second_fragment_start_lines
-from hyb2.stages.create_reference_file import create_reference
-from hyb2.stages.get_mtop_hybrids import get_mtop_hybrids
-from hyb2.stages.remove_duplicate_hybrids import remove_duplicate_hybrids
-from hyb2.stages.histogram import histogram
-from hyb2 import ui
+from hyb2.chimera.sam2blast import sam2blast
+from hyb2.chimera.collapse_blast import collapse_blast
+from hyb2.chimera.mtophits_blast import deduplicate_by_second_fragment_start_lines
+from hyb2.chimera.create_reference_file import create_reference
+from hyb2.chimera.get_mtop_hybrids import get_mtop_hybrids
+from hyb2.chimera.remove_duplicate_hybrids import remove_duplicate_hybrids
+from hyb2.common.histogram import histogram
+from hyb2.tools import ui
 
 
 def run(

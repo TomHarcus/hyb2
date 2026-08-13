@@ -6,7 +6,7 @@ scripts/generate_tier2_baseline.sh). test.hyb deliberately carries a
 version of the port, so exercising it here is intentional.
 """
 
-from hyb2.stages.hyb2constraints import hyb2constraints
+from hyb2.folding.hyb2constraints import hyb2constraints
 
 
 def test_hyb2constraints_matches_golden(tier2_fixtures_dir):

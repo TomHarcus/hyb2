@@ -6,7 +6,7 @@ into a ranked .hyb of merged duplexes.
 """
 
 import sys
-from hyb2.stages.combine_hyb_merge_touching import combine_hyb_merge_touching
+from hyb2.folding.combine_hyb_merge_touching import combine_hyb_merge_touching
 
 def bp2hyb(lines):
     

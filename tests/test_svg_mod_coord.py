@@ -7,7 +7,7 @@ step 8). Branch 1 = single strand (-x 100); branch 3 = two strand
 runs in tmp_path.
 """
 
-from hyb2.stages.svg_mod_coord import svg_mod_coord
+from hyb2.folding.svg_mod_coord import svg_mod_coord
 
 
 def _run(tmp_path, y_coord, length):

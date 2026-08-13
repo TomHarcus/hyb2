@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.txt2hyb import add_sequences_to_hyb
+from hyb2.legacy_leaves.txt2hyb import add_sequences_to_hyb
 
 TAB_FILE = "READ1\tACGTACGT\nREAD2\tTTTTGGGG\n"
 HYB_FILE = (

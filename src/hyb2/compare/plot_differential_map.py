@@ -5,8 +5,8 @@ Finds significant differences between two conditions
 
 import argparse, sys
 from pathlib import Path
-from hyb2.pipelines.hyb2_compare import _differential_map, _num
-from hyb2.stages.make_hybrid_annotation_table import make_hybrid_annotation_table
+from hyb2.compare.hyb2_compare import _differential_map, _num
+from hyb2.compare.make_hybrid_annotation_table import make_hybrid_annotation_table
 
 
 def plot_differential_map(a1, a2, a3, a4, b1, b2, b3, b4, minimum=2, range=100, limit=0.95):

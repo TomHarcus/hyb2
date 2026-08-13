@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.filter_homopolymers import filter_homopolymers
+from hyb2.legacy_leaves.filter_homopolymers import filter_homopolymers
 
 
 def _awk_reference(text: str) -> str:

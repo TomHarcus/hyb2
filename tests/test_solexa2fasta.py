@@ -1,6 +1,6 @@
 import subprocess
 
-from hyb2.stages.solexa2fasta import solexa_to_fasta
+from hyb2.mapping.solexa2fasta import solexa_to_fasta
 
 def test_matches_legacy_awk_output():
     with open("data/synthetic/test.fastq") as f:

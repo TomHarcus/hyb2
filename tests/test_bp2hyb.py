@@ -14,7 +14,7 @@ lines and yields the ranked, merged .hyb rows. Output is deterministic (both
 GNU sorts fall back to a full-line tiebreak, reproduced in the port).
 """
 
-from hyb2.stages.bp2hyb import bp2hyb
+from hyb2.folding.bp2hyb import bp2hyb
 
 
 def test_bp2hyb_matches_golden(folding_fixtures_dir):
