@@ -170,7 +170,7 @@ def write_activate_d(prefix):
         '    mkdir -p "$TMPDIR"\n'
         "fi\n"
         # makes sure that terminfo is always found
-        'export TERMINFO_DIRS="$CONDA_PREFIX/share/terminfo:"\n'
+        'export TERMINFO_DIRS="$CONDA_PREFIX/share/terminfo:$HOME/.terminfo:/usr/share/terminfo:/lib/terminfo:/etc/terminfo"\n'
     )
 
 
