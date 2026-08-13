@@ -169,6 +169,8 @@ def write_activate_d(prefix):
         '    export TMPDIR="$HOME/scratch_tmp"\n'
         '    mkdir -p "$TMPDIR"\n'
         "fi\n"
+        # makes sure that terminfo is always found
+        'export TERMINFO_DIRS="$CONDA_PREFIX/share/terminfo:"\n'
     )
 
 

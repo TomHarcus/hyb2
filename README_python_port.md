@@ -93,11 +93,11 @@ hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -b MyRNA -x 3501 -y 3501 -l 2
 ### Reproducible runs with a YAML config (`--config`)
 
 Both `hyb2-py` and `hyb2-fold` accept a YAML config of arguments, handy for
-reproducible/shareable runs and CPLfold parameter sweeps. Templates ship in the repo:
+reproducible/shareable runs and CPLfold parameter sweeps. Templates are available in `pipeline_templates/`:
 `full_pipeline.yml` (full pipeline) and `standalone_fold.yml` (fold only).
 
 ```bash
-cp full_pipeline.yml run.yml           # then edit paths/params
+cp pipeline_templates/full_pipeline.yml run.yml           # then edit paths/params
 hyb2-py --config run.yml                  # run entirely from the config
 hyb2-py --config run.yml --alpha 0.3      # CLI flags OVERRIDE the config
 ```
