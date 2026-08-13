@@ -1,25 +1,27 @@
-name: renv-python
+name: hyb2
 channels:
   - conda-forge
   - bioconda
   - defaults
 dependencies:
-  - ca-certificates=2024.2.2
-  - libcxx=16.0.6
-  - libffi=3.4.2
-  - libsqlite=3.45.3
-  - libzlib=1.2.13
-  - llvm-openmp=18.1.3
-  - ncurses=6.4.20240210
-  - openssl=3.2.1
-  - perl=5.32.1
-  - pip=24.0
-  - python=3.7.12
-  - python_abi=3.7
-  - readline=8.2
-  - setuptools=69.0.3
-  - sqlite=3.45.3
-  - tk=8.6.13
-  - viennarna=2.5.1
-  - wheel=0.42.0
-  - xz=5.2.6
+  - python=3.12
+
+  # folding / mapping tools (subprocess deps)
+  - viennarna=2.7.0   #RNAcofold / RNAfold / b2ct (vienna + cplfold support matrix)
+  - bowtie2=2.5.4     # read mapping
+  - oligoarrayaux=3.8.1     # hybrid-min / hybrid-ss-min (unafold backend)
+
+  # R + plotting (Rscript subprocess)
+  - r-base=4.3
+  - bioconductor-deseq2=1.42.0
+  - r-ggplot2=3.5.1
+  - r-data.table=1.15.2
+
+  # cross-platform correctness
+  - coreutils     # GNU sort on MacOS (parity critical for collapse_blast)
+  - openjdk     # java for VARNA
+
+  # the package itself + its pip deps (numpy / pandas / pyyaml / tqdm / numba / scipy)
+  - pip
+  - pip:
+      - -e .[cplfold,dev]

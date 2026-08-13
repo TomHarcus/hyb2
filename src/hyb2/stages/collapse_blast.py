@@ -24,14 +24,16 @@ more reproducible than the legacy shell `sort`, whose order depended on locale.
 
 import sys, subprocess, tempfile, os
 from typing import Iterable, Iterator
+from hyb2 import config
 
 
 def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
+    sort_bin = config.gnu_sort()
     tmpdir = tmpdir or tempfile.gettempdir()
 
     env = {**os.environ, "LC_ALL": "C"}     
 
-    sort = ["sort", "-S", sort_mem, "-T", tmpdir, "-k13", in_path]
+    sort = [sort_bin, "-S", sort_mem, "-T", tmpdir, "-k13", in_path]
 
     sort_process = subprocess.Popen(
         sort,
@@ -99,7 +101,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
 
     with open(sorted1, "w") as fout:
         subprocess.run(
-            ["sort", "-S", sort_mem, "-T", tmpdir, "-t", "\t",
+            [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t",
              "-k3,3", "-k14,14", "-k1,1n", numbered],
              stdout=fout, env=env, check=True
         )
@@ -120,7 +122,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
 
     with open(resorted, "w") as fout:
         subprocess.run(
-        ["sort", "-S", sort_mem, "-T", tmpdir, "-t", "\t", "-k1,1n", deduped],
+        [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t", "-k1,1n", deduped],
         stdout=fout, env=env, check=True,
         )
 

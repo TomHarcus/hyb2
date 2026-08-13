@@ -7,7 +7,7 @@ generates RNA secondary structure of short- and long-range intramolecular- and i
 
 import os, shutil, re, glob, math, argparse, sys
 
-from hyb2.config import varna_jar, CPL_DEFAULTS
+from hyb2.config import VARNA_JAR, CPL_DEFAULTS
 
 import logging
 
@@ -25,7 +25,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
     fold = {1: "vienna", "1": "vienna", 0: "unafold", "0": "unafold"}.get(FOLD, FOLD)
 
     if VARNA is None:
-        VARNA = varna_jar()
+        VARNA = VARNA_JAR
 
     fasta_1 = FASTA_1
 

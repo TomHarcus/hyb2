@@ -23,7 +23,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
 
     if VARNA is None:
-        VARNA = config.varna_jar()
+        VARNA = config.VARNA_JAR
 
     with open(in_file, "r") as f:
         ct_lines = f.readlines()

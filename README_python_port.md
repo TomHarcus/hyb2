@@ -10,83 +10,43 @@ R scripts (plotting, DESeq2) are unchanged and called as subprocesses.
 
 ---
 
-## 1. Prerequisites
+## 1. Install (once per machine)
 
-Everything runs inside a single conda env (called `hyb2` here). Tools needed:
+You only need **conda** (Miniconda or Miniforge) already installed. Then, from the repo root:
 
-| Tool | Provides | Install |
-|---|---|---|
-| Python ≥ 3.10 | the port (3.12 is what's tested) | (in the env) |
-| ViennaRNA | `RNAfold`/`RNAcofold` (vienna backend, fixtures) | `conda install -c bioconda viennarna` |
-| oligoarrayaux | `hybrid-ss-min`/`hybrid-min` (unafold backend) | `conda install -c bioconda oligoarrayaux` |
-| bowtie2 | mapping fastq/fasta → SAM | `conda install -c bioconda bowtie2` |
-| R + DESeq2 + ggplot2 + data.table | all plotting + `hyb2_compare` | `conda install -c bioconda -c conda-forge bioconductor-deseq2 r-ggplot2 r-data.table` |
-| Java (JRE) + VARNA jar | structure rendering | `conda install -c conda-forge openjdk`; VARNA jar ships in `VARNA/` |
-| numpy, pandas, pyyaml, tqdm, numba, scipy | the port + `hyb2_compare` + `--config` + progress bars + CPLfold | pulled by `pip install -e ".[cplfold]"` (below) |
-| CPLfold + HotKnots | the CPLfold backend (local clone) | see §2 |
-
-### Quick env build
 ```bash
-conda create -n hyb2 python=3.12          # 3.10+ works; 3.12 is what's tested
-conda activate hyb2
-conda install -c bioconda -c conda-forge viennarna oligoarrayaux bowtie2 \
-    bioconductor-deseq2 r-ggplot2 r-data.table openjdk
-# from the repo root: installs the hyb2 package + console scripts + the
-# Python deps (numpy, pandas, numba, scipy). Drop [cplfold] for numpy+pandas only.
-pip install -e ".[cplfold]"
+python3 install.py
 ```
 
----
+That single script does everything:
 
-## 2. Per-machine setup (IMPORTANT: do these on each machine)
+- creates the `hyb2` conda env from `environment.yml` (Python, ViennaRNA, bowtie2,
+  oligoarrayaux, R + DESeq2 + ggplot2 + data.table, Java, GNU coreutils) and installs the
+  port + its console scripts (`pip install -e`),
+- clones **CPLfold** into the repo and **compiles HotKnots for your architecture**,
+- writes the runtime environment (`UNAFOLDDAT`, VARNA/CPLfold paths, and a real-disk
+  `TMPDIR` guard) into the env's conda **activation**, so activating the env sets everything,
+- runs **preflight checks** (GNU sort, all tools present, DESeq2 loads, HotKnots executes)
+  and fails loudly if anything is wrong.
 
-Three things are machine-specific and **must** be set up locally:
+**Platforms:** Linux, Intel macOS, and Apple Silicon macOS (built as `osx-64` under Rosetta,
+set up automatically). **Windows is not supported natively**: install WSL2 and run
+`install.py` inside it.
 
-1. **CPLfold path.** `src/hyb2/config.py` has `CPLFOLD_DIR` hardcoded. Edit it to point at
-   your CPLfold clone:
-   ```python
-   CPLFOLD_DIR = "/path/to/your/CPLfold"
-   ```
+Once it finishes, every run is just:
 
-2. **HotKnots is architecture-specific and must be compiled per machine.** CPLfold's energy
-   binaries are C++; a binary built on one arch (e.g. Apple Silicon) will not run on another
-   (e.g. x86-64 cluster). Rebuild after cloning / on a new machine:
-   ```bash
-   cd $CPLFOLD_DIR/Utils/HotKnots_v2.0
-   make            # purge stale .o files first if switching arch
-   ```
-   If this is wrong, CPLfold folds return `energy = None` and the port raises a clear
-   "rebuild HotKnots" error (it will not silently write a 0.0 energy).
+```bash
+conda activate hyb2
+hyb2-py --config run.yml          # edit run.yml first
+```
 
-3. **VARNA jar path (REQUIRED - machine-specific).** The port reads the jar location from
-   the committed file `bin/VARNA.dir`, whose contents are an **absolute path from the
-   original machine**, so after cloning it points somewhere that doesn't exist for you.
-   Either edit `bin/VARNA.dir` so its single line is your jar path:
-   ```
-   /path/to/your/hyb2/VARNA/build/jar/VARNAcmd.jar
-   ```
-   or override it per-shell with `export HYB2_VARNA_JAR=/path/to/VARNAcmd.jar` (this takes
-   precedence over the file). The jar itself ships in the repo at
-   `VARNA/build/jar/VARNAcmd.jar`.
+Activation sets all the machine-specific paths for you, there is nothing to hand-edit.
 
 ---
 
-## 3. Environment gotchas (read before your first run)
+## 2. Commands
 
-- **Activate the env** (or put its `bin/` on PATH) before running. Every R step calls
-  `Rscript` **bare**, so without the env active it grabs the *system* R (no DESeq2) and
-  `hyb2_compare` fails. Same for bowtie2 / hybrid-* / java.
-- **`UNAFOLDDAT`** (for the unafold backend) is set automatically by the port to
-  `$CONDA_PREFIX/share/oligoarrayaux`. If you run `hybrid-ss-min` by hand it must be set, or
-  it dies with "stack file is corrupt".
-- **`hyb2_compare` input table:** use **non-numeric** dataset stems (e.g. `ctrl_rep1`, not
-  `1`). R's `read.table` mangles numeric column headers and breaks DESeq2.
-
----
-
-## 4. Commands
-
-Console scripts (after `pip install -e .`): `hyb2-py`, `hyb2-coverage`, `plot-cdm`,
+Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-coverage`, `plot-cdm`,
 `hyb2-sam-composition`. The rest run via `python -m`:
 
 | Command | Console script | or `python -m …` |
@@ -101,7 +61,7 @@ Run `hyb2-py` with no args for full flag help.
 
 ---
 
-## 5. Quick start: full pipeline from a SAM
+## 3. Quick start: full pipeline from a SAM
 
 ```bash
 conda activate hyb2
@@ -143,16 +103,16 @@ hyb2-py --config run.yml --alpha 0.3      # CLI flags OVERRIDE the config
 ```
 Precedence is **CLI flag > config value > built-in default**. Config keys are the
 long-flag names (`input`, `reference`, `blast_threshold`, `x_start`, `alpha`, …); an
-unknown key fails loudly. `hyb2-fold` has its own template with the same key names for
-the overlapping args, so you can lift the fold section of a run straight across.
+unknown key fails loudly. Leave `varna_jar` **unset/commented** to auto-resolve the bundled
+jar, only set it to point at a VARNA jar in a non-default location.
 
 ### Output verbosity (`-V`)
 
 By default a run prints clean step-by-step status: `[1] Calling chimeras`, the folded
-`change in G`, output files: with progress bars on the slow front-of-pipeline stages (interactive
-terminals only; silent when piped/`tee`'d/on the cluster). Add **`-V/--verbose`** for the
-full detail: the per-stage legacy messages plus the R/VARNA subprocess output. Useful for
-debugging; leave it off for normal runs.
+delta G, and output files, with progress bars on the slow front-of-pipeline stages
+(interactive terminals only; silent when piped/`tee`'d/on the cluster). Add
+**`-V/--verbose`** for the full detail: the per-stage legacy messages plus the R/VARNA
+subprocess output. Useful for debugging; leave it off for normal runs.
 
 ### Readable long flags
 
@@ -162,7 +122,7 @@ Every short flag has a descriptive long alias (`-i/--input`, `-d/--reference`,
 
 ---
 
-## 6. Reuse the `.hyb`: display any RNA's structure on demand
+## 4. Reuse the `.hyb`: display any RNA's structure on demand
 
 Chimeric calling is the expensive part, and the `.hyb` it produces contains chimeras for
 **every** RNA in the reference at once. **Call chimeras once, then fold/plot any RNA
@@ -182,7 +142,7 @@ Only coverage/viewpoint (CDM) needs no coords: `hyb2-py -i test.hyb -a RNA_A`.
 
 ---
 
-## 7. Folding backends & CPLfold tuning
+## 5. Folding backends & CPLfold tuning
 
 Choose the backend with `-r`: `cplfold` (default, finds pseudoknots), `vienna` (ViennaRNA),
 `unafold` (UNAFold). **Both `hyb2-py` and `hyb2-fold` expose the full CPLfold parameter
@@ -202,11 +162,14 @@ python -m hyb2.pipelines.hyb2_fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 
 
 ---
 
-## 8. Comparing datasets (differential + similarity)
+## 6. Comparing datasets (differential + similarity)
 
 Compares ≥2 replicates per condition, runs DESeq2, produces a differential coverage map,
-similarity heatmap, and enrichment tables. Needs a **manually-made** tab-delimited table
-(non-numeric stems: see §3):
+similarity heatmap, and enrichment tables. Needs a **manually-made** tab-delimited table.
+
+> **Gotcha:** use **non-numeric** dataset stems (e.g. `ctrl_rep1`, not `1`). R's
+> `read.table` mangles numeric column headers and breaks DESeq2.
+
 ```
 ctrl_rep1.hyb   ctrl_rep1.MyRNA.contact.txt   condition_one
 ctrl_rep2.hyb   ctrl_rep2.MyRNA.contact.txt   condition_one
@@ -219,25 +182,25 @@ python -m hyb2.pipelines.hyb2_compare -i input.table -o cmp -a MyRNA -d ref.fast
 
 ---
 
-## 9. Testing on large files (the important bit for scale testing)
+## 7. Large files & memory
 
-The pipeline has been validated for **correctness** on the Zika `testData.sam`, but **not
-yet for scale on real large data**. The front-of-pipeline stages (where the data is biggest)
-now stream, **except `collapse_blast`, the one remaining bottleneck:**
+The front-of-pipeline stages (where the data is biggest) all stream or are memory-safe:
 
 | Stage | Status |
 |---|---|
-| `sam2blast` | **streams (O(1) memory), ~3.3× faster**: byte-identical output |
-| `bowtie2_map` fastq/fastq.gz prep | **streams (O(unique reads))**: byte-identical |
-| `mtophits_blast` | **streams (O(unique read IDs))**: byte-identical |
-| `collapse_blast` | **still materializes the blast ~2.7× in RAM (≈1.5× the SAM), linear**: the bottleneck |
+| `sam2blast` | streams (O(1) memory), ~3.3× faster; byte-identical output |
+| `bowtie2_map` fastq/fastq.gz prep | streams (O(unique reads)); byte-identical |
+| `mtophits_blast` | streams (O(unique read IDs)); byte-identical |
+| `collapse_blast` | **disk-backed external sort** (memory bounded by the sort buffer); byte-identical |
 
-**Empirically: a real ~50 GB SAM OOM-kills at `collapse_blast`.** `sam2blast` completes
-(26 GB blast, ~11 min), then `collapse` is killed loading that blast into RAM (needs ~75 GB;
-died at ~9 GB on a 15 GB-RAM box). This is a regression vs the legacy `collapse_blast_2.sh`,
-whose `sort -k13` was disk-backed/memory-safe, so the faithful fix restores that. **The
-pipeline cannot complete a 50 GB SAM until `collapse_blast` is fixed** (external-sort vs
-clean-rewrite: decision pending).
+`collapse_blast` uses a disk-backed `sort` (memory capped by `-S`, spilling to `TMPDIR`),
+mirroring the legacy `collapse_blast_2.sh`. A real ~50 GB SAM that previously OOM-killed
+now completes.
+
+> **`TMPDIR` must be on real disk.** A tmpfs (RAM-backed) `/tmp` (common on Linux)
+> re-introduces the OOM, because the sort spills into RAM. `install.py`'s activation script
+> handles this automatically (it points `TMPDIR` at `$HOME/scratch_tmp` when `/tmp` is
+> tmpfs). If you run outside the activated env, set `TMPDIR` to a real-disk path yourself.
 
 Everything **downstream of the `.hyb`** (folding, coverage, compare) operates on
 already-reduced data and is not a large-file concern.
@@ -249,11 +212,11 @@ To profile a run's peak memory:
 
 ---
 
-## 10. Run the test suite
+## 8. Run the test suite
 
 ```bash
 conda activate hyb2
-PYTHONPATH=src python -m pytest tests/ -q
+python -m pytest tests/ -q
 ```
 Some tests are **gated**, they skip (not fail) if a tool or a regenerated fixture is
 missing. Fixtures are gitignored and rebuilt per-machine:
@@ -267,13 +230,13 @@ scripts/generate_unafold_baseline.sh           # needs oligoarrayaux
 
 ---
 
-## 11. Known limitations
+## 9. Known limitations
 
-- **Scale untested on real large data** (see §9): the reason for this hand-off.
+- **Scale validated on `testData.sam`; real large-data parity still in progress.**
 - **`comradesScore`** (randomized 1000× parallel folding, significance scoring): not
   ported; needs a `qsub` cluster.
 - **`hyb2_app`** (Shiny GUI): the R app is unchanged; only its thin launcher wrapper is
   not yet ported.
-- **No per-stage checkpointing yet:** the `.hyb` is reused if present (§6), but if the
+- **No per-stage checkpointing yet:** the `.hyb` is reused if present (§4), but if the
   `.hyb` is missing the spine regenerates the blast intermediates from scratch (no
   skip-if-`test.blast`-exists yet).
