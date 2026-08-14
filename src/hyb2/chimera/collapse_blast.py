@@ -3,22 +3,6 @@
 removes duplicate rows, keeping exactly one row per
 unique (gene = col 2, mapped sequence = col 13) pair. 
 
-NOTE, despite the legacy "tallying reads to the ID" comment: NO count tallying
-survives. The awk recomputes the read-id count, then `cut -f3-20` throws it away,
-so every output read ID is unchanged. That path is dead code; this port omits it.
-
-WHY THE CODE BELOW IS CONVOLUTED: collapse's exact ROW ORDER changes the
-downstream numbers - mtophits keeps the first-seen e-value per read id, so a
-different order -> different reference sums (reversing the rows shifted Zika
-244903 -> 243644). So this faithfully reproduces the legacy script's specific
-order and representative row rather than deduping cleanly. If that fragility is
-ever judged not worth preserving, all of stages 1-2 could collapse to a clean
-"keep first per (gene, seq) in input order" - but that changes results and needs
-a re-baselined golden (a decision for Grzegorz).
-
-The sort key is pinned to code points (locale-independent), which is actually
-more reproducible than the legacy shell `sort`, whose order depended on locale.
-
 """
 
 
@@ -28,7 +12,7 @@ from hyb2.tools import config
 from hyb2.tools import ui
 
 
-def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
+def collapse_blast(in_path, out_path, *, sort_mem="25%", tmpdir=None):
     sort_bin = config.gnu_sort()
     tmpdir = tmpdir or tempfile.gettempdir()
 
