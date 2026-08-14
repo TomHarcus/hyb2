@@ -12,6 +12,7 @@ from hyb2.tools.ui import spinner
 
 import logging
 
+log = logging.getLogger(__name__)
 
 def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
@@ -92,6 +93,7 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                             f"{stem}_homodimers_{gene_1}.gplot"],
                             stderr=subprocess.DEVNULL if quiet else None,
                             check=True)
+        log.info(f"Viewpoint graph of {gene_1} saved")
 
     if gene_2:
 
@@ -144,6 +146,7 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                             f"{stem}_{gene_1}_{gene_2}.gplot"],
                             stderr=subprocess.DEVNULL if quiet else None,
                             check=True)
+        log.info(f"Viewpoint graph of {gene_2} saved")
         
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="plot-viewpoint", add_help=False)

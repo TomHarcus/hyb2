@@ -101,7 +101,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
     sorted1 = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
 
     with open(sorted1, "w") as fout:
-        with ui.spinner("collapse: sorting (1/2)"):
+        with ui.spinner("collapse: sorting (1/2) "):
             subprocess.run(
                 [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t",
                 "-k3,3", "-k14,14", "-k1,1n", numbered],
@@ -123,7 +123,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
     resorted = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
 
     with open(resorted, "w") as fout:
-        with ui.spinner("collapse: sorting (2/2)"):
+        with ui.spinner("collapse: sorting (2/2) "):
             subprocess.run(
             [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t", "-k1,1n", deduped],
             stdout=fout, env=env, check=True,

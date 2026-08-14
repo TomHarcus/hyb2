@@ -3,7 +3,7 @@
 # CLI flags override anything set here for full flexibility
 
 #verbose:         True               # -V verbose on or off
-input:            output.hyb         # -i  fastq / SAM / hyb
+input:            output.hyb         # -i  hyb
 gene_1:           Zika_virusRNA      # -a  gene of interest
 # gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)
 reference:        ref.fasta          # -d  reference fasta
