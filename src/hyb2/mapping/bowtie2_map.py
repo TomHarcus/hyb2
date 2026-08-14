@@ -6,8 +6,10 @@ from hyb2.mapping.make_hyb_db_2 import make_hyb_db_2
 from hyb2.mapping.make_comp_fasta import make_comp_fasta
 from hyb2.mapping.solexa2fasta import solexa_to_fasta_lines
 from hyb2.common.fasta2tab import fasta_to_tab_lines
+from hyb2.tools.ui import spinner
+from hyb2.tools.logsetup import is_quiet
 
-import subprocess, gzip, os
+import subprocess, gzip, os, contextlib
 
 from pathlib import Path
 
@@ -19,10 +21,7 @@ def bowtie2_map(in_file, db, out):
     if suffix[-1] == "fasta":
 
         if not Path(db.replace("fasta", "tab", 1)).is_file():
-            print("Making database...")
             make_hyb_db_2(db)
-
-        print("Bowtie2 mapping...")
 
         _bowtie2(db, out, in_file)
         
@@ -33,7 +32,6 @@ def bowtie2_map(in_file, db, out):
     elif suffix[-2] == "fastq" and suffix[-1] == "gz":
 
         if not Path(db.replace("fasta", "tab", 1)).is_file():
-            print("Making database...")
             make_hyb_db_2(db)
 
         comp_path = f"{out}_comp.fasta"
@@ -44,9 +42,6 @@ def bowtie2_map(in_file, db, out):
             comp = make_comp_fasta(tab)
             Path(comp_path).write_text(comp)
 
-
-        print("Bowtie2 mapping...")
-
         _bowtie2(db, out, comp_path)
 
         print("Mapping concluded")
@@ -55,7 +50,6 @@ def bowtie2_map(in_file, db, out):
     # uses generators + streaming so that when reading large input file ram limit doesnt shoot up
     elif suffix[-1] == "fastq":
         if not Path(db.replace("fasta", "tab", 1)).is_file():
-            print("Making database...")
             make_hyb_db_2(db)
 
         comp_path = f"{out}_comp.fasta"
@@ -66,8 +60,6 @@ def bowtie2_map(in_file, db, out):
             comp = make_comp_fasta(tab)
             Path(comp_path).write_text(comp)
 
-        print("Bowtie2 mapping...")
-
         _bowtie2(db, out, comp_path)
 
         print("Mapping concluded")
@@ -77,14 +69,18 @@ def bowtie2_map(in_file, db, out):
 
 # run bowtie2
 def _bowtie2(db, out, reads):
+    quiet = is_quiet()
+
     with open(f"{out}.sam", "w") as sam, open(f"{out}.blast.err", "w") as err:
-            
-        subprocess.run(
-            ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
-            "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
-            "--rdg", "5,1", "--rfg", "5,1", "-p", str(os.cpu_count()), "-x", db.replace(".fasta", "", 1),
-            "-f", reads],
-            stdout=sam,
-            stderr=err,
-            check=True
-        )
+        with spinner("bowtie2 mapping ") if quiet else contextlib.nullcontext():
+            if not quit:
+                print("bowtie2 mapping:")
+            subprocess.run(
+                ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
+                "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
+                "--rdg", "5,1", "--rfg", "5,1", "-p", str(os.cpu_count()), "-x", db.replace(".fasta", "", 1),
+                "-f", reads],
+                stdout=sam,
+                stderr=err,
+                check=True
+            )
