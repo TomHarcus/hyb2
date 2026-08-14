@@ -34,12 +34,13 @@ def print_help():
 
     return 0
 
-import subprocess, math, re, glob
+import subprocess, math, re, glob, contextlib
 from pathlib import Path
 from hyb2.compare.make_hybrid_annotation_table import make_hybrid_annotation_table
 from hyb2.compare.DESeq_interaction_split_select import split_select
 from hyb2.compare.similarity import similarity_contact
 from hyb2.tools.logsetup import is_quiet
+from hyb2.tools import ui
 
 import logging
 
@@ -102,8 +103,11 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     # prepends header to top of file
     Path(f"{out}.contact.txt").write_text("x\ty\tcount\n" + "\n".join(out_rows) + "\n")
 
-    subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
-                    f"{out}.contact.txt", str(LIMIT)], stderr=subprocess.DEVNULL if quiet else None, check=True)
+    with ui.spinner("generating similarity heatmap ") if quiet else contextlib.nullcontext():
+        if not quiet:
+            print("generating similarity heatmap")
+        subprocess.run(["Rscript", config.rscript("similarity_heatmap.R"),
+                        f"{out}.contact.txt", str(LIMIT)], stderr=subprocess.DEVNULL if quiet else None, check=True)
 
     condition_one_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_one"]
     condition_two_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_two"]
@@ -128,11 +132,14 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
 
     quiet = is_quiet()
 
-    subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
-                    f"{out}.table.txt", f"{out}_names.table",
-                    str(min_reads)],
-                    stderr=subprocess.DEVNULL if quiet else None,
-                    check=True)
+    with ui.spinner("generating deseq tables ") if quiet else contextlib.nullcontext():
+        if not quiet:
+            print("generating deseq tables")
+        subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
+                        f"{out}.table.txt", f"{out}_names.table",
+                        str(min_reads)],
+                        stderr=subprocess.DEVNULL if quiet else None,
+                        check=True)
 
     deseq_output = []
     for line in open(f"DESeq_{out}.txx").read().splitlines()[1:]:
@@ -176,10 +183,13 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
     tail = ["x\ty\tlogpadj\tlog2FoldChange\tpadj"] + tail
     Path(f"DESeq_{out}_significant.padj_heatmap.txt").write_text("\n".join(tail) + "\n")
 
-    subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
-                    f"DESeq_{out}_significant.padj_heatmap.txt", out],
-                    stderr=subprocess.DEVNULL if quiet else None,
-                    check=True)
+    with ui.spinner("generating differential coverage map ") if quiet else contextlib.nullcontext():
+        if not quiet:
+            print("generating differential converage map")
+        subprocess.run(["Rscript", config.rscript("differential_coverage_map.R"),
+                        f"DESeq_{out}_significant.padj_heatmap.txt", out],
+                        stderr=subprocess.DEVNULL if quiet else None,
+                        check=True)
 
     split_select(out, interaction_range)
 
@@ -205,7 +215,8 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
 
     for sign in ("pos", "neg"):
         hm = f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt"
-        for row in Path(hm).read_text().splitlines()[1:11]:       # awk NR>1 && NR<12
+        full_file = Path(hm).read_text().splitlines()[1:11]
+        for row in ui.track(full_file, "zoom CDMs ", total=len(full_file)):       # awk NR>1 && NR<12
             c = row.split("\t")
             subprocess.run(
                 ["Rscript", config.rscript("contact_density_map_zoom.R"),
@@ -234,6 +245,7 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
         in_hyb = src.replace("hyb", f"{sign}.hyb", 1)          
         Path(in_hyb).write_text("\n".join(filtered) + "\n")
 
+    jobs = []
     for hm in glob.glob(f"{out}_{rng}*enrichment.heatmap.txt"):  
         lines = Path(hm).read_text().splitlines()
         for i, row in enumerate(lines):
@@ -255,7 +267,10 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
                 cmd += ["-y", str(y1 + 1), "-l", "300"]
             if VARNA:
                 cmd += ["-j", VARNA]
-            subprocess.run(cmd, stderr=subprocess.DEVNULL if quiet else None, check=True)
+            jobs.append(cmd)
+
+    for cmd in ui.track(jobs, "folding enriched interactions ", total=len(jobs)):
+        subprocess.run(cmd, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
 
 def build_parser() -> argparse.ArgumentParser:
