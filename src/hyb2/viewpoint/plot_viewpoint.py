@@ -2,18 +2,20 @@
 
 """
 
-import re, subprocess, os, argparse, sys
+import re, subprocess, os, argparse, sys, contextlib
 from pathlib import Path
 from hyb2.viewpoint.hyb2blast import hyb2blast
 from hyb2.viewpoint.blast2gplot import blast2gplot
 from hyb2.tools import config
+from hyb2.tools.logsetup import is_quiet
+from hyb2.tools.ui import spinner
 
 import logging
 
 
 def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
-    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
+    quiet = is_quiet()
 
     # legacy DB_2 is unreachable: always == DB_1
 
@@ -55,11 +57,13 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                 blast_file=out_blast,
                 gene_lengths_file=f"{gene_1}.length.txt")
 
-
-    subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
-                    f"{stem}_{gene_1}.gplot"],
-                    stderr=subprocess.DEVNULL if quiet else None,
-                    check=True)
+    with spinner("rendering viewpoint graph ") if quiet else contextlib.nullcontext():
+        if not quiet:
+            print("rendering viewpoint graph")
+        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                        f"{stem}_{gene_1}.gplot"],
+                        stderr=subprocess.DEVNULL if quiet else None,
+                        check=True)
 
     homodimers = in_hyb.replace(".hyb", "_homodimers.hyb")
 
@@ -81,11 +85,13 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                     blast_file=out_homodimers_blast,
                     gene_lengths_file=f"{gene_1}.length.txt")
 
-        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
-                        f"{stem}_homodimers_{gene_1}.gplot"],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
-
+        with spinner("rendering viewpoint graph (homodimers)") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print("rendering viewpoint graph (homodimers)")
+            subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                            f"{stem}_homodimers_{gene_1}.gplot"],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
 
     if gene_2:
 
@@ -123,17 +129,21 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                     blast_file=blast_g1_g2,
                     gene_lengths_file=f"{gene_2}.length.txt")
 
-        
-        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
-                        f"{stem}_{gene_2}_{gene_1}.gplot"],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+        with spinner(f"rendering viewpoint graph ({gene_2}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering viewpoint graph ({gene_2})")
+            subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                            f"{stem}_{gene_2}_{gene_1}.gplot"],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
 
-        
-        subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
-                        f"{stem}_{gene_1}_{gene_2}.gplot"],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+        with spinner(f"rendering viewpoint graph ({gene_1}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering viewpoint graph ({gene_1})")
+            subprocess.run(["Rscript", config.rscript("viewpoint_graph.R"),
+                            f"{stem}_{gene_1}_{gene_2}.gplot"],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
         
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="plot-viewpoint", add_help=False)

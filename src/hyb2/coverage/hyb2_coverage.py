@@ -8,17 +8,19 @@ import sys
 from pathlib import Path
 from hyb2.coverage.plot_hybrids_3 import plot_hybrids_3, swap_gene1_to_arm1
 from hyb2.tools import config
+from hyb2.tools.logsetup import is_quiet
+from hyb2.tools.ui import spinner
 
-import logging
+import logging, contextlib
 
 log = logging.getLogger(__name__)
 
 def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
-    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
+    quiet = is_quiet()
 
     if not gene_2 and not x1 and not x2 and not y1 and not y2:
 
-        log.info(f"Plotting contact density map of {gene_1}...")
+        log.info(f"Plotting contact density map of {gene_1}:")
 
         contact = in_hyb.replace(".hyb", f".{gene_1}.contact.txt")
 
@@ -29,18 +31,22 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
 
         Path(contact).write_text(rows[0] + "\nx\ty\tcount\n" + "\n".join(rows[1:]) + "\n")
 
-        subprocess.run(["Rscript", config.rscript("contact_density_map_indiv.R"),
-                        contact,
-                        str(limit)],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+        with spinner(f"rendering contact map ({gene_1}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering contact map ({gene_1})")
+
+            subprocess.run(["Rscript", config.rscript("contact_density_map_indiv.R"),
+                            contact,
+                            str(limit)],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
         
 
         log.info(f"Contact density map of {gene_1} saved")
 
     elif gene_2 and not x1 and not x2 and not y1 and not y2:
 
-        log.info(f"Plotting contact density map of {gene_1} and {gene_2}...")
+        log.info(f"Plotting contact density map of {gene_1} and {gene_2}:")
 
         contact = in_hyb.replace(".hyb", f".{gene_1}-{gene_2}.contact.txt")
 
@@ -53,39 +59,48 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
         
         Path(contact).write_text(rows[0] + "\nx\ty\tcount\n" + "\n".join(rows[1:]) + "\n")
 
-        subprocess.run(["Rscript", config.rscript("cdm_2genes.R"),
-                        contact,
-                        str(limit)],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+        with spinner(f"rendering contact map ({gene_1} and {gene_2}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering contact map ({gene_1} and {gene_2})")
+            subprocess.run(["Rscript", config.rscript("cdm_2genes.R"),
+                            contact,
+                            str(limit)],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
 
         log.info(f"Contact density map of {gene_1} and {gene_2} saved")
 
     if not gene_2 and x1 and x2 and y1 and y2:
 
-        log.info(f"Plotting zoomed in contact density map of {gene_1}...")
+        log.info(f"Plotting zoomed in contact density map of {gene_1}:")
 
         contact = in_hyb.replace(".hyb", f".{gene_1}.contact.txt")
-    
-        subprocess.run(["Rscript", config.rscript("cdm_indiv_zoom.R"),
-                        contact, str(x1), str(x2), str(y1), str(y2),
-                        str(limit)],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+
+        with spinner(f"rendering zoomed contact map ({gene_1}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering zoomed contact map ({gene_1})")
+            subprocess.run(["Rscript", config.rscript("cdm_indiv_zoom.R"),
+                            contact, str(x1), str(x2), str(y1), str(y2),
+                            str(limit)],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
 
         log.info(f"Zoomed in contact density map of {gene_1} saved")
 
     elif gene_2 and x1 and x2 and y1 and y2:
 
-        log.info(f"Plotting zoomed in contact density map of {gene_1} and {gene_2}...")
+        log.info(f"Plotting zoomed in contact density map of {gene_1} and {gene_2}:")
 
         contact = in_hyb.replace(".hyb", f".{gene_1}-{gene_2}.contact.txt")
-            
-        subprocess.run(["Rscript", config.rscript("cdm_indiv_zoom.R"),
-                        contact,str(x1), str(x2), str(y1), str(y2),
-                        str(limit), gene_1, gene_2],
-                        stderr=subprocess.DEVNULL if quiet else None,
-                        check=True)
+
+        with spinner(f"rendering zoomed contact map ({gene_1} and {gene_2}) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print(f"rendering zoomed contact map ({gene_1} and {gene_2})")
+            subprocess.run(["Rscript", config.rscript("cdm_indiv_zoom.R"),
+                            contact,str(x1), str(x2), str(y1), str(y2),
+                            str(limit), gene_1, gene_2],
+                            stderr=subprocess.DEVNULL if quiet else None,
+                            check=True)
 
         log.info(f"Zoomed in contact density map of {gene_1} and {gene_2} saved")
 

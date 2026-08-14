@@ -10,9 +10,12 @@ branch of the legacy is dropped (Linux-only). Intermediate SVG is preserved
 import argparse
 import subprocess
 import sys
+import contextlib
 
 from hyb2.folding.svg_mod_coord import svg_mod_coord
 from hyb2.tools import config
+from hyb2.tools.logsetup import is_quiet
+from hyb2.tools.ui import spinner
 
 import logging
 
@@ -20,7 +23,7 @@ log = logging.getLogger(__name__)
 
 def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interactive):
 
-    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
+    quiet = is_quiet()
 
     if VARNA is None:
         VARNA = config.VARNA_JAR
@@ -55,8 +58,11 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     
     else:
         svg = in_file[:-3] + ".svg" if in_file.endswith(".ct") else in_file + ".svg"
-        subprocess.run(varna_cmd + ["-o", svg],
-                       stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
+        with spinner("rendering structure (VARNA) ") if quiet else contextlib.nullcontext():
+            if not quiet:
+                print("rendering structure (VARNA)")
+            subprocess.run(varna_cmd + ["-o", svg],
+                        stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
 
         prefix = score.split("__")[0]
 

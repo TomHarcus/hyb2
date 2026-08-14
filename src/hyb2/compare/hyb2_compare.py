@@ -39,6 +39,7 @@ from pathlib import Path
 from hyb2.compare.make_hybrid_annotation_table import make_hybrid_annotation_table
 from hyb2.compare.DESeq_interaction_split_select import split_select
 from hyb2.compare.similarity import similarity_contact
+from hyb2.tools.logsetup import is_quiet
 
 import logging
 
@@ -50,7 +51,7 @@ def _num(s):
 def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FASTA, 
                  VARNA, FOLDING):
 
-    quiet = not logging.getLogger().isEnabledFor(logging.DEBUG)
+    quiet = is_quiet()
 
     rows = [tuple(l.split()) for l in open(input_table) if l.strip()] 
 
@@ -124,6 +125,8 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
     way - table-driven vs positional condition assignment). `value` is the list of
     contact-file stems handed to the zoom R script. Does NOT include the similarity map or
     the folding branch (both hyb2_compare-only)."""
+
+    quiet = is_quiet()
 
     subprocess.run(["Rscript", config.rscript("DESeq_run.R"),
                     f"{out}.table.txt", f"{out}_names.table",
@@ -218,6 +221,8 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
     the top-10 enriched interactions of every heatmap. NOTE (faithful legacy quirk): the
     fold loop uses `in_hyb` = the LAST condition file, exactly as the legacy $IN leaks out
     of the build loop above it."""
+
+    quiet = is_quiet()
     in_hyb = None
     for src in condition_files:                                 
         filtered = []

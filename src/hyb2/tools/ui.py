@@ -54,3 +54,9 @@ def spinner(desc: str):
         stop.set()
         t.join()
         bar.close()
+
+# count bar for greedy constrained loop
+def track(iterable, desc, total=None):
+
+    return tqdm(iterable, total=total, desc=f"  {desc}",
+                disable=not sys.stderr.isatty(), leave=False)

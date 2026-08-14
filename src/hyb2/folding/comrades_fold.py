@@ -14,6 +14,7 @@ from hyb2.folding.ct2b_gk3 import ct2b_gk3
 from hyb2.tools import config
 
 import logging
+from hyb2.tools import ui
 
 log = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
     
     current = []
     accepted = []
-    for constraint in lines:
+    for constraint in ui.track(lines, "fitting constraints", total=len(lines)):
         
         current.append(constraint)
 
@@ -189,18 +190,19 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
                 matrix[j-begin, i-begin] = v
 
     # call cplfold
-    results = two_phase_pseudoknot_fold(
-        seq,
-        bonus_matrix=matrix,
-        alpha=alpha,
-        beta=beta,
-        beam_size=beam_size,
-        energy_delta=energy_delta,
-        max_phase1=max_phase1,
-        max_phase2=max_phase2,
-        energy_model=energy_model,
-        verbose=False
-    )
+    with ui.spinner("folding (cplfold) "):
+        results = two_phase_pseudoknot_fold(
+            seq,
+            bonus_matrix=matrix,
+            alpha=alpha,
+            beta=beta,
+            beam_size=beam_size,
+            energy_delta=energy_delta,
+            max_phase1=max_phase1,
+            max_phase2=max_phase2,
+            energy_model=energy_model,
+            verbose=False
+        )
 
     if not results:
         raise ValueError("CPLfold returned no structures")

@@ -60,12 +60,13 @@ def run(
 
     ref = out + "_mtophits.ref"
     with open(mtophits) as fin, open(ref, "w") as fout:
-        fout.writelines(create_reference(fin))
+        fout.writelines(create_reference(ui.progress(fin, in_sam, "reference")))
 
     hyb = out + ".hyb"
     with open(blast) as fin, open(hyb, "w") as fout:
-        fout.writelines(get_mtop_hybrids (
-            fin, blast_threshold=blast_threshold, mode=mode, max_overlap=max_overlap, max_hits=hmax
+        fout.writelines(get_mtop_hybrids(
+            ui.progress(fin, blast, "get_mtop_hybrids"),
+            blast_threshold=blast_threshold, mode=mode, max_overlap=max_overlap, max_hits=hmax
         ))
     
     ua = out + ".ua.hyb"
@@ -88,7 +89,7 @@ def run(
                 yield c[2] + "\n"
     
     with open(in_sam) as fin, open(tophit, "w") as fout:
-        fout.writelines(histogram(_single_reads(fin)))
+        fout.writelines(histogram(_single_reads(ui.progress(fin, in_sam, "tophit_by_gene"))))
 
     """hyb2_composition_pies.py not needed ported"""
 

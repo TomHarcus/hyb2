@@ -14,6 +14,7 @@ from hyb2.common.histogram import histogram
 from hyb2.folding.bp2hyb import bp2hyb
 from hyb2.folding.hyb2constraints import hyb2constraints
 from hyb2.tools import config
+from hyb2.tools.ui import spinner
 import logging
 
 log = logging.getLogger(__name__)
@@ -54,14 +55,15 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
             o1.write(bit1_rec)
             o2.write(bit2_rec)
 
-    if fold in ("vienna", "cplfold"):
-        _fold_vienna(bit1, bit2, ct, vienna_bin)
+    with spinner("building support matrix "):
+        if fold in ("vienna", "cplfold"):
+            _fold_vienna(bit1, bit2, ct, vienna_bin)
 
-    elif fold == "unafold":
-        _fold_unafold(bit1, bit2, ct)
-    
-    else:
-        raise ValueError(f"unknown folder: {fold}")
+        elif fold == "unafold":
+            _fold_unafold(bit1, bit2, ct)
+        
+        else:
+            raise ValueError(f"unknown folder: {fold}")
     
     with open(ct) as fin:
         scores = histogram(ct2bps_2(fin.read()))

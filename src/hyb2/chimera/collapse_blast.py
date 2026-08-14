@@ -25,6 +25,7 @@ more reproducible than the legacy shell `sort`, whose order depended on locale.
 import sys, subprocess, tempfile, os
 from typing import Iterable, Iterator
 from hyb2.tools import config
+from hyb2.tools import ui
 
 
 def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
@@ -50,7 +51,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
 
     line = None
     with open(tmpf, "a") as temp_fin:
-        for line in sort_process.stdout:
+        for line in ui.progress(sort_process.stdout, in_path, "collapse: dedup runs"):
             elements = line.rstrip("\n").split("\t")
 
             if last_gene is None and last_seq is None:
@@ -100,11 +101,12 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
     sorted1 = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
 
     with open(sorted1, "w") as fout:
-        subprocess.run(
-            [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t",
-             "-k3,3", "-k14,14", "-k1,1n", numbered],
-             stdout=fout, env=env, check=True
-        )
+        with ui.spinner("collapse: sorting (1/2)"):
+            subprocess.run(
+                [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t",
+                "-k3,3", "-k14,14", "-k1,1n", numbered],
+                stdout=fout, env=env, check=True
+            )
 
     deduped = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
     prev_key = None
@@ -121,10 +123,11 @@ def collapse_blast(in_path, out_path, *, sort_mem="4G", tmpdir=None):
     resorted = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
 
     with open(resorted, "w") as fout:
-        subprocess.run(
-        [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t", "-k1,1n", deduped],
-        stdout=fout, env=env, check=True,
-        )
+        with ui.spinner("collapse: sorting (2/2)"):
+            subprocess.run(
+            [sort_bin, "-S", sort_mem, "-T", tmpdir, "-t", "\t", "-k1,1n", deduped],
+            stdout=fout, env=env, check=True,
+            )
 
     with open(resorted) as fin, open(out_path, "w") as fout:
         for line in fin:
