@@ -4,15 +4,20 @@
 
 #verbose:         True               # -V verbose on or off
 input:            output.hyb         # -i  hyb
+reference:        ref.fasta          # -d  reference fasta
+
 gene_1:           Zika_virusRNA      # -a  gene of interest
 # gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)
-reference:        ref.fasta          # -d  reference fasta
+
 x_start:          3900               # -x  fold/zoom region start
 # y_start:         5001              # -y  2nd fragment start (long-range / 2-gene modes)
+
 length:           300                # -l
 # varna_jar:       /path/VARNAcmd.jar   # -j  (auto-resolved by default)
-# interactive:     1              # -0  launch VARNA GUI (needs a display)
+
 fold_backend:     cplfold            # -r  cplfold | vienna | unafold
+# interactive:     1              # -0  launch VARNA GUI (needs a display)
+
 
 # --- CPLfold tuning (only used when fold_backend: cplfold) ---
 alpha:            0.5

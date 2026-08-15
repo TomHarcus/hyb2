@@ -5,10 +5,10 @@
 #verbose:         True               # -V verbose on or off
 input_table:          input.table         # -i  .table
 output_id:            mycompare           # -o ouput prefix
-min_reads:            2                   # DESeq2 chimera count filtering threshold (default=2)
-interaction_range:    100                 # Range to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction
-LIMIT:                0.95                # Upper limit for heatmap chimeric count (default=0.95)
-GENE:                 gene_id             # Gene ID of interest
-FASTA:                input.fasta         # Fasta file used for mapping
+min_reads:            2                   # -m DESeq2 chimera count filtering threshold (default=2)
+interaction_range:    100                 # -r Range to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction
+LIMIT:                0.95                # -q Upper limit for heatmap chimeric count (default=0.95)
+GENE:                 gene_id             # -a Gene ID of interest
+FASTA:                input.fasta         # -d Fasta file used for mapping
 #VARNA:                /path/VARNAcmd.jar  # -j  (auto-resolved by default)
-FOLDING:              0                    # Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)
+FOLDING:              0                    # -0 Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)

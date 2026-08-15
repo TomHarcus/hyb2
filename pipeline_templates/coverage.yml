@@ -6,8 +6,8 @@
 input:            output.hyb         # -i  hyb
 gene_1:           Zika_virusRNA      # -a  gene of interest
 # gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)
-# limit:          0.95               # upper quantile for heatmap contrast (default=0.95)
-# x1:             None               # zoom window X start
-# x2:             None               # zoom window X end
-# y1:             None               # zoom window Y start
-# y2:             None               # zoom window Y end
+# limit:          0.95               # -q upper quantile for heatmap contrast (default=0.95)
+# x1:             None               # -w zoom window X start
+# x2:             None               # -x zoom window X end
+# y1:             None               # -y zoom window Y start
+# y2:             None               # -z zoom window Y end
