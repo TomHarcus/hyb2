@@ -56,9 +56,9 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         
         return (vienna_output, ct_output)
 
-    log.info(f"Input constraints file: {in_constraints}")
-    log.info(f"Creating constraints file: {current_constraints}")
-    log.info(f"Creating shuffled constraints file: {shuffled_constraints}")
+    log.debug(f"Input constraints file: {in_constraints}")
+    log.debug(f"Creating constraints file: {current_constraints}")
+    log.debug(f"Creating shuffled constraints file: {shuffled_constraints}")
 
     if current_constraints == in_constraints:
         raise ValueError("name your constraint file something else... Exiting")
