@@ -282,18 +282,21 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--help", action="help", help="Show this help message and exit")
     p.add_argument("-V", "--verbose", action="store_true", help="show detailed output")
-    p.add_argument("-i", dest="input_table", required=True, metavar="INPUT.HYB", help="Input table You MANUALLY GENERATED")
-    p.add_argument("-o", dest="out", required=True, help="out destination")
-    p.add_argument("-m", dest="min_reads", type=int, default=2, help="DESeq2 chimera count filtering threshold (default=2)")
-    p.add_argument("-r", dest="interaction_range", type=int, default=100, help="Range to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction")
-    p.add_argument("-q", dest="LIMIT", type=float, default=0.95, help="Upper limit for heatmap chimeric count (default=0.95)")
-    p.add_argument("-a", dest="GENE", help="Gene ID of interest")
-    p.add_argument("-d", dest="FASTA", help="Fasta file used for mapping")
-    p.add_argument("-j", dest="VARNA", default=None, help="Directory of VARNAcmd.jar")
-    p.add_argument("-0", dest="FOLDING", type=int, default=0, help="Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
+    p.add_argument("--config", default=None, metavar="RUN.YML", help="YAML config of args, CLI flags override it")
+    p.add_argument("-i", "--input-table", dest="input_table", required=True, metavar="INPUT.HYB", help="Input table You MANUALLY GENERATED")
+    p.add_argument("-o", "--output-id", dest="output_id", required=True, help="out destination")
+    p.add_argument("-m", "--min-reads", dest="min_reads", type=int, default=2, help="DESeq2 chimera count filtering threshold (default=2)")
+    p.add_argument("-r", "--range", dest="interaction_range", type=int, default=100, help="Range to define an interaction (default=100). 100nt from midpoint in both directions, meaning 200nt long for each defined interaction")
+    p.add_argument("-q", "--limit", dest="LIMIT", type=float, default=0.95, help="Upper limit for heatmap chimeric count (default=0.95)")
+    p.add_argument("-a", "--gene-id", dest="GENE", help="Gene ID of interest")
+    p.add_argument("-d", "--reference", dest="FASTA", help="Fasta file used for mapping")
+    p.add_argument("-j", "--varna-jar", dest="VARNA", default=None, help="Directory of VARNAcmd.jar")
+    p.add_argument("-0", "--folding", dest="FOLDING", type=int, default=0, help="Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
     return p
 
 from hyb2.tools.logsetup import configure_logging
+from hyb2.tools.configfile import parse_with_config
+
 def main(argv: list[str] | None = None) -> int:
     argv = sys.argv[1:] if argv is None else argv
 
@@ -301,12 +304,12 @@ def main(argv: list[str] | None = None) -> int:
         print_help()
         return 0
 
-    args = build_parser().parse_args(argv)
+    args = parse_with_config(build_parser(), argv)
 
     configure_logging(args.verbose)
 
     hyb2_compare(
-        args.input_table, args.out, args.min_reads, args.interaction_range,
+        args.input_table, args.output_id, args.min_reads, args.interaction_range,
         args.LIMIT, args.GENE, args.FASTA, args.VARNA, args.FOLDING
     )
     return 0

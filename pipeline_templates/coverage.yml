@@ -1,5 +1,5 @@
 # hyb2 coverage config
-# pass with: hyb2-coverage --config standalone_fold.yml
+# pass with: hyb2-coverage --config coverage.yml
 # CLI flags override anything set here for full flexibility
 
 #verbose:         True               # -V verbose on or off

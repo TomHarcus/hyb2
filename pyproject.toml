@@ -27,8 +27,10 @@ cplfold = ["numba", "scipy"]
 # `python -m hyb2`.
 [project.scripts]
 hyb2-py = "hyb2.cli:main"
-hyb2-sam-composition = "hyb2.chimera.sam_composition:main"
+hyb2-fold = "hyb2.folding.hyb2_fold:main"
 hyb2-coverage = "hyb2.coverage.hyb2_coverage:main"
+hyb2-compare = "hyb2.compare.hyb2_compare:main"
+hyb2-sam-composition = "hyb2.chimera.sam_composition:main"
 plot-cdm = "hyb2.coverage.hyb2_coverage:main"
 
 [tool.setuptools.packages.find]

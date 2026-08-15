@@ -46,16 +46,14 @@ Activation sets all the machine-specific paths for you, there is nothing to hand
 
 ## 2. Commands
 
-Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-coverage`, `plot-cdm`,
-`hyb2-sam-composition`. The rest run via `python -m`:
+Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, `hyb2-compare`. The rest run via `python -m`:
 
 | Command | Console script | or `python -m …` |
 |---|---|---|
 | main orchestrator | `hyb2-py` | `hyb2.cli` |
+| folding | `hyb2-fold` | `hyb2.folding.hyb2_fold` |
 | coverage / CDM | `hyb2-coverage` | `hyb2.coverage.hyb2_coverage` |
-| folding | - | `hyb2.folding.hyb2_fold` |
-| dataset comparison | - | `hyb2.compare.hyb2_compare` |
-| mapping only | - | `hyb2.mapping.bowtie2_map` |
+| dataset comparison | `hyb2-compare` | `hyb2.compare.hyb2_compare` |
 
 Run `hyb2-py` with no args for full flag help.
 
@@ -92,9 +90,9 @@ hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -b MyRNA -x 3501 -y 3501 -l 2
 
 ### Reproducible runs with a YAML config (`--config`)
 
-Both `hyb2-py` and `hyb2-fold` accept a YAML config of arguments, handy for
+All `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, and `hyb2-compare` accept a YAML config of arguments, handy for
 reproducible/shareable runs and CPLfold parameter sweeps. Templates are available in `pipeline_templates/`:
-`full_pipeline.yml` (full pipeline) and `standalone_fold.yml` (fold only).
+`full_pipeline.yml` (full pipeline), `folding.yml` (fold only), `compare.yml` (comparison only), and `coverage.yml` (coverage only).
 
 ```bash
 cp pipeline_templates/full_pipeline.yml run.yml           # then edit paths/params
@@ -150,7 +148,7 @@ surface** (`--alpha` etc.), so you can tune it from the one-shot pipeline or the
 fold command:
 
 ```bash
-python -m hyb2.folding.hyb2_fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
+hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
     -r cplfold -p test_MyRNA_3900-4199.basepair_scores.txt \
     --alpha 0.5 --beta 0.0 --normalize log --beam-size 100
 ```
@@ -177,7 +175,7 @@ expt_rep1.hyb   expt_rep1.MyRNA.contact.txt   condition_two
 expt_rep2.hyb   expt_rep2.MyRNA.contact.txt   condition_two
 ```
 ```bash
-python -m hyb2.compare.hyb2_compare -i input.table -o cmp -a MyRNA -d ref.fasta
+hyb2-compare -i input.table -o cmp -a MyRNA -d ref.fasta
 ```
 
 ---
