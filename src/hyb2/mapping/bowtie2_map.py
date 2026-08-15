@@ -13,7 +13,7 @@ import subprocess, gzip, os, contextlib
 
 from pathlib import Path
 
-def bowtie2_map(in_file, db, out):
+def bowtie2_map(in_file, db, out, reproducible=False):
 
     suffix = in_file.split(".")
 
@@ -23,7 +23,7 @@ def bowtie2_map(in_file, db, out):
         if not Path(db.replace("fasta", "tab", 1)).is_file():
             make_hyb_db_2(db)
 
-        _bowtie2(db, out, in_file)
+        _bowtie2(db, out, in_file, reproducible=reproducible)
         
         print("Mapping concluded")
 
@@ -42,7 +42,7 @@ def bowtie2_map(in_file, db, out):
             comp = make_comp_fasta(tab)
             Path(comp_path).write_text(comp)
 
-        _bowtie2(db, out, comp_path)
+        _bowtie2(db, out, comp_path, reproducible=reproducible)
 
         print("Mapping concluded")
 
@@ -60,7 +60,7 @@ def bowtie2_map(in_file, db, out):
             comp = make_comp_fasta(tab)
             Path(comp_path).write_text(comp)
 
-        _bowtie2(db, out, comp_path)
+        _bowtie2(db, out, comp_path, reproducible=reproducible)
 
         print("Mapping concluded")
 
@@ -68,18 +68,24 @@ def bowtie2_map(in_file, db, out):
         raise ValueError(f"unsupported input format: {in_file}")
 
 # run bowtie2
-def _bowtie2(db, out, reads):
+def _bowtie2(db, out, reads, reproducible):
     quiet = is_quiet()
+
+    cmd = ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
+                    "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
+                    "--rdg", "5,1", "--rfg", "5,1", "-p", str(os.cpu_count()), "-x", db.replace(".fasta", "", 1),
+                    "-f", reads]
 
     with open(f"{out}.sam", "w") as sam, open(f"{out}.blast.err", "w") as err:
         with spinner("bowtie2 mapping ") if quiet else contextlib.nullcontext():
-            if not quit:
+            if not quiet:
                 print("bowtie2 mapping:")
+
+            if reproducible:
+                cmd += ["--reorder"]
+
             subprocess.run(
-                ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
-                "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
-                "--rdg", "5,1", "--rfg", "5,1", "-p", str(os.cpu_count()), "-x", db.replace(".fasta", "", 1),
-                "-f", reads],
+                cmd,
                 stdout=sam,
                 stderr=err,
                 check=True

@@ -2,7 +2,7 @@
 # pass with: hyb2-py --config full_pipeline.yml
 # CLI flags override anything set here for full flexibility
 
-#verbose:         True               # -V verbose on or off
+#verbose:                        # -V verbose on or off
 input:            reads.sam          # -i  fastq / SAM / hyb
 reference:        ref.fasta          # -d  reference fasta
 output_id:        myrun              # -o  output prefix
@@ -24,6 +24,8 @@ length:           300                # -l
 
 fold_backend:     cplfold            # -r  cplfold | vienna | unafold
 # interactive:     1              # -0  launch VARNA GUI (needs a display)
+
+# reproducible                    # deterministic run-to-run output (adds bowtie2 --reorder)
 
 
 # --- CPLfold tuning (only used when fold_backend: cplfold) ---

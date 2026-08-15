@@ -2,7 +2,7 @@
 # pass with: hyb2-coverage --config coverage.yml
 # CLI flags override anything set here for full flexibility
 
-#verbose:         True               # -V verbose on or off
+#verbose:                            # -V verbose on or off
 input:            output.hyb         # -i  hyb
 gene_1:           Zika_virusRNA      # -a  gene of interest
 # gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)

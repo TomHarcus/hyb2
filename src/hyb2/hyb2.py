@@ -29,6 +29,7 @@ def print_help():
     print("\t--calc-energy (-e) calculate folding energy: 1 to calculate, 0 to skip and save on runtime (default=0)")
     print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
     print("\t--interactive (-0) interactive mode for VARNA pop-up: 0 to disable, 1 to activate (default=0)")
+    print("\t--reproducible deterministic run-to-run output (adds bowtie2 --reorder)")
 
     # folding parameters
     print("")
@@ -131,7 +132,7 @@ steps = ui.Steps()
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
-        interactive=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
+        interactive=False, reproducible=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
         max_phase2=CPL_DEFAULTS["max_phase2"], energy_model="energy_model"):
@@ -161,7 +162,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
 
     elif not Path(hyb_path).is_file():
         if mappable:
-            bowtie2_map(in_file, db, out)
+            bowtie2_map(in_file, db, out, reproducible=reproducible)
             log.info("SAM file generated")
             sam = f"{out}.sam"
 

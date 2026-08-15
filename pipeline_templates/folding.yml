@@ -2,7 +2,7 @@
 # pass with: python -m hyb2.pipelines.hyb2_fold --config standalone_fold.yml
 # CLI flags override anything set here for full flexibility
 
-#verbose:         True               # -V verbose on or off
+#verbose:                            # -V verbose on or off
 input:            output.hyb         # -i  hyb
 reference:        ref.fasta          # -d  reference fasta
 

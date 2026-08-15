@@ -123,6 +123,22 @@ long-flag names (`input`, `reference`, `blast_threshold`, `x_start`, `alpha`, â€
 unknown key fails loudly. Leave `varna_jar` **unset/commented** to auto-resolve the bundled
 jar, only set it to point at a VARNA jar in a non-default location.
 
+### Deterministic runs (`--reproducible`)
+
+By default bowtie2 maps with multiple threads and emits reads in **thread-completion order**, which varies run-to-run. The alignments are identical, only their *order* differs, but the order-sensitive `collapse` / `mtophits` stages turn that into a different `.hyb`, so two runs of the same data produce byte-different intermediates. The resulting folded structures and contact maps seem to be unaffected, only the bytes differ.
+
+Pass **`--reproducable`** (or `reproducible: true` in the config) to make bowtie2 emit reads in input order (`--reorder`), so the whole pipeline is byte-deterministic run-to-run. This slows down the mapping stage slightly, so by default it is off.
+
+```bash
+hyb2-py --config run.yml --reproducable
+```
+
+PDF's still byte differ, even with `--reproducable`. The PDF outputs (contact maps, viewpoint graphs) won't match byte-for-byte between runs, because R's `pdf()` device embeds a creation timestamp. The plots are identical, only the metadata differs. To verify two runs match, compare without the PDFs:
+
+```bash
+diff -rq run_1 run_2 --exclude='*.pdf'
+```
+
 ### Output verbosity (`-V`)
 
 By default a run prints clean step-by-step status: `[1] Calling chimeras`, the folded

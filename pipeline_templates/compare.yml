@@ -2,7 +2,7 @@
 # pass with: python -m hyb2_compare --config compare.yml
 # CLI flags override anything set here for full flexibility
 
-#verbose:         True               # -V verbose on or off
+#verbose:                                 # -V verbose on or off
 input_table:          input.table         # -i  .table
 output_id:            mycompare           # -o ouput prefix
 min_reads:            2                   # -m DESeq2 chimera count filtering threshold (default=2)

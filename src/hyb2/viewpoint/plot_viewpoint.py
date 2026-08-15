@@ -93,7 +93,7 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                             f"{stem}_homodimers_{gene_1}.gplot"],
                             stderr=subprocess.DEVNULL if quiet else None,
                             check=True)
-        log.info(f"Viewpoint graph of {gene_1} saved")
+    log.info(f"Viewpoint graph of {gene_1} saved")
 
     if gene_2:
 

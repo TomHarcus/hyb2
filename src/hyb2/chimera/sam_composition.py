@@ -60,7 +60,7 @@ def run(
 
     ref = out + "_mtophits.ref"
     with open(mtophits) as fin, open(ref, "w") as fout:
-        fout.writelines(create_reference(ui.progress(fin, in_sam, "reference")))
+        fout.writelines(create_reference(fin))
 
     hyb = out + ".hyb"
     with open(blast) as fin, open(hyb, "w") as fout:

@@ -55,6 +55,8 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["cplfold", "vienna", "unafold", "0", "1"]
     )
     parser.add_argument("-0", "--interactive", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
+    parser.add_argument("--reproducible", action="store_true", help="deterministic run-to-run output (adds bowtie2 --reorder)")
+
     parser.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
     parser.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
     parser.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
@@ -88,6 +90,7 @@ def main(argv: list[str] | None = None) -> int:
              x_coord=args.x_start, y_coord=args.y_start, length=args.length,
              varna=args.varna_jar, fold=args.fold_backend,
              interactive=(str(args.interactive) == "1"),
+             reproducible=args.reproducible,
              alpha=args.alpha, beta=args.beta, normalize=args.normalize,
              beam_size=args.beam_size, energy_delta=args.energy_delta,
              max_phase1=args.max_phase1, max_phase2=args.max_phase2,
