@@ -114,22 +114,28 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--help", action="help", help="Show this help message and exit")
     p.add_argument("-V", "--verbose", action="store_true", help="show detailed output")
-    p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
-    p.add_argument("-a", dest="gene_1", required=True, metavar="GENE_1", help="gene to plot (required)")
-    p.add_argument("-b", dest="gene_2", default=None, metavar="GENE_2", help="second gene (two-gene map)")
-    p.add_argument("-q", dest="limit", type=float, default=0.95, help="upper quantile for heatmap contrast (default=0.95)")
-    p.add_argument("-w", dest="x1", type=int, default=None, help="zoom window X start")
-    p.add_argument("-x", dest="x2", type=int, default=None, help="zoom window X end")
-    p.add_argument("-y", dest="y1", type=int, default=None, help="zoom window Y start")
-    p.add_argument("-z", dest="y2", type=int, default=None, help="zoom window Y end")
+    p.add_argument("--config", default=None, metavar="RUN.YML", help="YAML config of args, CLI flags override it")
+    p.add_argument("-i", "--input", dest="input", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
+    p.add_argument("-a", "--gene_1", dest="gene_1", required=True, metavar="GENE_1", help="gene to plot (required)")
+    p.add_argument("-b", "--gene_2", dest="gene_2", default=None, metavar="GENE_2", help="second gene (two-gene map)")
+    p.add_argument("-q", "--limit", dest="limit", type=float, default=0.95, help="upper quantile for heatmap contrast (default=0.95)")
+    p.add_argument("-w", "--x1", dest="x1", type=int, default=None, help="zoom window X start")
+    p.add_argument("-x", "--x2", dest="x2", type=int, default=None, help="zoom window X end")
+    p.add_argument("-y", "--y1", dest="y1", type=int, default=None, help="zoom window Y start")
+    p.add_argument("-z", "--y2", dest="y2", type=int, default=None, help="zoom window Y end")
     return p
 
 from hyb2.tools.logsetup import configure_logging
+from hyb2.tools.configfile import parse_with_config
+
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+
+    args = parse_with_config(build_parser(), argv)
+
     configure_logging(args.verbose)
+
     hyb2_coverage(
-        args.in_hyb, args.gene_1, args.gene_2, args.limit,
+        args.input, args.gene_1, args.gene_2, args.limit,
         args.x1, args.x2, args.y1, args.y2,
     )
     return 0
