@@ -42,11 +42,30 @@ hyb2-py --config run.yml          # edit run.yml first
 
 Activation sets all the machine-specific paths for you, there is nothing to hand-edit.
 
+### Troubleshooting: r-base "appears corrupted" during install
+
+If `install.py` prints something like:
+
+    SafetyError: The package for r-base ... appears to be corrupted.
+    The path 'lib/R/doc/html/packages.html' has an incorrect size.
+
+**this is harmless and can be ignored.** R regenerates that `packages.html` doc file, so its on-disk
+size stops matching the size conda recorded in the package manifest, and conda flags it. It's a known
+r-base quirk, not a real download problem. Conda normally prints it as a **warning and continues**,
+the install completes fine.
+
+If conda instead treats it as **fatal** and aborts, tell it to warn rather than error, then
+re-run:
+
+```bash
+conda config --set safety_checks warn
+python3 install.py                # resumes where left off
+```
 ---
 
 ## 2. Commands
 
-Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, `hyb2-compare`. The rest run via `python -m`:
+Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, `hyb2-compare`. The rest of the scripts run via `python -m`:
 
 | Command | Console script | or `python -m …` |
 |---|---|---|
@@ -134,7 +153,7 @@ hyb2-py -i reads.sam -d ref.fasta -o test          # -> test.hyb
 # 2. Then pick any RNA and fold/plot it - spine is skipped:
 hyb2-py -i test.hyb -a RNA_A -x 100  -l 300
 hyb2-py -i test.hyb -a RNA_B -x 500  -l 300
-python -m hyb2.folding.hyb2_fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
+hyb2-fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
 ```
 Only coverage/viewpoint (CDM) needs no coords: `hyb2-py -i test.hyb -a RNA_A`.
 
