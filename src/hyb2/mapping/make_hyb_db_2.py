@@ -24,6 +24,7 @@ def make_hyb_db_2(in_fasta):
             print("making database:")
         subprocess.run(["bowtie2-build", in_fasta, prefix], check=True, 
                        stdout=subprocess.DEVNULL if quiet else None,
+                       stderr=subprocess.DEVNULL if quiet else None
                        )
 
     tab = in_fasta.replace("fasta", "tab", 1)
