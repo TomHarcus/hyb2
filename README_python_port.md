@@ -229,6 +229,15 @@ Choose the backend with `-r`: `cplfold` (default, finds pseudoknots), `vienna` (
 surface** (`--alpha` etc.), so you can tune it from the one-shot pipeline or the standalone
 fold command:
 
+> **`-r unafold` and constraints.** The pipeline bundles **OligoArrayAux** (`hybrid-ss-min`),
+> the freely-redistributable subset of UNAFold (the *full* UNAFold is licensed and cannot be
+> shipped in the conda env). OligoArrayAux's `hybrid-ss-min` **silently ignores `--force`
+> constraints**, so `-r unafold` folds the fragment **unconstrained** (it does not incorporate the
+> experimental base-pair support) and no error is raised. To get constraint-honouring UNAFold folds
+> you must install the full licensed UNAFold-3.8 and point the tools at its `hybrid-ss-min`. For
+> constraint-guided folding, use **`cplfold` (default)** or **`vienna`**, which both honour the
+> experimental constraints.
+
 ```bash
 hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
     -r cplfold -p test_MyRNA_3900-4199.basepair_scores.txt \
