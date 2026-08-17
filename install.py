@@ -36,7 +36,7 @@ def die(msg):   print(f"\033[1;31mERROR:\033[0m {msg}", file=sys.stderr); sys.ex
 def run(cmd, *, cwd=None, check=True, capture=False, env=None):
     # this subprocess wrapper fails loud with the command that broke
 
-    print(f"\t${" ".join(map(str, cmd))}")
+    print(f'\t${" ".join(map(str, cmd))}')
     try:
         r = subprocess.run(
             [str(c) for c in cmd], cwd=cwd, env=env,
@@ -49,7 +49,7 @@ def run(cmd, *, cwd=None, check=True, capture=False, env=None):
     if check and r.returncode != 0:
         if capture and r.stderr:
             print(r.stderr, file=sys.stderr)
-        die(f"command failed ({r.returncode}): {" ".join(map(str, cmd))}")
+        die(f'command failed ({r.returncode}): {" ".join(map(str, cmd))}')
 
     return r
 

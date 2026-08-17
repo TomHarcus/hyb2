@@ -21,7 +21,13 @@ dependencies:
   - coreutils     # GNU sort on MacOS (parity critical for collapse_blast)
   - openjdk     # java for VARNA
 
-  # the package itself + its pip deps (numpy / pandas / pyyaml / tqdm / numba / scipy)
+  # cplfold python deps -- from conda so they use conda-forge's prebuilt osx-64
+  # numba/llvmlite. Via pip, llvmlite has no osx-64 wheel and builds from source,
+  # which needs cmake and fails on Apple Silicon (osx-64 under Rosetta).
+  - numba
+  - scipy
+
+  # the package itself + its remaining pip deps (numpy / pandas / pyyaml / tqdm)
   - pip
   - pip:
       - -e .[cplfold,dev]
