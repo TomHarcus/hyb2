@@ -10,9 +10,18 @@ R scripts (plotting, DESeq2) are unchanged and called as subprocesses.
 
 ---
 
-## 1. Install (once per machine)
+## 1. Clone Repo and Install (once per machine)
 
-You only need **conda** (Miniconda or Miniforge) already installed. Then, from the repo root:
+To clone the hyb2 repo:
+
+```bash
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+```
+
+You need **conda** already installed, **Miniforge is recommended**. It ships the fast
+`libmamba` solver by default. Older Miniconda/Anaconda installs may use the slow
+*classic* solver, which can hang for a very long time on this env's R/bioconda dependency
+tree (see troubleshooting below). Then from the repo root:
 
 ```bash
 python3 install.py
@@ -61,6 +70,20 @@ re-run:
 conda config --set safety_checks warn
 python3 install.py                # resumes where left off
 ```
+
+### Troubleshooting: stuck on "Solving environment"
+
+If `install.py` sits on `Solving environment:` for a long time (seemingly forever), your conda is
+using the slow **classic** solver, this env (bioconda + R + DESeq2) is a worst case for it. Switch
+to the fast `libmamba` solver and re-run:
+
+```bash
+conda config --show solver                        # 'classic' = the problem
+conda install -n base conda-libmamba-solver -y    # if the plugin isn't installed
+conda config --set solver libmamba
+python3 install.py                                # now solves in seconds
+```
+
 ---
 
 ## 2. Commands
@@ -78,7 +101,31 @@ Run `hyb2-py` with no args for full flag help.
 
 ---
 
-## 3. Quick start: full pipeline from a SAM
+## 3. Running Hyb2 on a cluster (e.g. Eddie)
+
+**Use Miniforge** (fast solver). If the cluster provides it as a module:
+`module avail 2>&1 | grep -i miniforge`, then `module load <name>`. Otherwise
+install your own into scratch. Check `which conda` points into Miniforge, not an old 
+system Anaconda module (unload that if it shadows).
+
+**Home dirs are usually small, the `hyb2` env is several GB** (R + DESeq2). Put
+conda's envs/pkgs on scratch if home is quota'd:
+
+```bash
+conda config --set envs_dirs /path/to/scratch/conda/envs
+conda config --set pkgs_dirs /path/to/scratch/conda/pkgs
+```
+
+Set `TMPDIR` to scratch for runs. The default `$HOME/scratch_tmp` will blow a home
+quota, and `collapse` needs several GB of scratch:
+
+```bash
+export TMPDIR=/path/to/scratch/tmp
+```
+
+---
+
+## 4. Quick start: full pipeline from a SAM
 
 ```bash
 conda activate hyb2
@@ -127,13 +174,13 @@ jar, only set it to point at a VARNA jar in a non-default location.
 
 By default bowtie2 maps with multiple threads and emits reads in **thread-completion order**, which varies run-to-run. The alignments are identical, only their *order* differs, but the order-sensitive `collapse` / `mtophits` stages turn that into a different `.hyb`, so two runs of the same data produce byte-different intermediates. The resulting folded structures and contact maps seem to be unaffected, only the bytes differ.
 
-Pass **`--reproducable`** (or `reproducible: true` in the config) to make bowtie2 emit reads in input order (`--reorder`), so the whole pipeline is byte-deterministic run-to-run. This slows down the mapping stage slightly, so by default it is off.
+Pass **`--reproducible`** (or `reproducible: true` in the config) to make bowtie2 emit reads in input order (`--reorder`), so the whole pipeline is byte-deterministic run-to-run. This slows down the mapping stage slightly, so by default it is off.
 
 ```bash
-hyb2-py --config run.yml --reproducable
+hyb2-py --config run.yml --reproducible
 ```
 
-PDF's still byte differ, even with `--reproducable`. The PDF outputs (contact maps, viewpoint graphs) won't match byte-for-byte between runs, because R's `pdf()` device embeds a creation timestamp. The plots are identical, only the metadata differs. To verify two runs match, compare without the PDFs:
+PDF's still byte differ, even with `--reproducible`. The PDF outputs (contact maps, viewpoint graphs) won't match byte-for-byte between runs, because R's `pdf()` device embeds a creation timestamp. The plots are identical, only the metadata differs. To verify two runs match, compare without the PDFs:
 
 ```bash
 diff -rq run_1 run_2 --exclude='*.pdf'
@@ -155,7 +202,7 @@ Every short flag has a descriptive long alias (`-i/--input`, `-d/--reference`,
 
 ---
 
-## 4. Reuse the `.hyb`: display any RNA's structure on demand
+## 5. Reuse the `.hyb`: display any RNA's structure on demand
 
 Chimeric calling is the expensive part, and the `.hyb` it produces contains chimeras for
 **every** RNA in the reference at once. **Call chimeras once, then fold/plot any RNA
@@ -175,7 +222,7 @@ Only coverage/viewpoint (CDM) needs no coords: `hyb2-py -i test.hyb -a RNA_A`.
 
 ---
 
-## 5. Folding backends & CPLfold tuning
+## 6. Folding backends & CPLfold tuning
 
 Choose the backend with `-r`: `cplfold` (default, finds pseudoknots), `vienna` (ViennaRNA),
 `unafold` (UNAFold). **Both `hyb2-py` and `hyb2-fold` expose the full CPLfold parameter
@@ -195,7 +242,7 @@ hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
 
 ---
 
-## 6. Comparing datasets (differential + similarity)
+## 7. Comparing datasets (differential + similarity)
 
 Compares ≥2 replicates per condition, runs DESeq2, produces a differential coverage map,
 similarity heatmap, and enrichment tables. Needs a **manually-made** tab-delimited table.
@@ -215,7 +262,7 @@ hyb2-compare -i input.table -o cmp -a MyRNA -d ref.fasta
 
 ---
 
-## 7. Large files & memory
+## 8. Large files & memory
 
 The front-of-pipeline stages (where the data is biggest) all stream or are memory-safe:
 
@@ -245,7 +292,7 @@ To profile a run's peak memory:
 
 ---
 
-## 8. Run the test suite
+## 9. Run the test suite
 
 ```bash
 conda activate hyb2
@@ -263,7 +310,7 @@ scripts/generate_unafold_baseline.sh           # needs oligoarrayaux
 
 ---
 
-## 9. Known limitations
+## 10. Known limitations
 
 - **Scale validated on `testData.sam`; real large-data parity still in progress.**
 - **`comradesScore`** (randomized 1000× parallel folding, significance scoring): not
