@@ -135,7 +135,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         interactive=False, reproducible=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
-        max_phase2=CPL_DEFAULTS["max_phase2"], energy_model="energy_model"):
+        max_phase2=CPL_DEFAULTS["max_phase2"], energy_model=CPL_DEFAULTS["energy_model"]):
 
     
     steps.start("Processing input")

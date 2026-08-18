@@ -79,7 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("-i", dest="in_file", required=True, metavar="IN.ct", help="folded structure (.ct)")
     p.add_argument("-s", dest="score", required=True, metavar="VARNA_scores.txt", help="per-base colour scores")
-    p.add_argument("-j", dest="varna", default=None, metavar="VARNAcmd.jar", help="VARNA jar (default: config.varna_jar())")
+    p.add_argument("-j", dest="varna", default=None, metavar="VARNAcmd.jar", help="VARNA jar (default: config.VARNA_JAR)")
     p.add_argument("-x", dest="x_coord", type=int, default=None, help="start coordinate of 1st strand")
     p.add_argument("-y", dest="y_coord", type=int, default=None, help="start coordinate of 2nd strand")
     p.add_argument("-l", dest="length", type=int, default=None, help="length of 1st strand")

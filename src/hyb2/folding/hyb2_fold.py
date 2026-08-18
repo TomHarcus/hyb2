@@ -10,6 +10,7 @@ import os, shutil, re, glob, math, argparse, sys
 from hyb2.tools.config import VARNA_JAR, CPL_DEFAULTS
 
 import logging
+from hyb2.tools.logsetup import is_quiet
 
 log = logging.getLogger(__name__)
 
@@ -424,7 +425,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-x", "--x-start", dest="x_start", type=int, required=True, help="start coordinate of the first fragment")
     p.add_argument("-y", "--y-start", dest="y_start", type=int, default=None, help="start coordinate of the second fragment (long-range / homodimer / intermolecular)")
     p.add_argument("-l", "--length", dest="length", type=int, required=True, help="fragment length")
-    p.add_argument("-j", "--varna-jar", dest="varna_jar", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.varna_jar())")
+    p.add_argument("-j", "--varna-jar", dest="varna_jar", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.VARNA_JAR)")
     p.add_argument("-0", "--interactive", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
     p.add_argument("-r", "--fold-backend", dest="fold_backend", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")

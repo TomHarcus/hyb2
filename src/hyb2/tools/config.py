@@ -32,7 +32,7 @@ def gnu_sort() -> str:
 
 
 
-VARNA_JAR = os.environ.get("HYB2_VARNA_JAR") or str(REPO_ROOT / "VARNA" / "build" / "jar") # Path to varna_jar
+VARNA_JAR = os.environ.get("HYB2_VARNA_JAR") or str(REPO_ROOT / "VARNA" / "build" / "jar" / "VARNAcmd.jar") 
 
 CPLFOLD_DIR = os.environ.get("HYB2_CPLFOLD_DIR") or str(REPO_ROOT / "CPLfold") # path to cplfold
 CPL_DEFAULTS = {"alpha": 0.5, "beta": 0.0, "normalize": "log", "beam_size": 100, "energy_delta": 5.0, "max_phase1": 10, "max_phase2": 5, "energy_model": "DP09"}

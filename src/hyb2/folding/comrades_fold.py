@@ -15,6 +15,8 @@ from hyb2.tools import config
 
 import logging
 from hyb2.tools import ui
+from hyb2.tools.logsetup import is_quiet
+import contextlib
 
 log = logging.getLogger(__name__)
 
@@ -148,6 +150,8 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
                   max_phase2, energy_model, vienna_bin):
     import numpy as np
 
+    quiet = is_quiet()
+
 
     if config.CPLFOLD_DIR not in sys.path:
         sys.path.insert(0, config.CPLFOLD_DIR)
@@ -190,7 +194,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
                 matrix[j-begin, i-begin] = v
 
     # call cplfold
-    with ui.spinner("folding (cplfold) "):
+    with ui.spinner("folding (cplfold) ") if quiet else contextlib.nullcontext():
         results = two_phase_pseudoknot_fold(
             seq,
             bonus_matrix=matrix,
@@ -201,7 +205,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
             max_phase1=max_phase1,
             max_phase2=max_phase2,
             energy_model=energy_model,
-            verbose=False
+            verbose=not quiet
         )
 
     if not results:
