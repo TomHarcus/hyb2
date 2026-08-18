@@ -60,6 +60,16 @@ def collapse_blast(in_path, out_path, *, sort_mem="25%", tmpdir=None):
         if line is not None:
             temp_fin.write(line)
 
+    rc = sort_process.wait()
+    if rc != 0:
+        raise RuntimeError(
+            f"external sort failed (exit {rc}) while collapsing {in_path}. "
+            f"The usual cause is TMPDIR running out of space: sort spilled to "
+            f"{tmpdir}. Check free space there, or point TMPDIR at a larger disk:\n"
+            f"    TMPDIR=/path/with/space hyb2-py ...\n"
+            f"(a tmpfs /tmp is RAM-backed and will also fail on large inputs)."
+        )
+
     numbered = tempfile.NamedTemporaryFile("w", dir=tmpdir, delete=False).name
 
     counter = 0

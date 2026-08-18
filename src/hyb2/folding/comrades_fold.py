@@ -126,10 +126,17 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
         fasta_text = fin.read()
 
     # call RNAfolder
-    fold = subprocess.run(
+    proc = subprocess.run(
         [b + "RNAfold", "--noconv", "--noPS", f"--commands={constraints_file}"],
         input=fasta_text, capture_output=True, text=True
-    ).stdout
+    )
+
+    # exit 1 + "empty solution set" is the expected over constrained rejection
+    # the greedy loop detects it via the absent pair. Any other failure is real
+    if proc.returncode != 0 and "empty solution set" not in proc.stderr:
+        raise RuntimeError(f"RNAfold failed (exit {proc.returncode}): {proc.stderr.strip()}")
+    
+    fold = proc.stdout
 
     vienna = fold.replace("&>", "-").replace("&", "")
 
@@ -138,7 +145,7 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
             fout.write(vienna)
 
     ct = subprocess.run([b + "b2ct"], input=vienna,
-                        capture_output=True, text=True).stdout
+                        capture_output=True, text=True, check=True).stdout
     
     ct = ct.replace("ENERGY =", "dG =")
 

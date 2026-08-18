@@ -62,7 +62,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
             if not quiet:
                 print("rendering structure (VARNA)")
             subprocess.run(varna_cmd + ["-o", svg],
-                        stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
+                        stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
         prefix = score.split("__")[0]
 

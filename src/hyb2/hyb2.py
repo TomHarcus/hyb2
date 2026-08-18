@@ -145,8 +145,10 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     process SAM files to Hyb format
     """
 
-    if "|" in open(db).read():
-        formatted = fasta_hyb2_formatting(open(db).read())
+    db_text = Path(db).read_text()
+
+    if "|" in db_text:
+        formatted = fasta_hyb2_formatting(db_text)
         db = db.replace(".fasta", ".hyb.fasta", 1)
         Path(db).write_text(formatted)
 
