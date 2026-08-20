@@ -10,6 +10,21 @@ R scripts (plotting, DESeq2) are unchanged and called as subprocesses.
 
 ---
 
+## Prerequisites
+
+You need **one** container runtime (matched to where you will run) and **nothing else** (no conda, R, viennaRNA, or per-tool installs. Its 
+all within the image):
+
+- **Cluster (Eddie / HPC):** **Apptainer**: usually available as a module (`module load apptainer`), so nothing to install (find it with `module avail apptainer`).
+- **Local Linux / WSL / macOS:** **Docker** install via the official guide: 
+<https://docs.docker.com/get-docker/>.
+- **Apptainer on your own Linux machine** (not a cluster): see
+  <https://apptainer.org/docs/admin/main/installation.html>
+  (recent Debian/Ubuntu: `sudo apt install -y apptainer`).
+
+You do *not* need both: pick the runtime for your machine. (Building the image yourself,
+rather than pulling it, additionally needs Docker: see *Developing*.)
+
 ## 1. Get the container (no install)
 
 The pipeline ships as a container image on GHCR with everything needed already there: Python, the conda env, R + DESeq2
