@@ -5,90 +5,103 @@ This is the Python reimplementation of the HYB2 RNA proximity-ligation pipeline
 `.hyb` file -> contact-density maps, viewpoint graphs, and RNA secondary-structure
 folding (ViennaRNA / UNAFold / **CPLfold**) rendered in VARNA.
 
-It reproduces the legacy `bin/` pipeline stage-by-stage, validated by golden-diff tests.
+It reproduces the legacy `legacy_bin/` pipeline stage-by-stage, validated by golden-diff tests.
 R scripts (plotting, DESeq2) are unchanged and called as subprocesses.
 
 ---
 
-## 1. Clone Repo and Install (once per machine)
+## 1. Get the container (no install)
 
-To clone the hyb2 repo:
+The pipeline ships as a container image on GHCR with everything needed already there: Python, the conda env, R + DESeq2
+, ViennaRNA, CPLfold + HotKnots, VARNA, bowtie2, Java. **No conda, no compiling, no per-machine install.**
+
+**Linux cluster (e.g. Eddie): Use Apptainer:**
+
+```bash
+module load apptainer   # use apptainer/1.4.4 on Eddie
+apptainer pull docker://ghcr.io/tomharcus/hyb2:latest   # produces hyb2_latest.sif
+apptainer run --bind "$TMPDIR" hyb2_latest.sif hyb2-py --config run.yml
+```
+
+**Local Linux / WSL / macOS: Use Docker:**
+
+```bash
+docker pull ghcr.io/tomharcus/hyb2:latest
+docker run --rm -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2-py --config run.yml
+```
+(Apple silicon should emulate running the image. This is fine for testing but slow for big mapping. The cluster is recommended for real runs)
+
+`:latest` tracks the most up to date build. If you want a specific version: instead of `:latest` add `:<git-sha>`.
+To pull a new build, re-pull (`apptainer pull --force... / docker pull...`)
+
+## For developing / modifying the code
+
+You only need this if you are **changing the pipeline itself**. To just run it, use just the container, no clone or setup required.
 
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
 ```
 
-You need **conda** already installed, **Miniforge is recommended**. It ships the fast
-`libmamba` solver by default. Older Miniconda/Anaconda installs may use the slow
-*classic* solver, which can hang for a very long time on this env's R/bioconda dependency
-tree (see troubleshooting below). Then from the repo root:
+### Quick edits (recommended)
+
+The image already contains the full environment, so bind-mount your source over it and the edits are live with no rebuild. The
+package is installed with `pip install -e`, so it reads straight from the mounted source. Mount `src/` for Python and `rscripts/` for 
+the R plotting scripts:
 
 ```bash
-python3 install.py
+docker run --rm \
+    -v "$PWD/src:/opt/hyb2/src" \
+    -v "$PWD/rscripts:/opt/hyb2/rscripts" \
+    -v "$PWD/mydata:/data" -w /data \
+    ghcr.io/tomharcus/hyb2:latest hyb2-py --config run.yml
 ```
 
-That single script does everything:
+Make the changes, then re-run and the pipeline changes right away.
 
-- creates the `hyb2` conda env from `environment.yml` (Python, ViennaRNA, bowtie2,
-  oligoarrayaux, R + DESeq2 + ggplot2 + data.table, Java, GNU coreutils) and installs the
-  port + its console scripts (`pip install -e`),
-- clones **CPLfold** into the repo and **compiles HotKnots for your architecture**,
-- writes the runtime environment (`UNAFOLDDAT`, VARNA/CPLfold paths, and a real-disk
-  `TMPDIR` guard) into the env's conda **activation**, so activating the env sets everything,
-- runs **preflight checks** (GNU sort, all tools present, DESeq2 loads, HotKnots executes)
-  and fails loudly if anything is wrong.
+### Full native env for the test suite or bigger work
 
-**Platforms:** Linux, Intel macOS, and Apple Silicon macOS (built as `osx-64` under Rosetta,
-set up automatically). **Windows is not supported natively**: install WSL2 and run
-`install.py` inside it.
-
-Once it finishes, every run is just:
+Recreate the environment the image is built from (the `Dockerfile` contains the setup directions). Follow its `conda env create`, 
+CPLfold clone, and HotKnots `make` steps.
 
 ```bash
-conda activate hyb2
-hyb2-py --config run.yml          # edit run.yml first
+conda env create -f environment.yml && conda activate hyb2
+# then CPLfold + HotKnots exactly as the Dockerfile does (clone, purge *.o/*.a, make),
+# and export UNAFOLDDAT / HYB2_VARNA_JAR / HYB2_CPLFOLD_DIR as its ENV block sets them
+PYTHONPATH=src python -m pytest tests/ -q   # run the tests
 ```
 
-Activation sets all the machine-specific paths for you, there is nothing to hand-edit.
+### How a change works
 
-### Troubleshooting: r-base "appears corrupted" during install
+edit files -> test (bind-mount or native) -> git commit + push
+           -> CI rebuilds the image -> publishes ghcr.io/tomharcus/hyb2:latest
+           -> re-pull on the cluster / local machine to run the new version
 
-If `install.py` prints something like:
+Any changes made to `src/`, `rscripts/`, the `Dockerfile`, `environment.yml`, etc and pushed trigger the CI automatically.
+So `:latest` points to that newest build.
 
-    SafetyError: The package for r-base ... appears to be corrupted.
-    The path 'lib/R/doc/html/packages.html' has an incorrect size.
-
-**this is harmless and can be ignored.** R regenerates that `packages.html` doc file, so its on-disk
-size stops matching the size conda recorded in the package manifest, and conda flags it. It's a known
-r-base quirk, not a real download problem. Conda normally prints it as a **warning and continues**,
-the install completes fine.
-
-If conda instead treats it as **fatal** and aborts, tell it to warn rather than error, then
-re-run:
+To build the full image locally before pushing (catches build breaks without waiting for the CI):
 
 ```bash
-conda config --set safety_checks warn
-python3 install.py                # resumes where left off
-```
-
-### Troubleshooting: stuck on "Solving environment"
-
-If `install.py` sits on `Solving environment:` for a long time (seemingly forever), your conda is
-using the slow **classic** solver, this env (bioconda + R + DESeq2) is a worst case for it. Switch
-to the fast `libmamba` solver and re-run:
-
-```bash
-conda config --show solver                        # 'classic' = the problem
-conda install -n base conda-libmamba-solver -y    # if the plugin isn't installed
-conda config --set solver libmamba
-python3 install.py                                # now solves in seconds
+docker_scripts/build.sh build   # full image build
+docker_scripts/build.sh smoke   # entrypoint + tools resolve
 ```
 
 ---
 
 ## 2. Commands
 
-Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, `hyb2-compare`. The rest of the scripts run via `python -m`:
+The pipeline exposes four commands. Examples throughout the `README` show the bare command (e.g. `hyb2-py` etc). How you actually
+run them depends on how you are running:
+
+- **Container: cluster (Apptainer):**
+  `apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif <command>`
+
+- **Container: local (Docker):**
+  `docker run --rm -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest <command>`
+
+- **Dev clone (native env):** the commands are console scripts: run `<command>` directly, or use the 
+`python -m ...` module form.
 
 | Command | Console script | or `python -m …` |
 |---|---|---|
@@ -97,46 +110,78 @@ Console scripts (installed by `install.py`): `hyb2-py`, `hyb2-fold`, `hyb2-cover
 | coverage / CDM | `hyb2-coverage` | `hyb2.coverage.hyb2_coverage` |
 | dataset comparison | `hyb2-compare` | `hyb2.compare.hyb2_compare` |
 
-Run `hyb2-py` with no args for full flag help.
+Run any command with no args (or `--help`) for full flag help — e.g. `hyb2-py`.
 
 ---
 
 ## 3. Running Hyb2 on a cluster (e.g. Eddie)
 
-**Use Miniforge** (fast solver). If the cluster provides it as a module:
-`module avail 2>&1 | grep -i miniforge`, then `module load <name>`. Otherwise
-install your own into scratch. Check `which conda` points into Miniforge, not an old 
-system Anaconda module (unload that if it shadows).
+The container runs on any cluster with Apptainer, but after testing there are a few Eddie specific
+rules that make it run.
 
-**Home dirs are usually small, the `hyb2` env is several GB** (R + DESeq2). Put
-conda's envs/pkgs on scratch if home is quota'd:
+1. **Run from scratch, not home.** Home's ~10 GB quota can't hold the pipeline's intermediate files
+(SAM/blast can be 10s of GB). Work in `/exports/eddie/scratch/$USER/...`.
 
+2. **Request cores**: when using a small amount of cores bowtie2 crawls and seems to hang. Use
+`#$ -pe sharedmem 16` (batch) or `qlogin -pe sharedmem N` (interactive). The pipeline maps with
+exactly your allocated cores.
+
+3. **`h_vmem >= 16G`**: needed both for mapping and for the `apptainer pull` sqaushfs conversion
+(it OOMs on 8G).
+
+4. **Keep Apptainer's cache/tmp off home:**
 ```bash
-conda config --set envs_dirs /path/to/scratch/conda/envs
-conda config --set pkgs_dirs /path/to/scratch/conda/pkgs
+export APPTAINER_CACHEDIR=/exports/eddie/scratch/$USER/apptainer_cache
+export APPTAINER_TMPDIR=/exports/eddie/scratch/$USER/apptainer_tmp
 ```
 
-Set `TMPDIR` to scratch for runs. The default `$HOME/scratch_tmp` will blow a home
-quota, and `collapse` needs several GB of scratch:
+5. **Run each job in a clean/empty dir**: a leftover `.tab`/index from a prior run makes the pipeline
+skip the database build (bowtie2 then errors "index does not exist").
+
+6. **Bind scratch + `$TMPDIR`**: Apptainer auto mounts `$HOME` but not scratch or the node-local
+`$TMPDIR` (where the big sort spills).
+
+Batch script (run_hyb2.sh, submit from your scratch run dir):
+```bash
+#!/bin/bash
+#$ -cwd
+#$ -N hyb2
+#$ -pe sharedmem 16
+#$ -l h_vmem=16G
+#$ -l h_rt=12:00:00
+
+. /etc/profile.d/modules.sh
+module load apptainer/1.4.4
+apptainer run \
+    --bind "$TMPDIR" \
+    --bind /exports/eddie/scratch/$USER \
+    ./hyb2_latest.sif hyb2-py --config run.yml
+```
 
 ```bash
-export TMPDIR=/path/to/scratch/tmp
+qsub run_hyb2.sh    # queues + runs when cores free up. Check status with qstat
 ```
+
+For a quick interactive test: `qlogin -pe sharedmem 4 -l h_vmem=16G`, then
+`module load apptainer/1.4.4` and run directly.
 
 ---
 
 ## 4. Quick start: full pipeline from a SAM
 
+Full pipeline in one command (cluster/Apptainer shown. See section 2 for Docker/native):
+
 ```bash
-conda activate hyb2
-hyb2-py -i reads.sam -d reference.fasta -o myrun -a MyRNA -x 3900 -l 300 -r cplfold
+apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif \
+    hyb2-py -i reads.sam -d reference.fasta -o myrun -a MyRNA -x 3900 -l 300 -r cplfold
 ```
+
 Produces (prefix `myrun`): `myrun.hyb` (all chimeras) -> contact-density map PDF ->
 viewpoint graph PDF -> CPLfold structure (`.ct`/`.vienna`) -> VARNA `_plot.svg`.
 
 **Input types** (auto-detected from the extension): `.sam` (skips mapping), `.fastq` /
 `.fastq.gz` / `.fasta` (mapped with bowtie2 first), or `.hyb` (skips straight to plotting/
-folding). All five work.
+folding). 
 
 Key flags: `-a` gene of interest, `-b` second gene, `-x`/`-y` fragment start coords,
 `-l` fragment length, `-r` folding backend (`cplfold` default | `vienna` | `unafold`),
@@ -157,7 +202,17 @@ hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -b MyRNA -x 3501 -y 3501 -l 2
 ### Reproducible runs with a YAML config (`--config`)
 
 All `hyb2-py`, `hyb2-fold`, `hyb2-coverage`, and `hyb2-compare` accept a YAML config of arguments, handy for
-reproducible/shareable runs and CPLfold parameter sweeps. Templates are available in `pipeline_templates/`:
+reproducible/shareable runs and CPLfold parameter sweeps. To get the templates run:
+```bash
+# container user: fetch a template from GitHub:
+curl -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/pipeline_templates/full_pipeline.yml
+mv full_pipeline.yml run.yml        # then edit paths/params
+
+# dev clone: copy it locally instead:
+cp pipeline_templates/full_pipeline.yml run.yml
+```
+
+In `pipeline_templates/` you will find:
 `full_pipeline.yml` (full pipeline), `folding.yml` (fold only), `compare.yml` (comparison only), and `coverage.yml` (coverage only).
 
 ```bash
@@ -188,11 +243,10 @@ diff -rq run_1 run_2 --exclude='*.pdf'
 
 ### Output verbosity (`-V`)
 
-By default a run prints clean step-by-step status: `[1] Calling chimeras`, the folded
-delta G, and output files, with progress bars on the slow front-of-pipeline stages
-(interactive terminals only; silent when piped/`tee`'d/on the cluster). Add
-**`-V/--verbose`** for the full detail: the per-stage legacy messages plus the R/VARNA
-subprocess output. Useful for debugging; leave it off for normal runs.
+By default a run prints clean step-by-step status. On an interactive terminal you get live progress bars/spinners on the slow stages of the pipeline. When piped or on the cluster (no terminal)
+those same steps print as `stage ... / done (Xs)` lines with elapsed time, so cluster logs stay readable and show per-stage timing. Add `-V/--verbose` for full details (per-stage legacy messages + R/VARNA subprocess output).
+
+
 
 ### Readable long flags
 
@@ -206,8 +260,7 @@ Every short flag has a descriptive long alias (`-i/--input`, `-d/--reference`,
 
 Chimeric calling is the expensive part, and the `.hyb` it produces contains chimeras for
 **every** RNA in the reference at once. **Call chimeras once, then fold/plot any RNA
-repeatedly without re-mapping or re-calling**, the orchestrator skips the whole
-chimera-calling spine when the `.hyb` already exists.
+repeatedly without re-mapping or re-calling**, when you pass the `.hyb` as input (`-i test.hyb`)
 
 ```bash
 # 1. Call chimeras once (all RNAs):
@@ -247,7 +300,7 @@ hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
   baseline (the fair A/B control).
 - `--normalize raw|log`, `--alpha`, `--beta`, `--beam-size`, `--energy-delta`,
   `--max-phase1`, `--max-phase2`, `--energy-model` - all default from `config.CPL_DEFAULTS`.
-- `-0 1` launches the interactive VARNA GUI (needs a display); omit for headless SVG output.
+- `-0 1` launches the interactive VARNA GUI (needs x11, else use the SVG); omit for headless SVG output.
 
 ---
 
@@ -287,29 +340,36 @@ mirroring the legacy `collapse_blast_2.sh`. A real ~50 GB SAM that previously OO
 now completes.
 
 > **`TMPDIR` must be on real disk.** A tmpfs (RAM-backed) `/tmp` (common on Linux)
-> re-introduces the OOM, because the sort spills into RAM. `install.py`'s activation script
-> handles this automatically (it points `TMPDIR` at `$HOME/scratch_tmp` when `/tmp` is
-> tmpfs). If you run outside the activated env, set `TMPDIR` to a real-disk path yourself.
+> re-introduces the OOM, because the sort spills into RAM. The **container's entrypoint**
+> applies this guard automatically: if `TMPDIR` is unset or points at tmpfs it falls back
+> to `$HOME/scratch_tmp` (real disk). On a cluster, set `TMPDIR` (and `APPTAINER_TMPDIR`)
+> to scratch and bind it in (see section 3), so both the sort and Apptainer's own tmp land on
+> large real disk.
 
 Everything **downstream of the `.hyb`** (folding, coverage, compare) operates on
 already-reduced data and is not a large-file concern.
 
 To profile a run's peak memory:
 ```bash
-/usr/bin/time -v hyb2-py -i big.sam -d ref.fasta -o big -a MyRNA 2>&1 | grep "Maximum resident"
+/usr/bin/time -v apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif \
+    hyb2-py -i big.sam -d ref.fasta -o big -a MyRNA 2>&1 | grep "Maximum resident"
 ```
 
 ---
 
 ## 9. Run the test suite
 
+The tests run against the source in a **dev clone**, not the container. `tests/` isn't
+shipped in the image. Set up the native env or a bind-mount first (see *Developing /
+modifying the code*), then:
+
 ```bash
-conda activate hyb2
-python -m pytest tests/ -q
+PYTHONPATH=src python -m pytest tests/ -q
 ```
 Some tests are **gated**, they skip (not fail) if a tool or a regenerated fixture is
 missing. Fixtures are gitignored and rebuilt per-machine:
 ```bash
+
 scripts/generate_sam_composition_baseline.sh   # primary spine oracle
 scripts/generate_coverage_baseline.sh
 scripts/generate_viewpoint_baseline.sh
@@ -321,11 +381,8 @@ scripts/generate_unafold_baseline.sh           # needs oligoarrayaux
 
 ## 10. Known limitations
 
-- **Scale validated on `testData.sam`; real large-data parity still in progress.**
 - **`comradesScore`** (randomized 1000× parallel folding, significance scoring): not
   ported; needs a `qsub` cluster.
 - **`hyb2_app`** (Shiny GUI): the R app is unchanged; only its thin launcher wrapper is
   not yet ported.
-- **No per-stage checkpointing yet:** the `.hyb` is reused if present (§4), but if the
-  `.hyb` is missing the spine regenerates the blast intermediates from scratch (no
-  skip-if-`test.blast`-exists yet).
+

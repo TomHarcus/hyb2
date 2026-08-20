@@ -20,7 +20,7 @@ INTERLEAVED = (
 
 def _awk_reference(text: str) -> str:
     result = subprocess.run(
-        ["awk", "-f", "bin/mtophits_blast"],
+        ["awk", "-f", "legacy_bin/mtophits_blast"],
         input=text,
         capture_output=True,
         text=True,

@@ -5,7 +5,7 @@ from hyb2.legacy_leaves.filter_homopolymers import filter_homopolymers
 
 def _awk_reference(text: str) -> str:
     result = subprocess.run(
-        ["awk", "-f", "bin/filter_homopolymers.awk"],
+        ["awk", "-f", "legacy_bin/filter_homopolymers.awk"],
         input=text,
         capture_output=True,
         text=True,

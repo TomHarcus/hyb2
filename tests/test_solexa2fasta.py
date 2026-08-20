@@ -7,7 +7,7 @@ def test_matches_legacy_awk_output():
         fastq_text = f.read()
 
     awk_result = subprocess.run(
-        ["awk", "-f", "bin/solexa2fasta.awk", "data/synthetic/test.fastq"],
+        ["awk", "-f", "legacy_bin/solexa2fasta.awk", "data/synthetic/test.fastq"],
         capture_output=True,
         text=True,
         check=True,

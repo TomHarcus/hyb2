@@ -15,7 +15,7 @@ MULTI_BIOTYPE = (
 
 def _awk_reference(text: str) -> str:
     result = subprocess.run(
-        ["awk", "-f", "bin/blast_stats_2"],
+        ["awk", "-f", "legacy_bin/blast_stats_2"],
         input=text,
         capture_output=True,
         text=True,

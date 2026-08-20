@@ -17,7 +17,7 @@ def _awk_reference(tab_file: str, hyb_file: str, tmp_path) -> str:
     hyb_path.write_text(hyb_file)
 
     result = subprocess.run(
-        ["awk", "-f", "bin/txt2hyb.awk", str(tab_path), str(hyb_path)],
+        ["awk", "-f", "legacy_bin/txt2hyb.awk", str(tab_path), str(hyb_path)],
         capture_output=True,
         text=True,
         check=True,

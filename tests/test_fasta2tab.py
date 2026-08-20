@@ -8,7 +8,7 @@ def test_matches_legacy_awk_output():
         fasta_text = f.read()
 
     awk_result = subprocess.run(
-        ["awk", "-f", "bin/fasta2tab.awk", "data/Zika_18S_formatted.fasta"],
+        ["awk", "-f", "legacy_bin/fasta2tab.awk", "data/Zika_18S_formatted.fasta"],
         capture_output=True,
         text=True,
         check=True,

@@ -5,7 +5,7 @@ from hyb2.legacy_leaves.hybrid_stats_2 import hybrid_stats_2
 
 def _awk_reference(text: str) -> str:
     result = subprocess.run(
-        ["awk", "-f", "bin/hybrid_stats_2"],
+        ["awk", "-f", "legacy_bin/hybrid_stats_2"],
         input=text,
         capture_output=True,
         text=True,
