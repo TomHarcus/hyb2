@@ -13,7 +13,7 @@ def rscript(name: str) -> str:
     """
     Path to R scripts in bin/
     """
-    return str(REPO_ROOT / "bin" / name)
+    return str(REPO_ROOT / "rscripts" / name)
 
 
 def gnu_sort() -> str:

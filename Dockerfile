@@ -28,10 +28,9 @@ RUN git clone https://github.com/Vicky-0256/CPLfold.git /opt/hyb2/CPLfold \
     && cd .. && make
 
 # check everything is in place
-RUN sh /opt/hyb2/preflight.sh
+RUN sh /opt/hyb2/docker_scripts/preflight.sh
 
-# ensure that the tmp_dir guard is in entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-ENTRYPOINT ["/entrypoint.sh"]
+# ensure that the tmp_dir guard is in executable
+RUN chmod +x /opt/hyb2/docker_scripts/entrypoint.sh
+ENTRYPOINT ["/opt/hyb2/docker_scripts/entrypoint.sh"]
 CMD ["hyb2-py", "--help"]

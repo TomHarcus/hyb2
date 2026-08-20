@@ -5,6 +5,7 @@ CPLfold/
 data/
 scripts/
 tests/
+legacy_bin/
 
 
 # build outputs
