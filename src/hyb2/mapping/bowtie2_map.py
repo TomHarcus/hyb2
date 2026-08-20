@@ -70,7 +70,7 @@ def bowtie2_map(in_file, db, out, reproducible=False):
 # run bowtie2
 def _bowtie2(db, out, reads, reproducible):
     quiet = is_quiet()
-    threads = len(os.sched_getaffinity(0) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1))
+    threads = len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1)
 
     cmd = ["bowtie2", "-D", "20", "-R", "3", "-N", "0", "-L", "16", "-k", "20", "--local",
                     "-i", "S,1,0.50", "--score-min", "L,18,0", "--ma", "1", "--np", "0", "--mp", "2,2",
