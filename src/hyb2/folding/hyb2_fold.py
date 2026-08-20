@@ -456,7 +456,7 @@ def main(argv: list[str] | None = None) -> int:
         args.y_start,
         args.length,
         args.varna_jar,
-        args.interactive == "1",
+        str(args.interactive) == "1",
         args.fold_backend,
         alpha=args.alpha,
         beta=args.beta,

@@ -162,7 +162,11 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         hyb_path = in_file
         log.info("Hyb format as input detected")
 
-    elif not Path(hyb_path).is_file():
+    else:
+        if Path(hyb_path).is_file():
+            raise FileExistsError(
+                f"{hyb_path} already exists: delete it, move it, or change output_id to avoid overwriting"
+            )
         if mappable:
             bowtie2_map(in_file, db, out, reproducible=reproducible)
             log.info("SAM file generated")
@@ -174,8 +178,6 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         sam_composition.run(sam, out=out, hmax=hmax, blast_threshold=blast_threshold, max_overlap=max_overlap)
         log.info("Hyb file generated")
 
-    else:
-        log.debug("Hyb file exists. Next step.")
 
     """
     Step 2:

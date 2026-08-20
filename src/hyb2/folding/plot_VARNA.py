@@ -96,7 +96,7 @@ def main(argv: list[str] | None = None) -> int:
         x_coord=args.x_coord,
         y_coord=args.y_coord,
         length=args.length,
-        interactive=(args.interactive == "1"),
+        interactive=(str(args.interactive) == "1"),
     )
     return 0
 

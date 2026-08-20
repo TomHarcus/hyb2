@@ -1,0 +1,20 @@
+# large/regenerated files
+fixtures/
+.git/
+CPLfold/
+
+# build outputs
+*.sif
+*.tar
+*.tar.gz
+*.egg-info/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# local stuff
+scratch/
+scratchpad/
+.vscode/
+.idea/
+.DS_Store
