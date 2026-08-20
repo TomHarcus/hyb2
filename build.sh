@@ -43,22 +43,11 @@ case "${1:-help}" in
     # freeze the image to a tarball to scp to Eddie 
     docker save "$IMAGE:$TAG" | gzip > "$ARCHIVE"
     echo "wrote $ARCHIVE ($(du -h "$ARCHIVE" | cut -f1))"
-    echo "next:  scp $ARCHIVE <you>@eddie3.ecdf.ed.ac.uk:~/   then see: ./build.sh eddie"
     ;;
 
   eddie)
     cat <<'EOF'
-# on Eddie, after scp of hyb2.tar.gz 
-module load apptainer/1.4.4
-gunzip -f hyb2.tar.gz
-apptainer build hyb2.sif docker-archive://hyb2.tar     # convert once
 
-# run.  --bind "$TMPDIR" makes node-local scratch writable inside (big sort spills there)
-# inside an SGE job $TMPDIR is already /local/$JOB_ID (real disk); interactively, set it.
-apptainer run \
-    --bind "$TMPDIR" \
-    --bind /exports/eddie/scratch/<you>/mydata:/data \
-    hyb2.sif hyb2-py -i /data/reads.sam -d /data/ref.fasta -o run -a MyRNA -x 3900 -l 300 -r cplfold
 EOF
     ;;
 

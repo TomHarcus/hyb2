@@ -18,6 +18,18 @@ class Steps:
 # progress bar for writing to files
 def progress(fh, path: str, desc: str):
 
+    if not sys.stderr.isatty():
+        log.info(f"\t{desc} ...")
+        t0 = time.monotonic()
+        n = 0
+        try:
+            for line in fh:
+                n += len(line)
+                yield line
+        finally:
+            log.info(f"\t\tdone ({n/1e9:.2f} GB, {time.monotonic()-t0:.1f}s)")
+        return
+
     bar = tqdm(total=os.path.getsize(path), unit="B", unit_scale=True,
                desc=f"  {desc}", disable=not sys.stderr.isatty(), leave=False)
 
@@ -33,8 +45,12 @@ def progress(fh, path: str, desc: str):
 def spinner(desc: str):
 
     if not sys.stderr.isatty():
-        log.info(f"  {desc}...")
-        yield
+        log.info(f"\t{desc.rstrip()}...")
+        t0 = time.monotonic()
+        try:
+            yield
+        finally:
+            log.info(f"\t\tdone ({time.monotonic() - t0:.1f}s)")
         return
 
     bar = tqdm(total=None, bar_format="{desc}  {elapsed}", leave=False)
@@ -57,6 +73,9 @@ def spinner(desc: str):
 
 # count bar for greedy constrained loop
 def track(iterable, desc, total=None):
+    if not sys.stderr.isatty():
+        log.info(f"\t{desc} ...")
+        return iterable
 
     return tqdm(iterable, total=total, desc=f"  {desc}",
                 disable=not sys.stderr.isatty(), leave=False)

@@ -2,7 +2,7 @@
 # runs on every apptainer run / docker run before the pipeline
 
 # if tmpdir is unset or points at a tmpfs, fall back to real disk under $home
-if [ -z "$TMPDIR" ] || [ "$(stat -f -c %T "TMPDIR" 2>/dev/null)" == "tmpfs" ]; then
+if [ -z "$TMPDIR" ] || [ "$(stat -f -c %T "$TMPDIR" 2>/dev/null)" = "tmpfs" ]; then
     export TMPDIR="${HOME:-/tmp}/scratch_tmp"
     mkdir -p "$TMPDIR"
 fi
