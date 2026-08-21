@@ -175,6 +175,7 @@ hyb2() {
   apptainer run --bind "$TMPDIR" --bind /exports/eddie/scratch/$USER ~/hyb2_latest.sif "$@"; 
 }
 ```
+**Only wors in an interactive session, not for a `qsub` branch.**
 
 Afterwards, run `source ~/.bashrc` or `source ~/.zshrc` or open a new shell and run from your data directory:
 ```bash
@@ -229,7 +230,9 @@ Batch script (run_hyb2.sh, submit from your scratch run dir):
 
 . /etc/profile.d/modules.sh
 module load apptainer/1.4.4
-hyb2 hyb2-py --config run.yml
+apptainer run --bind "$TMPDIR" --bind /exports/eddie/scratch/$USER \
+    /exports/eddie/scratch/$USER/<dir>/hyb2_latest.sif \
+    hyb2-py --config run.yml
 ```
 
 ```bash
