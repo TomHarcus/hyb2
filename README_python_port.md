@@ -42,12 +42,22 @@ apptainer run --bind "$TMPDIR" hyb2_latest.sif hyb2-py --config run.yml
 
 ```bash
 docker pull ghcr.io/tomharcus/hyb2:latest
-docker run --rm -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2-py --config run.yml
+
+# -t shows progress bars when supported, --user keeps outputs owned by you
+docker run --rm -t \
+      --user "$(id -u):$(id -g)" -e HOME=/tmp \
+      -v "$PWD:/data" -w /data \
+      ghcr.io/tomharcus/hyb2:latest hyb2-py --config run.yml
 ```
+> On macOS (Docker Desktop), omit `--user ... -e HOME=/tmp`. Ownership is mapped to you automatically and `--user`
+> can cause permission errors there. Drop `-t` when piping output to a file (it errors without a terminal).
+
 (Apple silicon should emulate running the image. This is fine for testing but slow for big mapping. The cluster is recommended for real runs)
 
 `:latest` tracks the most up to date build. If you want a specific version: instead of `:latest` add `:<git-sha>`.
 To pull a new build, re-pull (`apptainer pull --force... / docker pull...`)
+
+**To run the pipeline with a simple command see the convenience part of section 2.**
 
 ## For developing / modifying the code
 
@@ -113,7 +123,7 @@ run them depends on how you are running:
   `apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif <command>`
 
 - **Container: local (Docker):**
-  `docker run --rm -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest <command>`
+  `docker run --rm -t  --user "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest <command>`
 
 - **Dev clone (native env):** the commands are console scripts: run `<command>` directly, or use the 
 `python -m ...` module form.
@@ -126,6 +136,49 @@ run them depends on how you are running:
 | dataset comparison | `hyb2-compare` | `hyb2.compare.hyb2_compare` |
 
 Run any command with no args (or `--help`) for full flag help — e.g. `hyb2-py`.
+
+### Convenience: a shell wrapper
+
+The full `docker run ...` / `apptainer run ...` line is long. You can define a wrapper **once** in your shell's startup file: `~/.bashrc` on Linux/WSL (default bash) or
+`~/.zshrc` on macOS (default zsh). Check your shell with `echo $SHELL`. This makes every command short.
+Pick the one for your platform:
+
+**Linux / WSL (Docker):**
+```bash
+hyb2() {
+  local tty=""; [ -t 1 ] && tty="-t"    # progress bars when interactive, safe when piped
+  docker run --rm $tty --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest "$@"
+}
+```
+
+**macOS (Docker):** omit `--user/HOME` (Docker desktop maps ownership automatically):
+```bash
+hyb2() {
+  local t=""; [ -t 1 ] && t="-t" 
+  docker run --rm $t -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest "$@"; 
+}
+```
+
+**Cluster (Apptainer):**
+```bash
+hyb2() { 
+  apptainer run --bind "$TMPDIR" --bind /exports/eddie/scratch/$USER ~/hyb2_latest.sif "$@"; 
+}
+```
+
+Afterwards, run `source ~/.bashrc` or `source ~/.zshrc` or open a new shell and run from your data directory:
+```bash
+cd my_data_dir
+hyb2 hyb2-py --config run.yml
+hyb2 hyb2-fold -i myrun.hyb -d ref.fasta -a MyRNA -x 108 -l 1168 -r cplfold
+```
+
+The wrapper mounts your current directory as `/data`, so `cd` into your data folder first
+and reference files by plain name (or `/data/...`). It handles the progress bars, file ownership,
+and required binds for you.
+
+**IMPORTANT: The rest of the commands assume the wrapper has been set up.**
 
 ---
 
@@ -141,7 +194,7 @@ rules that make it run.
 `#$ -pe sharedmem 16` (batch) or `qlogin -pe sharedmem N` (interactive). The pipeline maps with
 exactly your allocated cores.
 
-3. **`h_vmem >= 16G`**: needed both for mapping and for the `apptainer pull` sqaushfs conversion
+3. **`h_vmem >= 16G`**: needed both for mapping and for the `apptainer pull` squashfs conversion
 (it OOMs on 8G).
 
 4. **Keep Apptainer's cache/tmp off home:**
@@ -167,10 +220,7 @@ Batch script (run_hyb2.sh, submit from your scratch run dir):
 
 . /etc/profile.d/modules.sh
 module load apptainer/1.4.4
-apptainer run \
-    --bind "$TMPDIR" \
-    --bind /exports/eddie/scratch/$USER \
-    ./hyb2_latest.sif hyb2-py --config run.yml
+hyb2 hyb2-py --config run.yml
 ```
 
 ```bash
@@ -187,8 +237,7 @@ For a quick interactive test: `qlogin -pe sharedmem 4 -l h_vmem=16G`, then
 Full pipeline in one command (cluster/Apptainer shown. See section 2 for Docker/native):
 
 ```bash
-apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif \
-    hyb2-py -i reads.sam -d reference.fasta -o myrun -a MyRNA -x 3900 -l 300 -r cplfold
+hyb2 hyb2-py -i reads.sam -d reference.fasta -o myrun -a MyRNA -x 3900 -l 300 -r cplfold
 ```
 
 Produces (prefix `myrun`): `myrun.hyb` (all chimeras) -> contact-density map PDF ->
@@ -205,13 +254,13 @@ Key flags: `-a` gene of interest, `-b` second gene, `-x`/`-y` fragment start coo
 ### The four analysis modes (as in the original README)
 ```bash
 # short-range intramolecular
-hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -x 1001 -l 500
+hyb2 hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -x 1001 -l 500
 # long-range intramolecular
-hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -x 1001 -y 5001 -l 500
+hyb2 hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -x 1001 -y 5001 -l 500
 # intermolecular (two genes)
-hyb2-py -i reads.sam -d ref.fasta -o test -a RNA_A -b RNA_B -x 7501 -y 501 -l 500
+hyb2 hyb2-py -i reads.sam -d ref.fasta -o test -a RNA_A -b RNA_B -x 7501 -y 501 -l 500
 # homodimer
-hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -b MyRNA -x 3501 -y 3501 -l 200
+hyb2 hyb2-py -i reads.sam -d ref.fasta -o test -a MyRNA -b MyRNA -x 3501 -y 3501 -l 200
 ```
 
 ### Reproducible runs with a YAML config (`--config`)
@@ -232,8 +281,8 @@ In `pipeline_templates/` you will find:
 
 ```bash
 cp pipeline_templates/full_pipeline.yml run.yml           # then edit paths/params
-hyb2-py --config run.yml                  # run entirely from the config
-hyb2-py --config run.yml --alpha 0.3      # CLI flags OVERRIDE the config
+hyb2 hyb2-py --config run.yml                  # run entirely from the config
+hyb2 hyb2-py --config run.yml --alpha 0.3      # CLI flags OVERRIDE the config
 ```
 Precedence is **CLI flag > config value > built-in default**. Config keys are the
 long-flag names (`input`, `reference`, `blast_threshold`, `x_start`, `alpha`, …); an
@@ -247,7 +296,7 @@ By default bowtie2 maps with multiple threads and emits reads in **thread-comple
 Pass **`--reproducible`** (or `reproducible: true` in the config) to make bowtie2 emit reads in input order (`--reorder`), so the whole pipeline is byte-deterministic run-to-run. This slows down the mapping stage slightly, so by default it is off.
 
 ```bash
-hyb2-py --config run.yml --reproducible
+hyb2 hyb2-py --config run.yml --reproducible
 ```
 
 PDF's still byte differ, even with `--reproducible`. The PDF outputs (contact maps, viewpoint graphs) won't match byte-for-byte between runs, because R's `pdf()` device embeds a creation timestamp. The plots are identical, only the metadata differs. To verify two runs match, compare without the PDFs:
@@ -279,14 +328,14 @@ repeatedly without re-mapping or re-calling**, when you pass the `.hyb` as input
 
 ```bash
 # 1. Call chimeras once (all RNAs):
-hyb2-py -i reads.sam -d ref.fasta -o test          # -> test.hyb
+hyb2 hyb2-py -i reads.sam -d ref.fasta -o test          # -> test.hyb
 
 # 2. Then pick any RNA and fold/plot it - spine is skipped:
-hyb2-py -i test.hyb -a RNA_A -x 100  -l 300
-hyb2-py -i test.hyb -a RNA_B -x 500  -l 300
-hyb2-fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
+hyb2 hyb2-py -i test.hyb -a RNA_A -x 100  -l 300
+hyb2 hyb2-py -i test.hyb -a RNA_B -x 500  -l 300
+hyb2 hyb2-fold -i test.hyb -d ref.fasta -a RNA_C -x 900 -l 300 -r cplfold
 ```
-Only coverage/viewpoint (CDM) needs no coords: `hyb2-py -i test.hyb -a RNA_A`.
+Only coverage/viewpoint (CDM) needs no coords: `hyb2 hyb2-py -i test.hyb -a RNA_A`.
 
 ---
 
@@ -307,7 +356,7 @@ fold command:
 > experimental constraints.
 
 ```bash
-hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
+hyb2 hyb2-fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
     -r cplfold -p test_MyRNA_3900-4199.basepair_scores.txt \
     --alpha 0.5 --beta 0.0 --normalize log --beam-size 100
 ```
@@ -334,7 +383,7 @@ expt_rep1.hyb   expt_rep1.MyRNA.contact.txt   condition_two
 expt_rep2.hyb   expt_rep2.MyRNA.contact.txt   condition_two
 ```
 ```bash
-hyb2-compare -i input.table -o cmp -a MyRNA -d ref.fasta
+hyb2 hyb2-compare -i input.table -o cmp -a MyRNA -d ref.fasta
 ```
 
 ---
@@ -366,8 +415,7 @@ already-reduced data and is not a large-file concern.
 
 To profile a run's peak memory:
 ```bash
-/usr/bin/time -v apptainer run --bind "$TMPDIR" --bind /path/to/scratch hyb2_latest.sif \
-    hyb2-py -i big.sam -d ref.fasta -o big -a MyRNA 2>&1 | grep "Maximum resident"
+/usr/bin/time -v hyb2 hyb2-py -i big.sam -d ref.fasta -o big -a MyRNA 2>&1 | grep "Maximum resident"
 ```
 
 ---
