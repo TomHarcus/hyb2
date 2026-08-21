@@ -32,6 +32,15 @@ The pipeline ships as a container image on GHCR with everything needed already t
 
 **Linux cluster (e.g. Eddie): Use Apptainer:**
 
+First request an interative login session, as the login node is not powerful enough to build the container.
+This command works consistently:
+```bash
+qlogin -l h_vmem=16G
+```
+
+Then navigate to `scratch` by running `cd /exports/eddie/scratch/$USER`
+
+Then you can pull and build the containter:
 ```bash
 module load apptainer   # use apptainer/1.4.4 on Eddie
 apptainer pull docker://ghcr.io/tomharcus/hyb2:latest   # produces hyb2_latest.sif
