@@ -51,7 +51,7 @@ mini_dir="$(mktemp -d)"
 head -20 "$TIER2/test.ua.hyb" > "$mini_dir/mini.hyb"
 cp "$REF" "$mini_dir/ref.fasta"
 ( cd "$mini_dir" && PATH="$REPO_ROOT/bin:$UNAFOLD_BIN:$PATH" LC_ALL=C UNAFOLDDAT="$UNAFOLDDAT" \
-    bash "$REPO_ROOT/bin/comradesMakeConstraints_2" -i mini.hyb -f ref.fasta -b 1 -e 10298 -r 0 >/dev/null 2>&1 )
+    bash "$REPO_ROOT/legacy_bin/comradesMakeConstraints_2" -i mini.hyb -f ref.fasta -b 1 -e 10298 -r 0 >/dev/null 2>&1 )
 cp "$mini_dir/mini.hyb"                  "$OUT/mini.hyb"                  # port re-runs on this
 cp "$mini_dir/mini.basepair_scores.txt"  "$OUT/mini.basepair_scores.golden"
 rm -rf "$mini_dir"

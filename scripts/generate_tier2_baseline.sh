@@ -25,7 +25,7 @@
 # Usage:  scripts/generate_tier2_baseline.sh
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BIN="$REPO_ROOT/bin"
+BIN="$REPO_ROOT/legacy_bin"
 SRC="$REPO_ROOT/fixtures/sam_composition_run"
 OUT="$REPO_ROOT/fixtures/tier2_run"
 

@@ -11,7 +11,7 @@ OUT="$REPO_ROOT/fixtures/viewpoint_run"
 HYB="$TIER2/test.ua.hyb"
 REF_FASTA="$REPO_ROOT/data/Zika_18S_formatted.fasta"
 GENE=Zika_virusRNA
-HB="$REPO_ROOT/bin/hyb2blast.awk"
+HB="$REPO_ROOT/legacy_bin/hyb2blast.awk"
 
 [ -f "$HYB" ] || { echo "Error: $HYB not found (run scripts/generate_tier2_baseline.sh first)" >&2; exit 1; }
 
@@ -32,7 +32,7 @@ d="$(mktemp -d)"
 cp "$OUT/blast2gplot.ref.blast"   "$d/ref.blast"
 cp "$OUT/blast2gplot.blast"       "$d/in.blast"
 cp "$OUT/blast2gplot.lengths.txt" "$d/lengths.txt"
-( cd "$d" && perl "$REPO_ROOT/bin/blast2gplot.pl" \
+( cd "$d" && perl "$REPO_ROOT/legacy_bin/blast2gplot.pl" \
     EXP=exp N_GENES=1 REF_BLAST_FILE=ref.blast BLAST_FILE=in.blast GENE_LENGTHS_FILE=lengths.txt )
 cp "$d/exp_${GENE}.gplot" "$OUT/blast2gplot.gplot.golden"
 rm -rf "$d"

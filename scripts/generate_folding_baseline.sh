@@ -57,7 +57,7 @@ echo "[2/3] b2ct: test.ua.cofold.vienna -> test.ua.cofold.ct"
 
 echo "[3/5] ct2bps_2.awk: test.ua.cofold.ct -> test.ua.cofold.bps (parser golden)"
 # Golden for the ct2bps_2 port: legacy awk output on the real .ct above.
-awk -f "$REPO_ROOT/bin/ct2bps_2.awk" test.ua.cofold.ct > test.ua.cofold.bps
+awk -f "$REPO_ROOT/legacy_bin/ct2bps_2.awk" test.ua.cofold.ct > test.ua.cofold.bps
 
 # Everything below reproduces the bp2hyb feed from comradesMakeConstraints_2:
 #   ct2bps | histogram > basepair_scores           (line 61)
@@ -73,14 +73,14 @@ PERL_BIN="${PERL:-perl}"
 export PATH="$REPO_ROOT/bin:$PATH" LC_ALL=C   # bp2hyb.sh shells out to combine_hyb_merge_touching.pl
 
 echo "[4/5] histogram + fragment cap -> test.fragment_scores.txt (bp2hyb input, ~1000 lines)"
-awk -f "$REPO_ROOT/bin/ct2bps_2.awk" test.ua.cofold.ct \
-    | "$PERL_BIN" "$REPO_ROOT/bin/histogram.pl" \
+awk -f "$REPO_ROOT/legacy_bin/ct2bps_2.awk" test.ua.cofold.ct \
+    | "$PERL_BIN" "$REPO_ROOT/legacy_bin/histogram.pl" \
     | sort -k1,1n -k2,2n \
     | awk 'printed<=1000 && $1>=1 && $1<=10298 && $2>=1 && $2<=10298{print;printed++}' \
     > test.fragment_scores.txt
 
 echo "[5/6] bp2hyb.sh: test.fragment_scores.txt -> test.ranked_interactions.txt (bp2hyb golden)"
-bash "$REPO_ROOT/bin/bp2hyb.sh" < test.fragment_scores.txt > test.ranked_interactions.txt
+bash "$REPO_ROOT/legacy_bin/bp2hyb.sh" < test.fragment_scores.txt > test.ranked_interactions.txt
 
 echo "[6/6] comradesMakeConstraints_2 on a small window -> comrades_mini golden (end-to-end)"
 # End-to-end golden for the comrades_make_constraints pipeline. Deliberately a
@@ -95,8 +95,8 @@ CMC_REF="$REPO_ROOT/data/Zika_18S_formatted.fasta"
 mini_dir="$(mktemp -d)"
 head -20 "$TIER2/test.ua.hyb" > "$mini_dir/mini.hyb"
 cp "$CMC_REF" "$mini_dir/ref.fasta"
-( cd "$mini_dir" && PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" LC_ALL=C \
-    bash "$REPO_ROOT/bin/comradesMakeConstraints_2" -i mini.hyb -f ref.fasta -b 1 -e 10298 -r 1 >/dev/null 2>&1 )
+( cd "$mini_dir" && PATH="$REPO_ROOT/legacy_bin:$VIENNA_BIN:$PATH" LC_ALL=C \
+    bash "$REPO_ROOT/legacy_bin/comradesMakeConstraints_2" -i mini.hyb -f ref.fasta -b 1 -e 10298 -r 1 >/dev/null 2>&1 )
 cp "$mini_dir/mini.hyb" comrades_mini.hyb
 cp "$mini_dir/mini.1-10298_folding_constraints.txt" comrades_mini.folding_constraints
 rm -rf "$mini_dir"
@@ -114,12 +114,12 @@ head -20 "$TIER2/test.ua.hyb" > "$mv_dir/mini.hyb"
 cp "$CMC_REF" "$mv_dir/ref.fasta"
 (
   cd "$mv_dir"
-  export PYTHONPATH="$REPO_ROOT/src" PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" LC_ALL=C
+  export PYTHONPATH="$REPO_ROOT/src" PATH="$REPO_ROOT/legacy_bin:$VIENNA_BIN:$PATH" LC_ALL=C
   "$VIENNA_BIN/python" -c "from hyb2.pipelines.comrades_make_constraints import run; run('mini.hyb','ref.fasta',10000,10300, vienna_bin='$VIENNA_BIN')" >/dev/null 2>&1
   "$VIENNA_BIN/python" -c "from hyb2.pipelines.comrades_fold import run; run('mini.10000-10300_folding_constraints.txt','ref_10000-10300.fasta', fold='vienna', vienna_bin='$VIENNA_BIN')" >/dev/null 2>&1
   # .bps from the constrained fold, genome coords (OFFSET = begin-1 = 9999)
   awk -v OFFSET=9999 'NR==1{print $1 "\t" $5}$1<$5 && NR>1{print $1+OFFSET "\t" $5+OFFSET}' ref_10000-10300.fasta.ct > mini.bps
-  bash "$REPO_ROOT/bin/make_VARNA_scores_2.sh" -m 1000000 -l 10300 -t 301 -i mini.basepair_scores.txt -b mini.bps
+  bash "$REPO_ROOT/legacy_bin/make_VARNA_scores_2.sh" -m 1000000 -l 10300 -t 301 -i mini.basepair_scores.txt -b mini.bps
 )
 cp "$mv_dir/mini.basepair_scores.txt" make_varna.basepair_scores.txt
 cp "$mv_dir/mini.bps" make_varna.bps
@@ -147,9 +147,9 @@ if command -v java >/dev/null 2>&1 && [ -f "$VARNA_JAR" ]; then
     cp make_varna.ct "$svg_dir/frag.ct"
     ( cd "$svg_dir"
       java -jar "$VARNA_JAR" -i frag.ct -bpStyle simple -spaceBetweenBases "0.6" -o frag.svg >/dev/null 2>&1
-      bash "$REPO_ROOT/bin/svg_mod_coord.sh" -i frag.svg -x 100 && cp frag_plot.svg branch1
+      bash "$REPO_ROOT/legacy_bin/svg_mod_coord.sh" -i frag.svg -x 100 && cp frag_plot.svg branch1
       rm -f frag_plot.svg
-      bash "$REPO_ROOT/bin/svg_mod_coord.sh" -i frag.svg -x 100 -y 5000 -l 150 && cp frag_plot.svg branch3 )
+      bash "$REPO_ROOT/legacy_bin/svg_mod_coord.sh" -i frag.svg -x 100 -y 5000 -l 150 && cp frag_plot.svg branch3 )
     cp "$svg_dir/frag.svg" svg_mod.input.svg
     cp "$svg_dir/branch1" svg_mod.branch1.golden
     cp "$svg_dir/branch3" svg_mod.branch3.golden
@@ -160,8 +160,8 @@ if command -v java >/dev/null 2>&1 && [ -f "$VARNA_JAR" ]; then
     cp make_varna.ct "$pv_dir/frag.ct"
     cp make_varna.VARNA_scores.txt "$pv_dir/s__frag.VARNA_scores.txt" 2>/dev/null \
         || cp make_varna.VARNA_scores.golden "$pv_dir/s__frag.VARNA_scores.txt"
-    ( cd "$pv_dir" && PATH="$REPO_ROOT/bin:$VIENNA_BIN:$PATH" \
-        bash "$REPO_ROOT/bin/plot_VARNA" -i frag.ct -s s__frag.VARNA_scores.txt \
+    ( cd "$pv_dir" && PATH="$REPO_ROOT/legacy_bin:$VIENNA_BIN:$PATH" \
+        bash "$REPO_ROOT/legacy_bin/plot_VARNA" -i frag.ct -s s__frag.VARNA_scores.txt \
              -j "$VARNA_JAR" -x 100 -l 150 >/dev/null 2>&1 )
     cp make_varna.ct plot_varna.ct
     cp make_varna.VARNA_scores.golden plot_varna.scores.txt 2>/dev/null || true

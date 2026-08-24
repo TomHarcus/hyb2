@@ -15,7 +15,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TIER2="$REPO_ROOT/fixtures/tier2_run"
 OUT="$REPO_ROOT/fixtures/coverage_run"
 HYB="$TIER2/test.ua.hyb"
-AWK="$REPO_ROOT/bin/plot_hybrids_3.awk"
+AWK="$REPO_ROOT/legacy_bin/plot_hybrids_3.awk"
 
 [ -f "$HYB" ] || { echo "Error: $HYB not found (run scripts/generate_tier2_baseline.sh first)" >&2; exit 1; }
 
@@ -26,7 +26,7 @@ awk -f "$AWK" USE_ENTIRE_HYBRIDS=1 BIN_SIZE=10 \
     GENE_1=Zika_virusRNA GENE_2=Zika_virusRNA "$HYB" \
     > "$OUT/plot_hybrids_3.single.golden"
 
-echo "[2/2] two-gene: swap prep (bin/hyb2_coverage line 36) | plot_hybrids_3.awk"
+echo "[2/2] two-gene: swap prep (legacy_bin/hyb2_coverage line 36) | plot_hybrids_3.awk"
 awk -v GENE_1=Zika_virusRNA \
     '{if ($4==GENE_1) print $0; if ($10==GENE_1) print $1"\t"$2"\t"$3"\t"$10"\t"$11"\t"$12"\t"$13"\t"$14"\t"$15"\t"$4"\t"$5"\t"$6"\t"$7"\t"$8"\t"$9}' \
     "$HYB" \

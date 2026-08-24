@@ -26,7 +26,7 @@
 #   input.sam defaults to ../hyb2_baseline/test.sam (the SAM Tom was given).
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BIN="$REPO_ROOT/bin"
+BIN="$REPO_ROOT/legacy_bin"
 # Grzegorz's newer scripts live in a sibling checkout; only collapse_blast_2.sh
 # is taken from here (memory-efficient rewrite, byte-identical output). Override
 # with NEWBIN=... if your copy lives elsewhere.
