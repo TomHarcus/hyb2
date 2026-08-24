@@ -10,7 +10,10 @@ def split_select(name, val):
     new_row = pd.DataFrame({'x': 0, 'y': 0, 'p': 0 , 'f':0, 'a':0}, index = [0])
     for filename in os.listdir('.'):
         if filename.startswith('DESeq_' + name) and filename.endswith("heatmap.txt"):
-            data = pd.read_csv(filename, sep="	", skiprows=1, header=None)
+            try:
+                data = pd.read_csv(filename, sep="	", skiprows=1, header=None)
+            except pd.errors.EmptyDataError:
+                data=pd.DataFrame(columns=range(5))
             data.columns = ["x", "y", "p", "f", "a"] # assigning name to columns
             data = pd.concat([new_row, data[:]]).reset_index(drop = True) #insert new row in data, resetting index to 0
             output_file_red = open(name + "_" + str(val) + "range_pos_enrichment.txt","w")
@@ -66,9 +69,9 @@ def split_select(name, val):
                     f_blue.append(row['f'])
                     a_blue.append(row['a'])
                     output_file_blue.write(str(int(row['x'])) + "	" + str(int(row['y'])) + "	" + str((row['f'])) + "	" + str((row['a'])) + "\n")
-    #flush any data not yet written to file
-    output_file_red.flush()
-    output_file_blue.flush()
+            #flush any data not yet written to file
+            output_file_red.flush()
+            output_file_blue.flush()
 
 if __name__ == "__main__":
     split_select(sys.argv[1], int(sys.argv[2]))

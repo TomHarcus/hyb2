@@ -242,6 +242,8 @@ qsub run_hyb2.sh    # queues + runs when cores free up. Check status with qstat
 For a quick interactive test: `qlogin -pe sharedmem 4 -l h_vmem=16G`, then
 `module load apptainer/1.4.4` and run directly.
 
+> The sort buffer is 25% of the node's RAM. Keep `h_vmem * cores` above that (the recommended `32 * 8 GB` easily is)
+> A much tighter allocation on a big node could OOM the sort.
 ---
 
 ## 4. Quick start: full pipeline from a SAM
