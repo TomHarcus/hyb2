@@ -173,6 +173,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
             sam = f"{out}.sam"
 
         else:
+            log.info("Sam format as input detected")
             sam = in_file
 
         sam_composition.run(sam, out=out, hmax=hmax, blast_threshold=blast_threshold, max_overlap=max_overlap)
