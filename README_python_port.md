@@ -224,8 +224,8 @@ Batch script (run_hyb2.sh, submit from your scratch run dir):
 #!/bin/bash
 #$ -cwd
 #$ -N hyb2
-#$ -pe sharedmem 16
-#$ -l h_vmem=16G
+#$ -pe sharedmem 32
+#$ -l h_vmem=8G
 #$ -l h_rt=12:00:00
 
 . /etc/profile.d/modules.sh
