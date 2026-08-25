@@ -175,7 +175,7 @@ hyb2() {
   apptainer run --bind "$TMPDIR" --bind /exports/eddie/scratch/$USER ~/hyb2_latest.sif "$@"; 
 }
 ```
-**Only wors in an interactive session, not for a `qsub` branch.**
+**Only works in an interactive session, not for a `qsub` branch.**
 
 Afterwards, run `source ~/.bashrc` or `source ~/.zshrc` or open a new shell and run from your data directory:
 ```bash
