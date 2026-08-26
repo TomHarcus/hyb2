@@ -100,6 +100,7 @@ def print_help():
 
 from pathlib import Path
 
+import sys
 
 from hyb2.mapping.fasta_hyb2_formatting import fasta_hyb2_formatting
 from hyb2.mapping.bowtie2_map import bowtie2_map
