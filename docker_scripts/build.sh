@@ -14,7 +14,7 @@ case "${1:-help}" in
 
   smoke)
     # no data needed. proves entrypoint, env, and every tool resolve inside the image
-    docker run --rm "$IMAGE:$TAG" hyb2-py --help
+    docker run --rm "$IMAGE:$TAG" hyb2 --help
     docker run --rm "$IMAGE:$TAG" bash -lc \
       'RNAfold --version && bowtie2 --version | head -1 \
        && Rscript -e "suppressMessages(library(DESeq2))" && echo "tools OK"'

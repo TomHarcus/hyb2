@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     # max-hits-per-sequence, not help; --help still works via the explicit
     # long-only alias added below.
     parser = argparse.ArgumentParser(
-        prog="hyb2-py",
+        prog="hyb2",
         description="Python port of the HYB2 RNA proximity-ligation pipeline (in progress).",
         add_help=False,
     )
@@ -74,6 +74,19 @@ from hyb2.tools.configfile import parse_with_config
 def main(argv: list[str] | None = None) -> int:
 
     argv = sys.argv[1:] if argv is None else argv
+
+    from hyb2.folding.hyb2_fold import main as fold_main
+    from hyb2.compare.hyb2_compare import main as compare_main
+    from hyb2.coverage.hyb2_coverage import main as coverage_main
+
+    subcommands = {
+        "fold": fold_main,
+        "compare": compare_main,
+        "coverage": coverage_main
+    }
+
+    if argv and argv[0] in subcommands:
+        return subcommands[argv[0]](argv[1:])
 
     args = parse_with_config(build_parser(), argv)
 

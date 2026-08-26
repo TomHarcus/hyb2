@@ -33,7 +33,6 @@ RUN sh /opt/hyb2/docker_scripts/preflight.sh
 # ensure that the tmp_dir guard is in executable
 RUN chmod +x /opt/hyb2/docker_scripts/entrypoint.sh
 ENTRYPOINT ["/opt/hyb2/docker_scripts/entrypoint.sh"]
-CMD ["hyb2-py", "--help"]
+CMD ["hyb2", "--help"]
 # trigger ci
 
-# trigger ci
