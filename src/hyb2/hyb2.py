@@ -5,7 +5,6 @@ The main orchestrator that ties in the whole pipeline
 """
 
 def print_help():
-    print("No options specified!")
     print("Usage:")
     print("\tconda activate hyb2")
     print("hyb2-py -i <input.fastq/sam -d <fasta_file> -o <output_ID> -a <gene_ID_1 -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
@@ -139,6 +138,13 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     
     steps.start("Processing input")
 
+    if gene_2 and not gene_1:
+        raise ValueError("-b/--gene-2 requires -a/--gene-1")
+    if length and x_coord is None:
+        raise ValueError("-l/--length requires -x/--x-start")
+    if (x_coord or y_coord or length) and not gene_1:
+        raise ValueError("coordinate/fold options (-x/-y/-l) require a gene (-a)")
+
     """
     Step 1: 
     process SAM files to Hyb format
@@ -183,6 +189,10 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     Step 2:
     Plot contact density map of selected genes
     """
+
+    if not gene_1:
+        log.info("generated hyb file only")
+        return
 
     if gene_1:
         steps.start("Contact density maps")

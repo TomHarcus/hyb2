@@ -46,6 +46,9 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
     fasta_1 = os.path.basename(fasta_1)
     fasta_2 = os.path.basename(fasta_2)
 
+    if GENE_2 is not None and y_coord is None:
+        raise ValueError("-b/--gene-2 requires -y/--y-start")
+
     if GENE_2 is None and y_coord is not None and (x_coord > y_coord):
         raise ValueError("Intramolecular Folding x_coord must be lower than y_coord")
 
