@@ -413,7 +413,7 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
 def build_parser() -> argparse.ArgumentParser:
     # getopts "i:a:b:d:x:y:l:j:0:r:" in the legacy bin/hyb2_fold
     p = argparse.ArgumentParser(
-        prog="hyb2-fold",
+        prog="hyb2 fold",
         description="fold an RNA fragment / interaction and render it with VARNA",
         add_help=False,
     )

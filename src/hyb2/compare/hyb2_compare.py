@@ -6,15 +6,14 @@ import argparse, sys
 from hyb2.tools import config
 
 def print_help():
-    print("No Options Specified!")
     print("Usage:")
     print("To compare between datasets:")
-    print("hyb2-compare -i <Input.table> -o <Outpud_ID>")
-    print("Input.table format:")
-    print("Output1.hyb\tOutput1.GENE.contact.txt\tcondition_one")
-    print("Output2.hyb\tOutput2.GENE.contact.txt\tcondition_one")
-    print("Output3.hyb\tOutput3.GENE.contact.txt\tcondition_two")
-    print("Output4.hyb\tOutput4.GENE.contact.txt\tcondition_two")
+    print("hyb2 compare -i <input.table> -o <output_ID>")
+    print("input.table format:")
+    print("output1.hyb\tOutput1.GENE.contact.txt\tcondition_one")
+    print("output2.hyb\tOutput2.GENE.contact.txt\tcondition_one")
+    print("output3.hyb\tOutput3.GENE.contact.txt\tcondition_two")
+    print("output4.hyb\tOutput4.GENE.contact.txt\tcondition_two")
     print("You can prepare however many rows you like (at least 2 for each condition), categorized by condition_one and condition_two\n")
 
     print("\t --verbose (-V) add if you want verbose mode on")
@@ -29,9 +28,9 @@ def print_help():
     print("\t--varna-jar (-j)\tDirectory of VARNAcmd.jar (default set when installing hyb2)")
     print("\t--folding (-0)\tFolding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
 
-    print("Maybe Compatible with Mac-OS-ARM NOT TESTED YET\n")
+    print("")
 
-    print("Run hyb2-py without options for details about hyb2, hyb2-coverage, and hyb2-app\n")
+    print("Run hyb2 without options for details about hyb2 and hyb2 coverage\n")
    
     print("Any other queries, email me at laujianyou@live.com")
 
@@ -279,7 +278,7 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
 def build_parser() -> argparse.ArgumentParser:
     
     p = argparse.ArgumentParser(
-        prog="hyb2-compare",
+        prog="hyb2 compare",
         description="finds significant differences between two sets of data",
         add_help=False,
     )

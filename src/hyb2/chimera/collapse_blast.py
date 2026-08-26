@@ -66,7 +66,7 @@ def collapse_blast(in_path, out_path, *, sort_mem="25%", tmpdir=None):
             f"external sort failed (exit {rc}) while collapsing {in_path}. "
             f"The usual cause is TMPDIR running out of space: sort spilled to "
             f"{tmpdir}. Check free space there, or point TMPDIR at a larger disk:\n"
-            f"    TMPDIR=/path/with/space hyb2-py ...\n"
+            f"    TMPDIR=/path/with/space hyb2 ...\n"
             f"(a tmpfs /tmp is RAM-backed and will also fail on large inputs)."
         )
 

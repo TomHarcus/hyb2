@@ -6,8 +6,7 @@ The main orchestrator that ties in the whole pipeline
 
 def print_help():
     print("Usage:")
-    print("\tconda activate hyb2")
-    print("hyb2-py -i <input.fastq/sam -d <fasta_file> -o <output_ID> -a <gene_ID_1 -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
+    print("hyb2 -i <input.fastq/sam> -d <fasta_file> -o <output_ID> -a <gene_ID_1> -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
     print("Options:")
     print("\t --verbose (-V) add if you want verbose mode on")
     print("\t --config input args in one yaml file")
@@ -46,7 +45,7 @@ def print_help():
     print("To only plot contact density map after generating hyb output:")
     print("hyb2 -i <output.hyb> -a <gene_ID_1>")
     print("Or:")
-    print("hyb2-coverage -i <output.hyb> -a <gene_ID_1> -w <x_coord_1> -x <x_coord_2> -y <y_coord_1> -z <y_coord_2>")
+    print("hyb2 coverage -i <output.hyb> -a <gene_ID_1> -w <x_coord_1> -x <x_coord_2> -y <y_coord_1> -z <y_coord_2>")
     print("\t --verbose (-V) add if you want verbose mode on")
     print("\t --config input args in one yaml file")
     print("\t--input (-i) output.hyb from running hyb2")
@@ -61,7 +60,7 @@ def print_help():
     print("")
 
     print("To only fold RNA structures:")
-    print("hyb2-fold -i <output.hyb> -d <fasta_file> -a <gene_ID_1> -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
+    print("hyb2 fold -i <output.hyb> -d <fasta_file> -a <gene_ID_1> -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
     print("\t --verbose (-V) add if you want verbose mode on")
     print("\t --config input args in one yaml file")
     print("\t--input (-i) output.hyb from running hyb2")
@@ -89,19 +88,9 @@ def print_help():
 
     print("")
 
-    print("To start GUI:")
-    print("hyb2_app -i <output.hyb> -d <fasta_file> -a <gene_id_1>")
-    print("\t-i output.hyb from running hyb2")
-    print("\t-d fasta file used for mapping")
-    print("\t-a gene ID of interest")
-    print("\t-b second gene ID of interest (if different)")
-    print("\t-j directory of VARNAcmd.jar (default set when installing hyb2)")
-
-    print("")
-
     print("To compare between datasets after generating hyb2 files:")
-    print("hyb2-compare -i <input.table> -o <output_id> -a <gene_id> -d <fasta_file>")
-    print("Run hyb2-compare without options for more help details regarding hyb2-compare")
+    print("hyb2 compare -i <input.table> -o <output_id> -a <gene_id> -d <fasta_file>")
+    print("Run hyb2 compare without options for more help details regarding hyb2 compare")
 
     print("")
 
@@ -271,5 +260,5 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
 
     log.info("Analysis completed")
     log.info("To compare between different datasets and plot differential coverage map, similarity heatmap, and differential structures, use:")
-    log.info("hyb2_compare -i <input.table> -a <gene_ID> -d <fasta>")
-    log.info("For more details, run: hyb2_compare")
+    log.info("hyb2 compare -i <input.table> -a <gene_ID> -d <fasta>")
+    log.info("For more details, run: hyb2 compare")

@@ -108,7 +108,7 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
 def build_parser() -> argparse.ArgumentParser:
     
     p = argparse.ArgumentParser(
-        prog="hyb2-coverage",
+        prog="hyb2 coverage",
         description="plot contact-density maps (wraps the R plotting scripts)",
         add_help=False,
     )
