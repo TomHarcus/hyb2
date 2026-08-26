@@ -8,7 +8,7 @@ on:
         - 'docker_scripts/entrypoint.sh'
         - 'docker_scripts/preflight.sh'
         - 'environment.yml'
-        - 'pyproject.yml'
+        - 'pyproject.toml'
         - 'src/**'
         - 'rscripts/**'
         - '.github/workflows/build-container.yml'
