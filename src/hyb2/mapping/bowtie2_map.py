@@ -20,19 +20,27 @@ def bowtie2_map(in_file, db, out, reproducible=False):
     # check if in_file is a .fasta file
     if suffix[-1] == "fasta":
 
-        if not Path(db.replace("fasta", "tab", 1)).is_file():
-            make_hyb_db_2(db)
+        make_hyb_db_2(db)
 
         _bowtie2(db, out, in_file, reproducible=reproducible)
         
+        print("Mapping concluded")
+
+    # support for .fasta.gz files
+    elif suffix[-2] == "fasta" and suffix[-1] == "gz":
+
+        make_hyb_db_2(db)
+        
+        _bowtie2(db, out, in_file, reproducible=reproducible)
+                
         print("Mapping concluded")
 
     # check if in_file is a .fastq.gz file
     # uses generators + streaming so that when reading large input file ram limit doesnt shoot up
     elif suffix[-2] == "fastq" and suffix[-1] == "gz":
 
-        if not Path(db.replace("fasta", "tab", 1)).is_file():
-            make_hyb_db_2(db)
+
+        make_hyb_db_2(db)
 
         comp_path = f"{out}_comp.fasta"
 
@@ -49,8 +57,8 @@ def bowtie2_map(in_file, db, out, reproducible=False):
     # check if in_file is a .fastq file
     # uses generators + streaming so that when reading large input file ram limit doesnt shoot up
     elif suffix[-1] == "fastq":
-        if not Path(db.replace("fasta", "tab", 1)).is_file():
-            make_hyb_db_2(db)
+    
+        make_hyb_db_2(db)
 
         comp_path = f"{out}_comp.fasta"
 
