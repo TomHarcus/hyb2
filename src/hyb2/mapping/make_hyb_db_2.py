@@ -32,3 +32,6 @@ def make_hyb_db_2(in_fasta):
     if not Path(tab).is_file():
         with open(in_fasta) as fin:
             Path(tab).write_text(fasta_to_tab(fin.read()))
+
+    else:
+        print("Database already generate: skipping to bowtie2 mapping")
