@@ -18,18 +18,11 @@ log = logging.getLogger(__name__)
 def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
     quiet = is_quiet()
 
+    contact = _write_contact(in_hyb, gene_1, gene_2)
+
     if not gene_2 and not x1 and not x2 and not y1 and not y2:
 
         log.info(f"Plotting contact density map of {gene_1}:")
-
-        contact = in_hyb.replace(".hyb", f".{gene_1}.contact.txt")
-
-        with open(in_hyb) as fin:
-            awk_out = plot_hybrids_3(fin, gene_1, gene_1, bin_size=10)
-
-        rows = awk_out.splitlines()
-
-        Path(contact).write_text(rows[0] + "\nx\ty\tcount\n" + "\n".join(rows[1:]) + "\n")
 
         with spinner(f"rendering contact map ({gene_1}) ") if quiet else contextlib.nullcontext():
             if not quiet:
@@ -48,17 +41,6 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
 
         log.info(f"Plotting contact density map of {gene_1} and {gene_2}:")
 
-        contact = in_hyb.replace(".hyb", f".{gene_1}-{gene_2}.contact.txt")
-
-        with open(in_hyb) as fin:
-            swapped = swap_gene1_to_arm1(fin, gene_1)
-            
-        awk_out = plot_hybrids_3(swapped, gene_1, gene_2, bin_size=10)
-
-        rows = awk_out.splitlines()
-        
-        Path(contact).write_text(rows[0] + "\nx\ty\tcount\n" + "\n".join(rows[1:]) + "\n")
-
         with spinner(f"rendering contact map ({gene_1} and {gene_2}) ") if quiet else contextlib.nullcontext():
             if not quiet:
                 print(f"rendering contact map ({gene_1} and {gene_2})")
@@ -73,8 +55,6 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
     if not gene_2 and x1 and x2 and y1 and y2:
 
         log.info(f"Plotting zoomed in contact density map of {gene_1}:")
-
-        contact = in_hyb.replace(".hyb", f".{gene_1}.contact.txt")
 
         with spinner(f"rendering zoomed contact map ({gene_1}) ") if quiet else contextlib.nullcontext():
             if not quiet:
@@ -91,8 +71,6 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
 
         log.info(f"Plotting zoomed in contact density map of {gene_1} and {gene_2}:")
 
-        contact = in_hyb.replace(".hyb", f".{gene_1}-{gene_2}.contact.txt")
-
         with spinner(f"rendering zoomed contact map ({gene_1} and {gene_2}) ") if quiet else contextlib.nullcontext():
             if not quiet:
                 print(f"rendering zoomed contact map ({gene_1} and {gene_2})")
@@ -104,6 +82,23 @@ def hyb2_coverage(in_hyb, gene_1, gene_2, limit, x1, x2, y1, y2):
 
         log.info(f"Zoomed in contact density map of {gene_1} and {gene_2} saved")
 
+def _write_contact(in_hyb, gene_1, gene_2):
+    # always build contact.txt file
+    if gene_2:
+        contact = in_hyb.replace(".hyb", f".{gene_1}-{gene_2}.contact.txt")
+        with open(in_hyb) as fin:
+            swapped = swap_gene1_to_arm1(fin, gene_1)
+        awk_out = plot_hybrids_3(swapped, gene_1, gene_2, bin_size=10)
+
+    else:
+        contact = in_hyb.replace(".hyb", f".{gene_1}.contact.txt")
+        with open(in_hyb) as fin:
+            awk_out = plot_hybrids_3(fin, gene_1, gene_1, bin_size=10)
+
+    rows = awk_out.splitlines()
+    Path(contact).write_text(rows[0] + "\nx\ty\tcount\n" + "\n".join(rows[1:]) + "\n")
+
+    return contact
 
 def build_parser() -> argparse.ArgumentParser:
     
