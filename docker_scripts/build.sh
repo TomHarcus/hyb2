@@ -57,6 +57,7 @@ apptainer build hyb2.sif docker-archive://hyb2.tar     # convert once
 # inside an SGE job $TMPDIR is already /local/$JOB_ID (real disk); interactively, set it.
 apptainer run \
     --bind "$TMPDIR" \
+    --bind "$TMPDIR":/tmp \
     --bind /exports/eddie/scratch/<you>/mydata:/data \
     hyb2.sif hyb2-py -i /data/reads.sam -d /data/ref.fasta -o run -a MyRNA -x 3900 -l 300 -r cplfold
 

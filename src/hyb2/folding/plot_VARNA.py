@@ -18,6 +18,7 @@ from hyb2.tools.logsetup import is_quiet
 from hyb2.tools.ui import spinner
 
 import logging
+import tempfile
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +41,8 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     colorstyle = f"0.00:#FFFFFF,{sm*0.2:g}:#4747FF,{sm*0.55:g}:#1CFF47,{sm*0.65:g}:#FFFF47,{sm*0.9:g}:#FF4747,{sm}:#B64747"
     
     varna_cmd = [
-        "java", "-jar", VARNA,
+        "java", f"-Djava.io.tmpdir={tempfile.gettempdir()}",
+        "-jar", VARNA,
         "-i", in_file,
         "-bpStyle", "simple",
         "-colorMap", colorscores,

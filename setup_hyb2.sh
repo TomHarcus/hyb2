@@ -25,19 +25,32 @@ fi
 
 # write the hyb2() wrapper to its own file (overwrites each time)
 if [ "$METHOD" = docker ]; then
+    # check if mac
+    if [ "$(uname -s)" = "Darwin" ]; then
     # quoted text so every $ stays literal
-    cat > "$HOME/.hyb2.sh" <<'EOF'
+        cat > "$HOME/.hyb2.sh" <<'EOF'
+hyb2() {
+    local tty=""; [ -t 1 ] && tty="-t"
+    docker run --rm $tty -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+}
+EOF
+    # linux/wsl
+    else
+        cat > "$HOME/.hyb2.sh" <<'EOF'
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
     docker run --rm $tty --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 EOF
+    fi
+
 else
     # unqouted text, only SIF is expanded
     cat > "$HOME/.hyb2.sh" <<EOF
 hyb2() {
-    apptainer run \${TMPDIR:+--bind "\$TMPDIR"} --bind /exports/eddie/scratch/\$USER "$SIF" hyb2 "\$@"
+    [ -n "\$TMPDIR" ] && export APPTAINER_TMPDIR="\$TMPDIR"
+    apptainer run \${TMPDIR:+--bind "\$TMPDIR" --bind "\$TMPDIR":/tmp} --bind /exports/eddie/scratch/\$USER "$SIF" hyb2 "\$@"
 }
 EOF
 fi
