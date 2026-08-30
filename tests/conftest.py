@@ -1,8 +1,7 @@
 """Shared test helpers. Path locators + a legacy-script runner.
 
 These are methodology-agnostic (usable whether the suite diffs against the
-captured golden fixtures or re-runs the legacy scripts). The exact test style
-for Tier 1 is being confirmed with Grzegorz before test_*.py files are added.
+captured golden fixtures or re-runs the legacy scripts). 
 """
 
 from __future__ import annotations
@@ -97,7 +96,7 @@ def viewpoint_fixtures_dir() -> Path:
 def cplfold_env() -> str:
     """Skip unless CPLfold is importable AND its HotKnots computeEnergy binary
     runs on this machine. The binary is architecture-specific (must be compiled
-    per machine -- see CLAUDE.md), so a wrong-arch binary raises OSError at exec;
+    per machine), so a wrong-arch binary raises OSError at exec;
     we skip rather than fail in that case."""
     import os
     import sys as _sys

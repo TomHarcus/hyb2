@@ -2,7 +2,7 @@
 
 Compared on data rows only -- the .hyb comment header embeds the invocation
 path/args, which differ between the Perl and the port (see conftest.data_lines).
-Params match what hyb2_sam_composition.sh passes. Remove xfail once implemented.
+Params match what hyb2_sam_composition.sh passes.
 """
 
 import pytest

@@ -2,10 +2,9 @@
 
 Runs the Python pipeline on the real test.sam and diffs every intermediate
 against fixtures/sam_composition_run/. Catches wiring bugs the per-stage tests
-can't. Remove xfail once pipelines.sam_composition.run is implemented.
+can't. 
 
-Note: step 9 (composition pies) is not asserted -- hyb2_composition_pies.py
-isn't available locally (get from Grzegorz).
+Note: step 9 (composition pies) is not asserted 
 """
 
 import shutil

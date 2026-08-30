@@ -1,8 +1,7 @@
 """Golden-diff parity: remove_duplicate_hybrids vs fixtures/.../test.ua.hyb.
 
 Takes the ranking ref + the .hyb; the dedup output has no comment header, so a
-plain byte-diff is the contract. Remove xfail once implemented (also implement
-models.Hybrid, which this stage depends on).
+plain byte-diff is the contract. 
 """
 
 import pytest

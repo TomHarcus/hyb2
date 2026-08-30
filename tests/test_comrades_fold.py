@@ -3,8 +3,8 @@
 comrades_fold implements the CORRECTED Option B greedy loop (adds ranked
 base-pair constraints one at a time, keeps only those the fold honours). This
 deliberately diverges from the legacy comradesFold2, whose constraint loop is a
-silent no-op (see CLAUDE.md), so there is no legacy oracle to diff against --
-the golden is a snapshot captured FROM THE PORT (Grzegorz-approved re-baseline).
+silent no-op, so there is no legacy oracle to diff against --
+the golden is a snapshot captured FROM THE PORT.
 The fold is deterministic (shuffling=False), so the .vienna/.ct are stable.
 
 Inputs (constraints + fragment fasta) and outputs come from

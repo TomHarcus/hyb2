@@ -7,7 +7,7 @@ Two kinds of coverage, per the folding tier's mixed provenance:
   the legacy awk.
 * the fold is comrades_fold Option B (constraint-honouring, deliberately != the
   buggy legacy comradesFold2 no-op), so .vienna/.ct/log2scores are REGRESSION
-  snapshots captured from the port itself (Grzegorz-approved re-baseline).
+  snapshots captured from the port itself.
 
 Goldens come from scripts/generate_folding_baseline.sh step 10 (window
 Zika_virusRNA 3900, len 150). The unit tests exercise the two awk-faithful

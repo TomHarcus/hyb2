@@ -1,6 +1,5 @@
 """Golden-diff parity: sam2blast vs fixtures/sam_composition_run/test.blast.
 
-Remove the xfail marker once bin/sam2blast_3 is adopted into the stage.
 """
 
 import pytest

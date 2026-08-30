@@ -7,13 +7,18 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
-- [Local Linux/WSL and macOS Installation](#local-linuxwsl-and-macos-installation)
-- [Eddie Installation](#eddie-installation)
+- [Local Linux/WSL and macOS installation](#local-linuxwsl-and-macos-installation)
+- [Eddie installation](#eddie-installation)
 - [Running hyb2](#running-hyb2)
-- [Running The Pipeline on Eddie with Batch Jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
-- [Config Files](#config-files)
+- [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
+- [Config files](#config-files)
 - [Folding backends and CPLfold tuning](#folding-backends-and-cplfold-tuning)
 - [Comparing datasets](#comparing-datasets)
+- [Deterministic runs](#deterministic-runs)
+- [Large files and memory](#large-files-and-memory)
+- [Developing](#developing)
+- [Run the test suite](#run-the-test-suite)
+- [Known limitations](#known-limitations)
 
 
 
@@ -38,7 +43,7 @@ On macOS install Docker Desktop:
 docker run hello-world
 ```
 
-## Local Linux/WSL and macOS Installation
+## Local Linux/WSL and macOS installation
 
 ### If using Linux/WSL:
 Start off by installing Docker Engine by following the Linux/WSL section in [Prerequisites](#prerequisites)
@@ -105,7 +110,7 @@ hyb2 compare --help
 
 You can now go to the next section on how to run the pipeline.
 
-## Eddie Installation
+## Eddie installation
 
 Eddie uses **Apptainer** (not Docker) and is a shared batch cluster. The login node is limited, so compute intensive tasks should
 be run on compute nodes via `qsub` (job batching) or `qlogin` (interactive).
@@ -234,7 +239,7 @@ Here is a list of the key flags:
 
 **For complete information about each flag type: `hyb2 --help`**
 
-## Running The Pipeline on Eddie with Batch Jobs
+## Running the pipeline on Eddie with batch jobs
 
 The hyb2 wrapper works in an interactive `qlogin` session, but **not** inside a batch job. A batch job runs on a non-interactive
 shell that doesn't load your `~/.bashrc`, so the `hyb2` function is not available. For batch jobs you write a small job script
@@ -331,5 +336,108 @@ hyb2 compare -i input.table -o cmp -a MyRNA -d ref.fasta
 
 >Gotcha: use non-numeric dataset stems (e.g. `ctrl_rep1`, not `1`). R's `read.table` mangles numeric column headers and breaks DESeq2.
 
+## Deterministic runs
 
+By default bowtie2 maps with multiple threads and emits reads in **thread completion order**, which varies run to run. The alignments
+are identical, only their *order* is different, but the order sensitive `collapse` / `mtophits` stages turn that into a different `.hyb`, 
+so two runs of the same data produce byte-different intermediate files. The folded structures and contact maps are unaffected, only the 
+bytes differ.
 
+Pass **`--reproducible`** (or `reproducible: true` in a config) to make bowtie2 emit reads in input order, so the whole pipeline is
+byte deterministic run to run. It slows mapping slightly, so it is off by default.
+
+```bash
+hyb2 --config run.yml --reproducible
+```
+
+PDFs still differ even with `--reproducible`. R's `pdf()` embeds a creation timestamp (the plots are identical, only the metadata differs).
+To check two runs match, exclude the PDFs:
+
+```bash
+diff -rq run_1 run_2 --exclude='*.pdf'
+```
+
+## Large files and memory
+
+The front stages of the pipeline (where the data is biggest) all stream or are memory safe, so the pipeline handles large (50 GB+) inputs:
+
+| Stage | Status |
+|---|---|
+| `sam2blast` | streams (O(1) memory) | 
+| `bowtie2_map` fastq/fastq.gz input | streams | 
+| `mtophits_blast` | streams |
+| `collapse_blast` | disk backed sort (memory bounded by the sort buffer) |
+
+`collapse_blast` sorts on disk, spilling to `TMPDIR`, so a ~50 GB SAM that would otherwise run out of memory completes.
+
+>**`TMPDIR`** must be on real disk. **A tmpfs (RAM backed) `/tmp` re-introduces the out of memory problem, because the sort spills
+>into RAM. The container's entrypoint guards this automatically: if `TMPDIR` is unset or on tmpfs it falls back to `$HOME/scratch_tmp` (real disk).
+>On Eddie, `$TMPDIR` is already node-local real disk and the batch template binds it in.
+
+Everything downstream of the `.hyb` (folding, coverage, compare) works on already reduced data and is not a large file concern.
+
+To check a runs peak memory:
+
+```bash
+/usr/bin/time -v hyb2 -i big.sam -d ref.fasta -o big -a MyRNA 2>&1 | grep "Maximum resident"
+```
+
+## Developing
+
+You only need this if you are **changing the pipeline itself**. To just run it, use the container, no clone needed.
+
+```bash
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
+```
+
+**Quick edits (recommended).** The image already has the full environment, so bind-mount your source over it and edits are live with no rebuild
+(the package is intalled with `pip install -e .`, so it reads the mounted source). Mount `src/` for Python and `rscripts/` for the R plotting scripts:
+
+```bash
+docker run --rm \
+    -v "$PWD/src:/opt/hyb2/src" \
+    -v "$PWD/rscripts:/opt/hyb2/rscripts" \
+    -v "$PWD/mydata:/data" -w /data \
+    ghcr.io/tomharcus/hyb2:latest hyb2 --config run.yml
+```
+
+**How a change ships:**
+
+```
+edit -> test (bind mount or native) -> git commit + push
+     -> CI rebuilds the image -> publishes ghcr.io/tomharcus/hyb2:latest
+     -> re-pull to run the new version
+```
+
+Any pushed change to `src/`, `rscripts/`, the `Dockerfile`, `environment.yml`, or `pyproject.toml` triggers a CI build, so `:latest`
+tracks the newest. To build the image locally first (catches build breaks without waiting for CI to finish building):
+
+```bash
+docker_scripts/build.sh build       # full image build
+docker_scripts/build.sh smoke       # entrypoint + tools resolve
+```
+
+## Run the test suite
+
+The tests run against a **dev clone**, not the container (`tests/` isn't shipped in the image). Set up a native env first: recreate the environment
+the `Dockerfile` builds (its `conda env create -f environment.yml`, CPLfold clone, and HotKnots `make` steps), then:
+
+```bash
+PYTHONPATH=src python -m pytest tests/ -q
+```
+
+Some tests are **gated**, they skip (not fail) if a tool or a regenerated fixture is missing. Fixtures are gitignored and rebuilt per machine:
+
+```bash
+scripts/generate_sam_composition_baseline.sh   # primary spine oracle
+scripts/generate_coverage_baseline.sh
+scripts/generate_viewpoint_baseline.sh
+scripts/generate_folding_baseline.sh           # needs ViennaRNA + java
+scripts/generate_unafold_baseline.sh           # needs oligoarrayaux
+```
+
+## Known limitations
+
+- **`comradesScore`** (randomized 1000x parallel folding): not ported, needs a `qsub` cluster.
+- **`hyb2_app`** (Shiny GUI): the R app is unchanged, only its thin launcher wrapper is not ported.

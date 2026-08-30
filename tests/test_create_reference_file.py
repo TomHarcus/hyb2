@@ -1,7 +1,5 @@
 """Golden-diff parity: create_reference_file vs fixtures/.../test_mtophits.ref.
 
-Tier 1 #1 -- the first stage to port (no dependencies). Remove the xfail marker
-once implemented.
 """
 
 import pytest
