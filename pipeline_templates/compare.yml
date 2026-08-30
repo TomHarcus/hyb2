@@ -1,5 +1,5 @@
 # hyb2 compare config
-# pass with: python -m hyb2_compare --config compare.yml
+# pass with: hyb2 compare --config compare.yml
 # CLI flags override anything set here for full flexibility
 
 #verbose:                                 # -V verbose on or off

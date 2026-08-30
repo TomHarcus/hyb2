@@ -1,5 +1,5 @@
 # hyb2 fold config
-# pass with: python -m hyb2.pipelines.hyb2_fold --config standalone_fold.yml
+# pass with: hyb2 fold --config standalone_fold.yml
 # CLI flags override anything set here for full flexibility
 
 #verbose:                            # -V verbose on or off

@@ -1,5 +1,5 @@
 # hyb2 run config
-# pass with: hyb2-py --config full_pipeline.yml
+# pass with: hyb2 --config full_pipeline.yml
 # CLI flags override anything set here for full flexibility
 
 #verbose:                        # -V verbose on or off
