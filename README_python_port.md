@@ -112,6 +112,11 @@ To get the Apptainer image on Eddie run:
 qlogin -l h_vmem=16G                    # needs a compute node, NOT A LOGIN NODE
 cd /exports/eddie/scratch/$USER         # change to the scratch directory as the home quota is too small
 module load apptainer
+
+# keep the pull's cache + temp on scratch, off your home quota
+export APPTAINER_CACHEDIR=/exports/eddie/scratch/$USER/apptainer_cache
+export APPTAINER_TMPDIR=/exports/eddie/scratch/$USER/apptainer_tmp
+
 apptainer pull docker://ghcr.io/tomharcus/hyb2:latest
 ```
 The pull converts to a `.sif` file.
@@ -123,6 +128,20 @@ chmod +x setup_hyb2.sh
 ./setup_hyb2.sh /exports/eddie/scratch/$USER/hyb2_latest.sif
 source ~/.bashrc
 ```
+
+The setup file creates the file `~/.hyb2.sh` which contains a simple function wrapper that simplifies the hyb2 commands (instead of rewriting the long apptainer run command each time):
+
+```bash
+hyb2() {
+    [ -n "$TMPDIR" ] && export APPTAINER_TMPDIR="$TMPDIR"
+    apptainer run ${TMPDIR:+--bind "$TMPDIR" --bind "$TMPDIR":/tmp} --bind /exports/eddie/scratch/$USER /exports/eddie/scratch/$USER/hyb2_latest.sif hyb2 "$@"
+}
+```
+
+It then writes one line to your shells startup configuration file (`~/.bashrc`):
+```bash
+[ -f ~/.hyb2.sh ] && source ~/.hyb2.sh
+```
 >Important caveat: the `hyb2` wrapper works only in an interactive session (`qlogin`), but not inside a `qsub` batch job.
 >Batch jobs run a non-interactive shell that doesn't source `~/.bashrc`, so the function is not available. For batch jobs
 >use the full `qsub` batch template in [Running on Eddie](#running-the-pipeline-on-eddie-with-batch-jobs).
@@ -130,11 +149,6 @@ source ~/.bashrc
 ### Eddie Specific Quirks
 - Work on the scratch directory, not home. The home directories quota is too small to run the pipeline.
 - Request cores: the default is 1, and this makes bowtie2 very slow.
-- Keep Apptainer's cache/tmp off of scratch by running:
-  ```bash
-  export APPTAINER_CACHEDIR=/exports/eddie/scratch/$USER/apptainer_cache
-  export APPTAINER_TMPDIR=/exports/eddie/scratch/$USER/apptainer_tmp
-  ```
 - Bind scratch + `$TMPDIR` as Apptainer auto mounts to `$HOME` but not those (available in the template in [Running on Eddie](#running-the-pipeline-on-eddie-with-batch-jobs))
 
 Afterwards you are ready to start.
@@ -235,8 +249,9 @@ Create a file, e.g. `run_hyb2.sh`, in your scratch run directory and paste in th
 . /etc/profile.d/modules.sh  # makes `module` available in the batch shell
 module load apptainer/1.4.4
 
-export APPTAINER_TMPDIR="$TMPDIR"
+export APPTAINER_TMPDIR="$TMPDIR"   # Apptainer's own temp not /tmp
 
+# --bind "$TMPDIR":/tmp remaps the container's /tmp so tools like Java and R never write to the nodes /tmp
 apptainer run --bind "$TMPDIR" --bind "$TMPDIR":/tmp --bind /exports/eddie/scratch/$USER \
     /exports/eddie/scratch/$USER/<your_dir>/hyb2_latest.sif \
     hyb2 -i reads.sam -d ref.fasta -o myrun -a MyRNA -x 3900 -l 300
