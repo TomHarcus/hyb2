@@ -11,6 +11,9 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 - [Eddie Installation](#eddie-installation)
 - [Running hyb2](#running-hyb2)
 - [Running The Pipeline on Eddie with Batch Jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
+- [Config Files](#config-files)
+- [Folding backends and CPLfold tuning](#folding-backends-and-cplfold-tuning)
+- [Comparing datasets](#comparing-datasets)
 
 
 
@@ -273,8 +276,60 @@ qstat                 # shows your queued/running jobs
 skipping the database creation step.
 - The sort buffer is 25% of the node's RAM, so keep `h_vmem * cores` above that. A much tighter allocation could run out of memory on a large sort.
 
+## Config files
 
+Instead of typing all the arguments on the command line, any command can read them from a YAML config file. This is handy for reproducable, shareable runs.
 
+Fetch a template (one per command):
+```bash
+curl -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/pipeline_templates/full_pipeline.yml
+mv full_pipeline.yml run.yml     # then edit the paths and parameters
+```
+
+There is a template for each command: `full_pipeline.yml`, `folding.yml`, `compare.yml`, and `coverage.yml`.
+
+Then run from the config:
+```bash
+hyb2 --config run.yml                   # runs entirely from the file
+hyb2 --config run.yml --alpha 0.3       # any command-line flag overrides the config
+```
+
+The config keys are the long flag names (`input`, `reference`, `output_id`, `x_start`, `alpha`, ...). The same long flags can also work as command line
+flags (e.g. `--input` for `-i`). Flag precedence is like this: **command line flag > config value > default**, and an unknown key stops with an error.
+
+## Folding backends and CPLfold tuning
+
+Choose the backend with `-r`: `cplfold` (default, finds pseudoknots), `vienna` (ViennaRNA),
+`unafold` (UNAFold). Both **`hyb2`** and **`hyb2 fold`** commands expose the full CPLfold parameter surface:
+
+```bash
+hyb2 fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
+    -r cplfold -p test_MyRNA_3900-4199.basepair_scores.txt \
+    --alpha 0.5 --beta 0.0 --normalize log --beam-size 100
+```
+- `-p <basepair_scores>` turns the experimental bonus **on**; omit it for the no-bonus
+  baseline (the fair A/B control).
+- `--normalize raw|log`, `--alpha`, `--beta`, `--beam-size`, `--energy-delta`,
+  `--max-phase1`, `--max-phase2`, `--energy-model` - all default from `config.CPL_DEFAULTS`.
+- `-0 1` launches the interactive VARNA GUI (needs a display); omit for headless SVG output.
+
+>Important caveat: **-r unafold and constraints**. The image bundles **OligoArrayAux** (hybrid-ss-min), the freely-redistributable subset of UNAFold (the full UNAFold is licensed and can't be shipped). OligoArrayAux's `hybrid-ss-min` **silently ignores `--force` constraints**, so `-r unafold` folds the fragment **unconstrained**, it doesn't incorporate the experimental base-pair support, and no error is raised. For constraint-guided folding use **`cplfold`** (default) or **`vienna`**, which both honour the constraints.
+
+## Comparing datasets
+
+Compares ≥2 replicates per condition, runs DESeq2, produces a differential coverage map,
+similarity heatmap, and enrichment tables. Needs a **manually-made** tab-delimited table:
+```
+ctrl_rep1.hyb   ctrl_rep1.MyRNA.contact.txt   condition_one
+ctrl_rep2.hyb   ctrl_rep2.MyRNA.contact.txt   condition_one
+expt_rep1.hyb   expt_rep1.MyRNA.contact.txt   condition_two
+expt_rep2.hyb   expt_rep2.MyRNA.contact.txt   condition_two
+```
+```bash
+hyb2 compare -i input.table -o cmp -a MyRNA -d ref.fasta
+```
+
+>Gotcha: use non-numeric dataset stems (e.g. `ctrl_rep1`, not `1`). R's `read.table` mangles numeric column headers and breaks DESeq2.
 
 
 
