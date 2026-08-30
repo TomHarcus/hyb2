@@ -3,7 +3,7 @@
 # CLI flags override anything set here for full flexibility
 
 #verbose:                            # -V verbose on or off
-input:            output.hyb         # -i  hyb
+input:            input.hyb         # -i  hyb
 gene_1:           Zika_virusRNA      # -a  gene of interest
 # gene_2:         18S_rRNA           # -b  second gene (intermolecular/homodimer)
 # limit:          0.95               # -q upper quantile for heatmap contrast (default=0.95)

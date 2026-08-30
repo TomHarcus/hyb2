@@ -3,7 +3,7 @@
 # CLI flags override anything set here for full flexibility
 
 #verbose:                            # -V verbose on or off
-input:            output.hyb         # -i  hyb
+input:            input.hyb         # -i  hyb
 reference:        ref.fasta          # -d  reference fasta
 
 gene_1:           Zika_virusRNA      # -a  gene of interest
