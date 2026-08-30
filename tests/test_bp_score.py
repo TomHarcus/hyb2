@@ -6,9 +6,6 @@ local->genome), then drives make_varna_scores. Inputs are the frozen constrained
 fold (make_varna.ct) + experimental support (make_varna.basepair_scores.txt);
 the outputs must reproduce the make_varna .bps and VARNA_scores goldens (bp_score
 is exactly the driver that produced those).
-
-bp_score writes files next to its inputs, so it runs in tmp_path with bare names
-(the legacy assumes cwd + bare filenames).
 """
 
 from hyb2.folding.bp_score import bp_score

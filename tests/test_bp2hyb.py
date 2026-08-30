@@ -8,10 +8,6 @@ lines -> 258 ranked-interaction lines; see scripts/generate_folding_baseline.sh)
 The ~1000-line cap is load-bearing, not incidental: bp2hyb reformats every base
 pair into an all-"RNA" chimera, so every record lands in one combine bucket and
 combine runs O(n^2). The pipeline caps the input for exactly this reason.
-
-bp2hyb() is a stdin-style filter: it takes an iterable of "i<TAB>j<TAB>count"
-lines and yields the ranked, merged .hyb rows. Output is deterministic (both
-GNU sorts fall back to a full-line tiebreak, reproduced in the port).
 """
 
 from hyb2.folding.bp2hyb import bp2hyb
