@@ -31,12 +31,12 @@ if [ "$METHOD" = docker ]; then
         cat > "$HOME/.hyb2.sh" <<'EOF'
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    local gui=""
-    if command -v xhost >/dev/null 2>&1; then       # xhost present = XQuartz installed
-        xhost + 127.0.0.1 >/dev/null 2>&1 || true
-        gui="-e DISPLAY=host.docker.internal:0"
+    local gui=()
+    if [ -x /opt/X11/bin/xhost ]; then
+        /opt/X11/bin/xhost + 127.0.0.1 >/dev/null 2>&1 || true
+        gui=(-e "DISPLAY=host.docker.internal:0")
     fi
-    docker run --rm $tty $gui -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+    docker run --rm $tty "${gui[@]}" -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 EOF
     # linux/wsl
@@ -44,12 +44,12 @@ EOF
         cat > "$HOME/.hyb2.sh" <<'EOF'
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    local gui=""
+    local gui=()
     if [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
         xhost +local: >/dev/null 2>&1 || true
-        gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+        gui=(-e "DISPLAY=$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix)
     fi
-    docker run --rm $tty $gui --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    docker run --rm $tty "${gui[@]}" --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 EOF
