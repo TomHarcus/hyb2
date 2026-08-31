@@ -40,7 +40,7 @@ EOF
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
     local gui=""
-    if [ -n "$DISPLAY:-}" ] && [ -d /tmp/.x11-unix ]; then
+    if [ -n "$DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
         xhost +local: >/dev/null 2>&1 || true
         gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
     fi
