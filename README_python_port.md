@@ -43,6 +43,21 @@ On macOS install Docker Desktop:
 docker run hello-world
 ```
 
+#### Running the VARNA GUI on macOS:
+
+To have compatibility for the VARNA GUI on macOS, XQuartz must be installed. XQuartz is the X11 windowing system for macOS.
+
+Run the command:
+```bash
+brew install --cask xquartz     # installs XQuartz
+```
+
+Then launch XQuartz and go to **Settings** -> **Security** -> **tick "Allow connections from network clients** -> **quit and reopen XQuartz**.
+The setting only takes effect after a restart.
+
+Afterwards the macOS machine is complete.
+
+
 ## Local Linux/WSL and macOS installation
 
 ### If using Linux/WSL:
@@ -77,7 +92,12 @@ The setup file creates the file `~/.hyb2.sh` which contains a simple function wr
 ```bash
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    docker run --rm $tty --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    local gui=""
+    if [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
+        xhost +local: >/dev/null 2>&1 || true
+        gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+    fi
+    docker run --rm $tty $gui --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 ```
@@ -86,7 +106,12 @@ hyb2() {
 ```bash
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    docker run --rm $tty -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+    local gui=""
+    if command -v xhost >/dev/null 2>&1; then       # xhost present = XQuartz installed
+        xhost + 127.0.0.1 >/dev/null 2>&1 || true
+        gui="-e DISPLAY=host.docker.internal:0"
+    fi
+    docker run --rm $tty $gui -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 ```
 
