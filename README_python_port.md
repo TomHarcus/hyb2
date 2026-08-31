@@ -52,10 +52,16 @@ Run the command:
 brew install --cask xquartz     # installs XQuartz
 ```
 
-Then launch XQuartz and go to **Settings** -> **Security** -> **tick "Allow connections from network clients** -> **quit and reopen XQuartz**.
+Then launch XQuartz and go (Top Left) to **XQuartz** -> **Settings** -> **Security** -> **tick "Allow connections from network clients** -> **quit and reopen XQuartz**.
 The setting only takes effect after a restart.
 
-Afterwards the macOS machine is complete.
+After you have fully closed and reopened XQuartz, run:
+```bash
+export DISPLAY=:0
+xhost +
+```
+
+Afterwards the macOS machine's state is ready.
 
 
 ## Local Linux/WSL and macOS installation
@@ -92,12 +98,12 @@ The setup file creates the file `~/.hyb2.sh` which contains a simple function wr
 ```bash
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    local gui=""
+    local gui=()
     if [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
         xhost +local: >/dev/null 2>&1 || true
-        gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+        gui=(-e "DISPLAY=$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix)
     fi
-    docker run --rm $tty $gui --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    docker run --rm $tty "${gui[@]}" --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 ```
@@ -106,12 +112,12 @@ hyb2() {
 ```bash
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    local gui=""
-    if command -v xhost >/dev/null 2>&1; then       # xhost present = XQuartz installed
-        xhost + 127.0.0.1 >/dev/null 2>&1 || true
-        gui="-e DISPLAY=host.docker.internal:0"
+    local gui=()
+    if [ -x /opt/X11/bin/xhost ]; then
+        /opt/X11/bin/xhost + 127.0.0.1 >/dev/null 2>&1 || true
+        gui=(-e "DISPLAY=host.docker.internal:0")
     fi
-    docker run --rm $tty $gui -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+    docker run --rm $tty "${gui[@]}" -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 ```
 
