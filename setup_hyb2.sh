@@ -31,7 +31,12 @@ if [ "$METHOD" = docker ]; then
         cat > "$HOME/.hyb2.sh" <<'EOF'
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    docker run --rm $tty -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+    local gui=""
+    if command -v xhost >/dev/null 2>&1; then       # xhost present = XQuartz installed
+        xhost + 127.0.0.1 >/dev/null 2>&1 || true
+        gui="-e DISPLAY=host.docker.internal:0"
+    fi
+    docker run --rm $tty $gui -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 EOF
     # linux/wsl
@@ -40,7 +45,7 @@ EOF
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
     local gui=""
-    if [ -n "$DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
+    if [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
         xhost +local: >/dev/null 2>&1 || true
         gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
     fi
