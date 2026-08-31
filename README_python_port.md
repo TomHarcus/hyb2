@@ -117,7 +117,7 @@ hyb2() {
         /opt/X11/bin/xhost + 127.0.0.1 >/dev/null 2>&1 || true
         gui=(-e "DISPLAY=host.docker.internal:0")
     fi
-    docker run --rm $tty "${gui[@]}" -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
+    docker run --rm --platform linux/amd64 $tty "${gui[@]}" -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 ```
 
