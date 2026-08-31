@@ -39,7 +39,12 @@ EOF
         cat > "$HOME/.hyb2.sh" <<'EOF'
 hyb2() {
     local tty=""; [ -t 1 ] && tty="-t"
-    docker run --rm $tty --user "$(id -u):$(id -g)" -e HOME=/tmp \
+    local gui=""
+    if [ -n "$DISPLAY:-}" ] && [ -d /tmp/.x11-unix ]; then
+        xhost +local: >/dev/null 2>&1 || true
+        gui="-e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix"
+    fi
+    docker run --rm $tty $gui --user "$(id -u):$(id -g)" -e HOME=/tmp \
         -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
 }
 EOF
