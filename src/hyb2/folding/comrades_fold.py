@@ -222,21 +222,8 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
     structure = best["structure"]
     energy = best.get("energy")
 
-    # CPLfold returns energy=None when HotKnots' computeEnergy fails (it catches
-    # the error, warns, and leaves energy unset). The commonest cause is an
-    # architecture mismatch in the compiled binary -- e.g. an aarch64 build run
-    # on x86-64 gives "exec format error". Silently writing 0.0 here would emit
-    # a structure with a meaningless energy and corrupt the COMRADES-score
-    # ranking, so fail loudly with the fix instead.
     if energy is None:
-        hk = os.path.join(config.CPLFOLD_DIR, "Utils", "HotKnots_v2.0")
-        raise RuntimeError(
-            f"CPLfold folded {gene_name!r} but HotKnots could not compute its "
-            f"energy. This usually means the compiled binary {hk}/bin/computeEnergy "
-            f"does not match this machine's architecture. Rebuild it:\n"
-            f"    make -C {hk}\n"
-            f"then verify: `uname -m` vs `file {hk}/bin/computeEnergy`."
-        )
+        raise ValueError(f"CPLfold returned no energy for {gene_name}")
 
     vienna = f">{gene_name}\n{seq}\n{structure} ({energy})\n"
 

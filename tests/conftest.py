@@ -65,10 +65,11 @@ def vienna_bin() -> str:
     """Directory containing ViennaRNA's RNAcofold/b2ct, for pipeline tests that
     actually fold. Prefers PATH, falls back to the hyb2 conda env; skips if
     neither has it."""
+    import os
     exe = shutil.which("RNAcofold")
     if exe is not None:
         return str(Path(exe).parent)
-    candidate = Path.home() / "miniconda3" / "envs" / "hyb2" / "bin" / "RNAcofold"
+    candidate = Path.home() / Path(os.environ["CONDA_PREFIX"]) / "bin" / "RNAcofold"
     if candidate.exists():
         return str(candidate.parent)
     pytest.skip("ViennaRNA (RNAcofold) not found on PATH or in the hyb2 env")
@@ -94,10 +95,7 @@ def viewpoint_fixtures_dir() -> Path:
 
 @pytest.fixture
 def cplfold_env() -> str:
-    """Skip unless CPLfold is importable AND its HotKnots computeEnergy binary
-    runs on this machine. The binary is architecture-specific (must be compiled
-    per machine), so a wrong-arch binary raises OSError at exec;
-    we skip rather than fail in that case."""
+    """Skip unless CPLfold is importable from config.CPLFOLD_DIR"""
     import os
     import sys as _sys
     from hyb2.tools import config
@@ -112,15 +110,6 @@ def cplfold_env() -> str:
     except Exception as e:
         pytest.skip(f"CPLfold not importable: {e}")
 
-    exe = os.path.join(cpldir, "Utils", "HotKnots_v2.0", "bin", "computeEnergy")
-    if not os.path.exists(exe):
-        pytest.skip("HotKnots computeEnergy not built")
-    try:
-        subprocess.run([exe], capture_output=True, stdin=subprocess.DEVNULL, timeout=10)
-    except OSError as e:
-        pytest.skip(f"HotKnots computeEnergy not runnable on this architecture: {e}")
-    except subprocess.TimeoutExpired:
-        pass  # runnable (right arch), just waits for input -> good enough
     return cpldir
 
 
@@ -145,7 +134,7 @@ def unafold_env(monkeypatch) -> str:
     if shutil.which("hybrid-ss-min") and shutil.which("hybrid-min"):
         bindir = Path(shutil.which("hybrid-ss-min")).parent
     else:
-        cand = Path.home() / "miniconda3" / "envs" / "hyb2" / "bin"
+        cand = Path.home() / Path(os.environ["CONDA_PREFIX"]) / "bin"
         if (cand / "hybrid-ss-min").exists() and (cand / "hybrid-min").exists():
             monkeypatch.setenv("PATH", str(cand) + os.pathsep + os.environ.get("PATH", ""))
             bindir = cand
