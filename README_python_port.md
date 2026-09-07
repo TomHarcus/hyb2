@@ -420,6 +420,25 @@ You only need this if you are **changing the pipeline itself**. To just run it, 
 For running the test suite or modifying the pipeline, install everything with conda (recommended to use **Miniforge** as it comes with the fast
 libmamba solver by default).
 
+If you don't already have conda, install **Miniforge**. Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
+
+```bash
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash "Miniforge3-$(uname)-$(uname -m).sh"
+```
+
+Restart your shell, then `conda --version` should work and you can proceed with cloning and installing the environment.
+
+If you already have conda (Miniconda/Anaconda), you can use it instead of Miniforge. If `conda env create` hangs on
+"Solving environment", your conda is on the old classic solver. To fix, force the fast one:
+
+```bash
+conda env create --solver=libmamba -f environment.yml
+```
+
+(or set it once: `conda config --set solver libmamba`). Recent conda versions already default to libmamba, so this is only needed
+on older installs.
+
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
 cd hyb2
