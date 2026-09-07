@@ -453,6 +453,12 @@ git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/
 export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
+> **On macOS**, `bioconductor-deseq2` has no native `osx-arm64` build, so a plain `conda env create` will not work.
+>Create the env as Intel instead, it runs under Rosetta:
+>```bash
+>CONDA_SUBDIR=osx-64 conda env create -f environment.yml
+>```
+
 `conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
 are live with no reinstall. Run it directly:
 
