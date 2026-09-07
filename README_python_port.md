@@ -439,6 +439,8 @@ conda env create --solver=libmamba -f environment.yml
 (or set it once: `conda config --set solver libmamba`). Recent conda versions already default to libmamba, so this is only needed
 on older installs.
 
+After the Miniforge/conda setup is correct, you can proceed:
+
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
 cd hyb2
