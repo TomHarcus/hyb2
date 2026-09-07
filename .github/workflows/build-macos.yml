@@ -3,19 +3,27 @@ on:
   workflow_dispatch:
   push:
     branches: [python-migration]
-    paths: [environment.yml, pyproject.toml, .github/workflows/build-macos.yml]   # re-check when deps change
+    paths: [environment.yml, pyproject.toml, .github/workflows/build-macos.yml]
 
 jobs:
-  native-arm64:
-    runs-on: macos-14                 # Apple Silicon
+  macos-rosetta:
+    runs-on: macos-14              # Apple Silicon; env forced to osx-64 (Rosetta)
+    env:
+      CONDA_SUBDIR: osx-64         # bioconductor-deseq2 has no osx-arm64 build 
     steps:
       - uses: actions/checkout@v4
+
+      - name: install Rosetta
+        run: softwareupdate --install-rosetta --agree-to-license || true
+
       - uses: conda-incubator/setup-miniconda@v3
         with:
-          miniforge-version: latest   # installs Miniforge (osx-arm64)
-      - name: create env
-        shell: bash -el {0}           # -l so conda activation works in the step
+          miniforge-version: latest
+
+      - name: create env (Intel via Rosetta)
+        shell: bash -el {0}
         run: conda env create -f environment.yml
+
       - name: smoke
         shell: bash -el {0}
         run: conda run -n hyb2 hyb2 --help
