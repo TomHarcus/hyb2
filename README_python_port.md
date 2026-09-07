@@ -417,26 +417,35 @@ To check a runs peak memory:
 
 You only need this if you are **changing the pipeline itself**. To just run it, use the container, no clone needed.
 
+For running the test suite or modifying the pipeline, install everything with conda (recommended to use **Miniforge** as it comes with the fast
+libmamba solver by default).
+
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
 cd hyb2
+
+conda env create -f environment.yml     # env + all tools
+conda activate hyb2
+
+# CPLfold (pure python)
+git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
+export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
-**Quick edits (recommended).** The image already has the full environment, so bind-mount your source over it and edits are live with no rebuild
-(the package is intalled with `pip install -e .`, so it reads the mounted source). Mount `src/` for Python and `rscripts/` for the R plotting scripts:
+`conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
+are live with no reinstall. Run it directly:
 
 ```bash
-docker run --rm \
-    -v "$PWD/src:/opt/hyb2/src" \
-    -v "$PWD/rscripts:/opt/hyb2/rscripts" \
-    -v "$PWD/mydata:/data" -w /data \
-    ghcr.io/tomharcus/hyb2:latest hyb2 --config run.yml
+hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
 ```
 
-**How a change ships:**
+**How a change works:**
+
+Modifying the code only changes the pipeline locally, the published container is what users run, so a change only reaches them once it's
+pushed and CI rebuilds the image:
 
 ```
-edit -> test (bind mount or native) -> git commit + push
+edit -> tests -> git commit + push
      -> CI rebuilds the image -> publishes ghcr.io/tomharcus/hyb2:latest
      -> re-pull to run the new version
 ```
@@ -451,8 +460,7 @@ docker_scripts/build.sh smoke       # entrypoint + tools resolve
 
 ## Run the test suite
 
-The tests run against a **dev clone**, not the container (`tests/` isn't shipped in the image). Set up a native env first: recreate the environment
-the `Dockerfile` builds (its `conda env create -f environment.yml`, CPLfold clone, and HotKnots `make` steps), then:
+The tests run against a **dev clone**, not the container (`tests/` isn't shipped in the image). Set up a native env first (see [Developing](#developing)) then:
 
 ```bash
 PYTHONPATH=src python -m pytest tests/ -q
