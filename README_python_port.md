@@ -9,6 +9,7 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 - [Prerequisites](#prerequisites)
 - [Local Linux/WSL and macOS installation](#local-linuxwsl-and-macos-installation)
 - [Eddie installation](#eddie-installation)
+- [Checking hyb2 with small test data](#checking-hyb2-with-small-test-data)
 - [Running hyb2](#running-hyb2)
 - [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
 - [Config files](#config-files)
@@ -208,6 +209,31 @@ hyb2 compare --help
 
 You can now go to the next section on how to run the pipeline.
 
+## Checking hyb2 with small test data
+
+To check that hyb2 is installed and configured correctly, you can run the following commands to test the pipeline on trivial data files
+
+Create a new directory at a location of your choosing (on Eddie you want to be on `scratch/` not `home/`):
+
+```bash
+mkdir hyb2_test
+cd hyb2_test
+```
+
+Once inside the directory, download the test data:
+
+```bash
+curl -L -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/data/Zika_18S_formatted.fasta  # reference fasta
+curl -L -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/data/testData.sam              # input sam file
+```
+
+Then test the pipeline by running:
+
+```bash
+hyb2 -i testData.sam -d Zika_18S_formatted.fasta -o testrun -a Zika_virusRNA -x 3900 -l 300 -r cplfold
+```
+
+This should produce a `testrun.hyb` file, a contact density map PDF, a viewpoint PDF, and the folded structure. This tests the pipeline end to end.
 
 ## Running hyb2
 
