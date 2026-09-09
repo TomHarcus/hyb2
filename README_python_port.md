@@ -7,8 +7,9 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
-- [Local Linux/WSL and macOS installation](#local-linuxwsl-and-macos-installation)
+- [Local Linux/WSL and macOS container installation](#local-linuxwsl-and-macos-container-installation)
 - [Eddie installation](#eddie-installation)
+- [Local native install (conda)](#local-native-install-conda)
 - [Checking hyb2 with small test data](#checking-hyb2-with-small-test-data)
 - [Running hyb2](#running-hyb2)
 - [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
@@ -65,7 +66,7 @@ xhost +
 Afterwards the macOS machine's state is ready.
 
 
-## Local Linux/WSL and macOS installation
+## Local Linux/WSL and macOS container installation
 
 ### If using Linux/WSL:
 Start off by installing Docker Engine by following the Linux/WSL section in [Prerequisites](#prerequisites)
@@ -208,6 +209,61 @@ hyb2 compare --help
 ```
 
 You can now go to the next section on how to run the pipeline.
+
+## Local native install (conda)
+
+If you want to **change the pipeline itself** install natively following the steps here. To just run it, use the container method above, no clone needed.
+
+For running the test suite or modifying the pipeline, install everything with conda (recommended to use **Miniforge** as it comes with the fast
+libmamba solver by default).
+
+If you don't already have conda, install **Miniforge**. Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
+
+```bash
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash "Miniforge3-$(uname)-$(uname -m).sh"
+```
+
+Restart your shell, then `conda --version` should work and you can proceed with cloning and installing the environment.
+
+If you already have conda (Miniconda/Anaconda), you can use it instead of Miniforge. 
+
+After the Miniforge/conda setup is correct, you can proceed:
+
+```bash
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
+
+conda env create -f environment.yml     # env + all tools
+conda activate hyb2
+
+# CPLfold (pure python)
+git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
+export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
+```
+
+There are two cases that need a tweak to the `conda env create` line above:
+
+- On macOS, `bioconductor-deseq2` has no native `osx-arm64` build, so a plain create fails. To fix, build the env as Intel
+(running underneath Rosetta) using this command instead:
+    ```bash
+    CONDA_SUBDIR=osx-64 conda env create -f environment.yml
+    ```
+
+- If it hangs on "Solving environment" (an older conda on the classic solver), force libmamba by using this command instead:
+    ```bash
+    conda env create --solver=libmamba -f environment.yml
+    ```
+    (or set it once: `conda config --set solver libmamba`). Recent conda installations already default to libmamba, so this is for any
+    older installs.
+
+
+`conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
+are live with no reinstall. Run it directly:
+
+```bash
+hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
+```
 
 ## Checking hyb2 with small test data
 
@@ -441,57 +497,6 @@ To check a runs peak memory:
 
 ## Developing
 
-You only need this if you are **changing the pipeline itself**. To just run it, use the container, no clone needed.
-
-For running the test suite or modifying the pipeline, install everything with conda (recommended to use **Miniforge** as it comes with the fast
-libmamba solver by default).
-
-If you don't already have conda, install **Miniforge**. Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
-
-```bash
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash "Miniforge3-$(uname)-$(uname -m).sh"
-```
-
-Restart your shell, then `conda --version` should work and you can proceed with cloning and installing the environment.
-
-If you already have conda (Miniconda/Anaconda), you can use it instead of Miniforge. If `conda env create` hangs on
-"Solving environment", your conda is on the old classic solver. To fix, force the fast one:
-
-```bash
-conda env create --solver=libmamba -f environment.yml
-```
-
-(or set it once: `conda config --set solver libmamba`). Recent conda versions already default to libmamba, so this is only needed
-on older installs.
-
-After the Miniforge/conda setup is correct, you can proceed:
-
-```bash
-git clone -b python-migration https://github.com/TomHarcus/hyb2.git
-cd hyb2
-
-conda env create -f environment.yml     # env + all tools
-conda activate hyb2
-
-# CPLfold (pure python)
-git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
-export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
-```
-
-> **On macOS**, `bioconductor-deseq2` has no native `osx-arm64` build, so a plain `conda env create` will not work.
->Create the env as Intel instead, it runs under Rosetta:
->```bash
->CONDA_SUBDIR=osx-64 conda env create -f environment.yml
->```
-
-`conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
-are live with no reinstall. Run it directly:
-
-```bash
-hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
-```
-
 **How a change works:**
 
 Modifying the code only changes the pipeline locally, the published container is what users run, so a change only reaches them once it's
@@ -513,7 +518,7 @@ docker_scripts/build.sh smoke       # entrypoint + tools resolve
 
 ## Run the test suite
 
-The tests run against a **dev clone**, not the container (`tests/` isn't shipped in the image). Set up a native env first (see [Developing](#developing)) then:
+The tests run against a **dev clone**, not the container (`tests/` isn't shipped in the image). Set up a native env first (see [Local native install](#local-native-install-conda)) then:
 
 ```bash
 PYTHONPATH=src python -m pytest tests/ -q
