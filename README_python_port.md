@@ -259,7 +259,21 @@ There are two cases that need a tweak to the `conda env create` line above:
 
 
 `conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
-are live with no reinstall. Run it directly:
+are live with no reinstall. 
+
+**When running natively with no container**, nothing sets `TMPDIR` for you. Before a large run export it to a large real-disk location with plenty of space free. Pick 
+the line for where you are running:
+
+```bash
+export TMPDIR=$HOME/hyb2_tmp                           # local machine (any large disk)
+# export TMPDIR=/exports/eddie/scratch/$USER/hyb2_tmp   # on Eddie: scratch, not home
+mkdir -p "$TMPDIR"
+```
+
+This does two things: gives the `collapse` sort room to spill (avoids the out of space crash), and keeps temp files off the node's shared `/tmp`. The container
+handles this automatically, the conda path does not.
+
+Then run it directly:
 
 ```bash
 hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
