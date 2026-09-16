@@ -41,7 +41,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     colorstyle = f"0.00:#FFFFFF,{sm*0.2:g}:#4747FF,{sm*0.55:g}:#1CFF47,{sm*0.65:g}:#FFFF47,{sm*0.9:g}:#FF4747,{sm}:#B64747"
     
     varna_cmd = [
-        "java", f"-Djava.io.tmpdir={tempfile.gettempdir()}",
+        "java", f"-Djava.io.tmpdir={tempfile.gettempdir()}", "-XX:+PerfDisableSharedMem",
         "-jar", VARNA,
         "-i", in_file,
         "-bpStyle", "simple",

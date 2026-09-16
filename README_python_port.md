@@ -231,6 +231,15 @@ If you already have conda (Miniconda/Anaconda), you can use it instead of Minifo
 
 After the Miniforge/conda setup is correct, you can proceed:
 
+**On Eddie only**, the env is several GB and your home quota is too small, so point conda's package cache and envs at scratch (persists in ~/.condarc, survives logout):
+
+```bash
+conda config --add pkgs_dirs /exports/eddie/scratch/$USER/conda/pkgs
+conda config --add envs_dirs /exports/eddie/scratch/$USER/conda/envs
+```
+
+Then:
+
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
 cd hyb2
