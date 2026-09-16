@@ -109,6 +109,8 @@ from hyb2.coverage.hyb2_coverage import hyb2_coverage
 from hyb2.viewpoint.plot_viewpoint import plot_viewpoint
 from hyb2.folding import hyb2_fold
 from hyb2.tools.config import CPL_DEFAULTS
+from hyb2.tools.tmp import ensure_offtmp_tmpdir
+
 
 import logging
 
@@ -124,6 +126,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
         max_phase2=CPL_DEFAULTS["max_phase2"], energy_model=CPL_DEFAULTS["energy_model"]):
 
+    ensure_offtmp_tmpdir()
     
     steps.start("Processing input")
 

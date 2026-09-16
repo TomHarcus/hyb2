@@ -261,8 +261,9 @@ There are two cases that need a tweak to the `conda env create` line above:
 `conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
 are live with no reinstall. 
 
-**When running natively with no container**, nothing sets `TMPDIR` for you. Before a large run export it to a large real-disk location with plenty of space free. Pick 
-the line for where you are running:
+**When running natively with no container**, hyb2 picks a safe temp location automatically: if `TMPDIR` is unset or a tmpfs (RAM-backed), it uses
+`.hyb2_tmp` in your working directory, so that it is off `/tmp`, and exported so the sort, R, and VARNA all use it. For large runs it's still best
+to point `TMPDIR` at a roomy disk explicitly, so the spill has guaranteed space and lands where you want:
 
 ```bash
 export TMPDIR=$HOME/hyb2_tmp                           # local machine (any large disk)
@@ -270,8 +271,7 @@ export TMPDIR=$HOME/hyb2_tmp                           # local machine (any larg
 mkdir -p "$TMPDIR"
 ```
 
-This does two things: gives the `collapse` sort room to spill (avoids the out of space crash), and keeps temp files off the node's shared `/tmp`. The container
-handles this automatically, the conda path does not.
+This does two things: gives the `collapse` sort room to spill (avoids the out of space crash), and keeps temp files off the node's shared `/tmp`. 
 
 Then run it directly:
 
@@ -498,8 +498,9 @@ The front stages of the pipeline (where the data is biggest) all stream or are m
 `collapse_blast` sorts on disk, spilling to `TMPDIR`, so a ~50 GB SAM that would otherwise run out of memory completes.
 
 >**`TMPDIR`** must be on real disk. **A tmpfs (RAM backed) `/tmp` re-introduces the out of memory problem, because the sort spills
->into RAM. The container's entrypoint guards this automatically: if `TMPDIR` is unset or on tmpfs it falls back to `$HOME/scratch_tmp` (real disk).
->On Eddie, `$TMPDIR` is already node-local real disk and the batch template binds it in.
+>into RAM. hyb2 guards this automatically on both paths: the container remaps `/tmp` to `$TMPDIR`, the native path redirects `TMPDIR`
+>to `.hyb2_tmp` in the working directory when it is unset or a tmpfs. On Eddie, a batch job's `$TMPDIR` is already node-local real disk.
+>For large runs, still set `TMPDIR` to scratch explicitly for guaranteed space.
 
 Everything downstream of the `.hyb` (folding, coverage, compare) works on already reduced data and is not a large file concern.
 

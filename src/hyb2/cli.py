@@ -70,10 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
 
 from hyb2.tools.logsetup import configure_logging
 from hyb2.tools.configfile import parse_with_config
+from hyb2.tools.tmp import ensure_offtmp_tmpdir
 
 def main(argv: list[str] | None = None) -> int:
 
     argv = sys.argv[1:] if argv is None else argv
+
+    ensure_offtmp_tmpdir()
 
     from hyb2.folding.hyb2_fold import main as fold_main
     from hyb2.compare.hyb2_compare import main as compare_main

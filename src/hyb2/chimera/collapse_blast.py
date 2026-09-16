@@ -12,6 +12,7 @@ from hyb2.tools import config
 from hyb2.tools import ui
 
 
+
 def collapse_blast(in_path, out_path, *, sort_mem="25%", tmpdir=None):
     sort_bin = config.gnu_sort()
     tmpdir = tmpdir or tempfile.gettempdir()
