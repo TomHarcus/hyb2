@@ -157,6 +157,7 @@ module load apptainer
 # keep the pull's cache + temp on scratch, off your home quota
 export APPTAINER_CACHEDIR=/exports/eddie/scratch/$USER/apptainer_cache
 export APPTAINER_TMPDIR=/exports/eddie/scratch/$USER/apptainer_tmp
+mkdir -p "$APPTAINER_CACHEDIR" "$APPTAINER_TMPDIR"
 
 apptainer pull docker://ghcr.io/tomharcus/hyb2:latest
 ```
