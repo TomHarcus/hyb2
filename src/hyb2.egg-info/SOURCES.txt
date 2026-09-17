@@ -61,6 +61,7 @@ src/hyb2/tools/__init__.py
 src/hyb2/tools/config.py
 src/hyb2/tools/configfile.py
 src/hyb2/tools/logsetup.py
+src/hyb2/tools/tmp.py
 src/hyb2/tools/ui.py
 src/hyb2/viewpoint/__init__.py
 src/hyb2/viewpoint/blast2gplot.py
