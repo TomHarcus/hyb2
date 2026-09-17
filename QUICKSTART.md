@@ -50,7 +50,7 @@ hyb2 -i testData.sam -d Zika_18S_formatted.fasta -o testrun -a Zika_virusRNA -x 
 You should get a `testrun.hyb` file, a contact density map PDF, a viewpoint graph PDF, and a folded structure. If they are generated,
 the pipeline is setup correctly.
 
-## 4. Run it on you own data
+## 4. Run it on your own data
 
 ```bash
 hyb2 -i your_reads.sam -d your_reference.fasta -o my_run -a MyGeneName -x 3900 -l 300
@@ -59,7 +59,7 @@ hyb2 -i your_reads.sam -d your_reference.fasta -o my_run -a MyGeneName -x 3900 -
 - `-i`: your input reads (`.sam`, `.fastq`, `.fastq.gz`, `.fasta`, or `.fasta.gz` all work)
 - `-d`: your reference genome/sequence file
 - `-o`: a name for your output files
-- `-a`: the gene/region you want to analyze
+- `-a`: the gene/region you want to analyse
 - `-x` / `-l`: the window (start position and length) to fold around
 
 ## 5. Next steps

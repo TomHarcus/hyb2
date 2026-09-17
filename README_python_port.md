@@ -1,6 +1,6 @@
 # HYB2 Python port: running guide
 
-This is the Python reimplementation of the HYB2 RNA pipeline. It is used for analyzing RNA proximity ligation experiments from mapped files in the fastq/SAM format to:
+This is the Python reimplementation of the HYB2 RNA pipeline. It is used for analysing RNA proximity ligation experiments from mapped files in the fastq/SAM format to:
 1. Generate a list of chimeric interactions with their coordinates, sequence, and folding energy
 2. Plot contact density maps of selected genes and viewpoint graphs
 3. Generate intra/intermolecular RNA structures of selected regions
