@@ -231,14 +231,7 @@ If you already have conda (Miniconda/Anaconda), you can use it instead of Minifo
 
 After the Miniforge/conda setup is correct, you can proceed:
 
-**On Eddie only**, the env is several GB and your home quota is too small, so point conda's package cache and envs at scratch (persists in ~/.condarc, survives logout):
-
-```bash
-conda config --add pkgs_dirs /exports/eddie/scratch/$USER/conda/pkgs
-conda config --add envs_dirs /exports/eddie/scratch/$USER/conda/envs
-```
-
-Then:
+#### Local Machine
 
 ```bash
 git clone -b python-migration https://github.com/TomHarcus/hyb2.git
@@ -267,6 +260,27 @@ There are two cases that need a tweak to the `conda env create` line above:
     (or set it once: `conda config --set solver libmamba`). Recent conda installations already default to libmamba, so this is for any
     older installs.
 
+#### Eddie
+
+The env is several GB and your home quota is too small, so point conda's package cache and envs at scratch (persists in ~/.condarc, survives logout):
+
+```bash
+conda config --add pkgs_dirs /exports/eddie/scratch/$USER/conda/pkgs
+conda config --add envs_dirs /exports/eddie/scratch/$USER/conda/envs
+
+cd /exports/eddie/scratch/$USER
+
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
+
+conda env create -f environment.yml     # env + all tools
+conda activate hyb2
+
+# CPLfold (pure python)
+git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
+export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
+```
+
 
 `conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
 are live with no reinstall. 
@@ -283,11 +297,14 @@ mkdir -p "$TMPDIR"
 
 This does two things: gives the `collapse` sort room to spill (avoids the out of space crash), and keeps temp files off the node's shared `/tmp`. 
 
-Then run it directly:
+Then, to run locally, call it directly:
 
 ```bash
 hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
 ```
+
+On Eddie you run via batch jobs: see [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
+
 
 ## Checking hyb2 with small test data
 
@@ -380,9 +397,12 @@ Here is a list of the key flags:
 
 The hyb2 wrapper works in an interactive `qlogin` session, but **not** inside a batch job. A batch job runs on a non-interactive
 shell that doesn't load your `~/.bashrc`, so the `hyb2` function is not available. For batch jobs you write a small job script
-that calls the container directly with the full `apptainer run` command, then submit it with `qsub`.
+that calls the container directly with the full `apptainer run` command or activates the hyb2 env, then submit it with `qsub`.
 
-Create a file, e.g. `run_hyb2.sh`, in your scratch run directory and paste in this:
+Create a file, e.g. `run_hyb2.sh`, in your scratch run directory.
+
+If using Apptainer, paste this:
+
 ```bash
 #!/bin/bash
 #$ -cwd                      # run in the directory you submit from
@@ -405,6 +425,39 @@ apptainer run --bind "$TMPDIR" --bind "$TMPDIR":/tmp --bind /exports/eddie/scrat
 The last line is the actual pipeline command. You can swap it for **any command from the sections above** (the full pipeline, `hyb2 fold`,
 `hyb2 compare`, ...). Everything before it is the cluster wrapping: request resources, load Apptainer, and bind the directories as Apptainer
 doesn't mount automatically (scratch and the node-local `$TMPDIR`, where the big sort spills).
+
+If using the native conda env, paste this:
+
+```bash
+#!/bin/bash
+#$ -cwd                      # run in the dir you submit from (must be on scratch)
+#$ -N hyb2_conda             # job name
+#$ -pe sharedmem 32          # cores (bowtie2 uses these)
+#$ -l h_vmem=8G              # memory PER core -> 32 x 8G = 256G total
+#$ -l h_rt=12:00:00          # max runtime (hh:mm:ss)
+
+# keep every JVM this job spawns off the node's shared /tmp:
+#   - R's `getsp` probes at conda-env activation (R CMD javareconf)
+#   - VARNA at fold time
+# both would otherwise create /tmp/hsperfdata_<user>; this suppresses it.
+export _JAVA_OPTIONS="-XX:-UsePerfData"
+
+# a batch shell doesn't load ~/.bashrc, so conda isn't initialised: source it
+source "$HOME/miniforge3/etc/profile.d/conda.sh"
+conda activate hyb2
+
+# CPLfold (pure-Python) location, needed for the cplfold backend
+export HYB2_CPLFOLD_DIR=/exports/eddie/scratch/$USER/hyb2/CPLfold
+
+# all pipeline temp (collapse sort spill, R temp) on scratch: room to spill, off /tmp
+export TMPDIR=/exports/eddie/scratch/$USER/hyb2_tmp
+mkdir -p "$TMPDIR"
+
+# clear any stale hsperfdata husk left on this node by earlier jobs
+rm -rf /tmp/hsperfdata_$USER
+
+hyb2 -i reads.sam -d ref.fasta -o myrun -a MyRNA -x 3900 -l 300
+```
 
 Then you can submit the job and check its status:
 ```bash
