@@ -241,7 +241,7 @@ conda env create -f environment.yml     # env + all tools
 conda activate hyb2
 
 # CPLfold (pure python)
-git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
+git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
 export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
@@ -270,14 +270,14 @@ conda config --add envs_dirs /exports/eddie/scratch/$USER/conda/envs
 
 cd /exports/eddie/scratch/$USER
 
-git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
 cd hyb2
 
 conda env create -f environment.yml     # env + all tools
 conda activate hyb2
 
 # CPLfold (pure python)
-git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git
+git clone -b feature/pseudoknot-free-mode https://github.com/Vicky-0256/CPLfold.git
 export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
@@ -505,8 +505,8 @@ hyb2 fold -i test.hyb -d ref.fasta -a MyRNA -x 3900 -l 300 \
 - `-p <basepair_scores>` turns the experimental bonus **on**; omit it for the no-bonus
   baseline (the fair A/B control).
 - `--normalize raw|log`, `--alpha`, `--beta`, `--beam-size`, `--energy-delta`,
-  `--max-phase1`, `--max-phase2`, `--energy-model` - all default from `config.CPL_DEFAULTS`.
-- `-0 1` launches the interactive VARNA GUI (needs a display); omit for headless SVG output.
+  `--max-phase1`, `--max-phase2`, `--allow-pseudoknot true|false`, `--energy-model` - all default from `config.CPL_DEFAULTS`.
+- `-0 true` launches the interactive VARNA GUI (needs a display); omit for headless SVG output.
 
 >Important caveat: **-r unafold and constraints**. The image bundles **OligoArrayAux** (hybrid-ss-min), the freely-redistributable subset of UNAFold (the full UNAFold is licensed and can't be shipped). OligoArrayAux's `hybrid-ss-min` **silently ignores `--force` constraints**, so `-r unafold` folds the fragment **unconstrained**, it doesn't incorporate the experimental base-pair support, and no error is raised. For constraint-guided folding use **`cplfold`** (default) or **`vienna`**, which both honour the constraints.
 

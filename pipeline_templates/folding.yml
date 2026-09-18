@@ -16,7 +16,7 @@ length:           300                # -l
 # varna_jar:       /path/VARNAcmd.jar   # -j  (auto-resolved by default)
 
 fold_backend:     cplfold            # -r  cplfold | vienna | unafold
-# interactive:     1              # -0  launch VARNA GUI (needs a display)
+# interactive:     true              # -0  launch VARNA GUI (needs a display)
 
 
 # --- CPLfold tuning (only used when fold_backend: cplfold) ---
@@ -25,6 +25,7 @@ beta:             0.0
 beam_size:        100
 energy_delta:     5.0
 max_phase1:       10           
-max_phase2:       5              
+max_phase2:       5       
+# allow_pseudoknot: false        
 energy_model:     DP09
 normalize:        log             # raw | log

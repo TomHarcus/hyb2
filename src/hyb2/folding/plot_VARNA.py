@@ -72,6 +72,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
 
         return out
 
+from hyb2.tools.config import str2bool
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
@@ -85,7 +86,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-x", dest="x_coord", type=int, default=None, help="start coordinate of 1st strand")
     p.add_argument("-y", dest="y_coord", type=int, default=None, help="start coordinate of 2nd strand")
     p.add_argument("-l", dest="length", type=int, default=None, help="length of 1st strand")
-    p.add_argument("-0", dest="interactive", default=None, help="1 = VARNA interactive GUI mode")
+    p.add_argument("-0", "--interactive", dest="interactive", type=str2bool, default=False, metavar="BOOL", help="launch the interactive VARNA GUI (default false)")
     return p
 
 
@@ -98,7 +99,7 @@ def main(argv: list[str] | None = None) -> int:
         x_coord=args.x_coord,
         y_coord=args.y_coord,
         length=args.length,
-        interactive=(str(args.interactive) == "1"),
+        interactive=args.interactive,
     )
     return 0
 

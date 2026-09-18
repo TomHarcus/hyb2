@@ -23,9 +23,9 @@ def print_help():
     print("\t--y-start (-y) start coordinate of 2nd strand/gene for zoomed-in contact and folding")
     print("\t--length (-l) length of fragments for zoomed-in contact and folding")
     print("\t--varna-jar (-j) directory of VARNAcmd.jar (default set when installing hyb2)")
-    print("\t--calc-energy (-e) calculate folding energy: 1 to calculate, 0 to skip and save on runtime (default=0)")
+    print("\t--calc-energy (-e) calculate folding energy: true to calculate, false to skip and save on runtime (default=false)")
     print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
-    print("\t--interactive (-0) interactive mode for VARNA pop-up: 0 to disable, 1 to activate (default=0)")
+    print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
     print("\t--reproducible deterministic run-to-run output (adds bowtie2 --reorder)")
 
     # folding parameters
@@ -38,6 +38,7 @@ def print_help():
     print("\t--energy-delta cplfold energy delta (default=5.0)")
     print("\t--max-phase1 cplfold max phase 1 (default=10)")
     print("\t--max-phase2 cplfold max phase 2 (default=5)")
+    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation")
     print("\t--energy-model cplfold energy model: 'DP09', 'DP03', 'CC06', 'CC09', 'RE' (default='DP09')")
 
     print("")
@@ -72,7 +73,7 @@ def print_help():
     print("\t--length (-l) length of fragment")
     print("\t--varna-jar (-j) directory of VARNAcmd.jar (default set when installing hyb2)")
     print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
-    print("\t--interactive (-0) interactive mode for VARNA pop-up: 0 to disable, 1 to activate (default=0)")
+    print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
 
     # folding parameters
     print("")
@@ -84,6 +85,7 @@ def print_help():
     print("\t--energy-delta cplfold energy delta (default=5.0)")
     print("\t--max-phase1 cplfold max phase 1 (default=10)")
     print("\t--max-phase2 cplfold max phase 2 (default=5)")
+    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation")
     print("\t--energy-model cplfold energy model: 'DP09', 'DP03', 'CC06', 'CC09', 'RE' (default='DP09')")
 
     print("")
@@ -124,7 +126,8 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         interactive=False, reproducible=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
-        max_phase2=CPL_DEFAULTS["max_phase2"], energy_model=CPL_DEFAULTS["energy_model"]):
+        max_phase2=CPL_DEFAULTS["max_phase2"], allow_pseudoknot=CPL_DEFAULTS["allow_pseudoknot"],
+        energy_model=CPL_DEFAULTS["energy_model"]):
 
     ensure_offtmp_tmpdir()
     
@@ -238,7 +241,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
 
     elif x_coord and length and not gene_2 and y_coord:
         steps.start(f"Folding {gene_1} (this can take a while)")
@@ -247,7 +250,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
 
     elif x_coord and length and gene_2 and y_coord:
         steps.start(f"Folding {gene_1} with {gene_2} (this can take a while)")
@@ -256,7 +259,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
 
     else:
         log.info("No options specified to generate secondary structure")

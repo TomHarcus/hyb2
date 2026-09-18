@@ -24,7 +24,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         vienna_bin=None, basepair_scores=None, begin=None, end=None, alpha=config.CPL_DEFAULTS["alpha"],
         beta=config.CPL_DEFAULTS["beta"], normalize=config.CPL_DEFAULTS["normalize"], beam_size=config.CPL_DEFAULTS["beam_size"],
         energy_delta=config.CPL_DEFAULTS["energy_delta"], max_phase1=config.CPL_DEFAULTS["max_phase1"], 
-        max_phase2=config.CPL_DEFAULTS["max_phase2"], energy_model=config.CPL_DEFAULTS["energy_model"]):
+        max_phase2=config.CPL_DEFAULTS["max_phase2"], allow_pseudoknot=config.CPL_DEFAULTS["allow_pseudoknot"], energy_model=config.CPL_DEFAULTS["energy_model"]):
     
     """
     cluster array job code would live here
@@ -50,7 +50,7 @@ def run(in_constraints, in_fasta, *, output_id=None, shuffling=False, fold="vien
         _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
                       alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
                       energy_delta=energy_delta, max_phase1=max_phase1, max_phase2=max_phase2,
-                      energy_model=energy_model, vienna_bin=vienna_bin)
+                      allow_pseudoknot=allow_pseudoknot, energy_model=energy_model, vienna_bin=vienna_bin)
         
         if output_id:
             for path in (ct_output, vienna_output):
@@ -154,7 +154,7 @@ def _fold_vienna_constrained(in_fasta, constraints_file, ct_output, vienna_bin, 
 
 def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_output,
                   alpha, beta, normalize, beam_size, energy_delta, max_phase1,
-                  max_phase2, energy_model, vienna_bin):
+                  max_phase2, allow_pseudoknot, energy_model, vienna_bin):
     import numpy as np
 
     quiet = is_quiet()
@@ -211,6 +211,7 @@ def _fold_cplfold(in_fasta, basepair_scores, begin, end, ct_output, vienna_outpu
             energy_delta=energy_delta,
             max_phase1=max_phase1,
             max_phase2=max_phase2,
+            allow_pseudoknot=allow_pseudoknot,
             energy_model=energy_model,
             verbose=not quiet
         )
@@ -293,6 +294,8 @@ def _dot_to_ct(name, seq, structure, energy):
 
     return "".join(lines)
 
+from hyb2.tools.config import str2bool
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="comrades-fold",
@@ -316,6 +319,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--energy-delta", dest="energy_delta", type=float, default=config.CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
     p.add_argument("--max-phase1", dest="max_phase1", type=int, default=config.CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
     p.add_argument("--max-phase2", dest="max_phase2", type=int, default=config.CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
+    p.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=config.CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot toggle (default true)")
     p.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=config.CPL_DEFAULTS["energy_model"], help="cplfold energy model")
 
 
@@ -339,6 +343,7 @@ def main(argv: list[str] | None = None) -> int:
         energy_delta=args.energy_delta,
         max_phase1=args.max_phase1,
         max_phase2=args.max_phase2,
+        allow_pseudoknot=args.allow_pseudoknot,
         energy_model=args.energy_model
     )
 

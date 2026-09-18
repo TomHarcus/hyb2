@@ -11,4 +11,4 @@ LIMIT:                0.95                # -q Upper limit for heatmap chimeric 
 GENE:                 gene_id             # -a Gene ID of interest
 FASTA:                input.fasta         # -d Fasta file used for mapping
 #VARNA:                /path/VARNAcmd.jar  # -j  (auto-resolved by default)
-FOLDING:              0                    # -0 Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)
+FOLDING:              false                    # -0 Folding option: false to disable, true to activate automatic folding of enriched interactions (default=false)

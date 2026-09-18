@@ -13,6 +13,7 @@ import yaml
 import logging
 
 from hyb2.tools.config import CPL_DEFAULTS
+from hyb2.tools.config import str2bool
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -43,9 +44,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-e", "--calc-energy", # for the add_dG_hyb2_2 port
         dest="calc_energy",
-        type=int,
-        default=0,
-        help="Calculate folding energy: 1 on, 0 off (default=0)",
+        type=str2bool,
+        default=False,
+        metavar="BOOL",
+        help="Calculate folding energy: true on, false off (default=false)",
     ) 
     
     parser.add_argument(
@@ -54,7 +56,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="cplfold",
         choices=["cplfold", "vienna", "unafold", "0", "1"]
     )
-    parser.add_argument("-0", "--interactive", dest="interactive", default=None, help="1 to launch the interactive VARNA GUI")
+    parser.add_argument("-0", "--interactive", dest="interactive", type=str2bool, default=False, metavar="BOOL", help="launch the interactive VARNA GUI (default false)")
     parser.add_argument("--reproducible", action="store_true", help="deterministic run-to-run output (adds bowtie2 --reorder)")
 
     parser.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
@@ -64,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
     parser.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
     parser.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
+    parser.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot toggle (default true)")
     parser.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
 
     return parser
@@ -105,12 +108,12 @@ def main(argv: list[str] | None = None) -> int:
              gene_1=args.gene_1, gene_2=args.gene_2, limit=args.heatmap_quantile,
              x_coord=args.x_start, y_coord=args.y_start, length=args.length,
              varna=args.varna_jar, fold=args.fold_backend,
-             interactive=(str(args.interactive) == "1"),
+             interactive=args.interactive,
              reproducible=args.reproducible,
              alpha=args.alpha, beta=args.beta, normalize=args.normalize,
              beam_size=args.beam_size, energy_delta=args.energy_delta,
              max_phase1=args.max_phase1, max_phase2=args.max_phase2,
-             energy_model=args.energy_model)
+             allow_pseudoknot=args.allow_pseudoknot, energy_model=args.energy_model)
 
     return 0
 

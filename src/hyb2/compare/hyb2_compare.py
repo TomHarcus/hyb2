@@ -26,7 +26,7 @@ def print_help():
     print("\t--gene-id (-a)\tGene ID of interest")
     print("\t--reference (-d)\tFasta file used for mapping")
     print("\t--varna-jar (-j)\tDirectory of VARNAcmd.jar (default set when installing hyb2)")
-    print("\t--folding (-0)\tFolding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
+    print("\t--folding (-0)\tFolding option: false to disable, true to activate automatic folding of enriched interactions (default=false)")
 
     print("")
 
@@ -114,7 +114,7 @@ def hyb2_compare(input_table, out, min_reads, interaction_range, LIMIT, GENE, FA
     condition_one_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_one"]
     condition_two_files = [hyb for (hyb, contact, cond) in rows if cond == "condition_two"]
 
-    if FOLDING == 1:
+    if FOLDING:
         _fold_enriched(condition_one_files, "pos", out, interaction_range, GENE, FASTA, VARNA)
         _fold_enriched(condition_two_files, "neg", out, interaction_range, GENE, FASTA, VARNA)
     else:
@@ -229,7 +229,7 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
 
 
 def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
-    """Port of bin/hyb2_compare lines 137-141 (the FOLDING==1 branch, one condition).
+    """Port of bin/hyb2_compare lines 137-141 (the FOLDING branch, one condition).
     Builds a <IN>.<sign>.hyb of GENE-GENE chimeras for each condition file, then folds
     the top-10 enriched interactions of every heatmap. NOTE (faithful legacy quirk): the
     fold loop uses `in_hyb` = the LAST condition file, exactly as the legacy $IN leaks out
@@ -274,6 +274,7 @@ def _fold_enriched(condition_files, sign, out, rng, GENE, FASTA, VARNA):
     for cmd in ui.track(jobs, "folding enriched interactions ", total=len(jobs)):
         subprocess.run(cmd, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
+from hyb2.tools.config import str2bool
 
 def build_parser() -> argparse.ArgumentParser:
     
@@ -293,7 +294,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-a", "--gene-id", dest="GENE", help="Gene ID of interest")
     p.add_argument("-d", "--reference", dest="FASTA", help="Fasta file used for mapping")
     p.add_argument("-j", "--varna-jar", dest="VARNA", default=None, help="Directory of VARNAcmd.jar")
-    p.add_argument("-0", "--folding", dest="FOLDING", type=int, default=0, help="Folding option: 0 to disable, 1 to activate automatic folding of enriched interactions (default=0)")
+    p.add_argument("-0", "--folding", dest="FOLDING", type=str2bool, default=False, metavar="BOOL", help="Folding option: false to disable, true to activate automatic folding of enriched interactions (default=false)")
     return p
 
 from hyb2.tools.logsetup import configure_logging

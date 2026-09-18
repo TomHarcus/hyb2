@@ -19,7 +19,7 @@ ENV PATH=/opt/conda/envs/hyb2/bin:$PATH \
     HYB2_CPLFOLD_DIR=/opt/hyb2/CPLfold
 
 # clone cplfold 
-RUN git clone -b feature/standalone-pseudoknot-energy https://github.com/Vicky-0256/CPLfold.git /opt/hyb2/CPLfold
+RUN git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
 
 # check everything is in place
 RUN sh /opt/hyb2/docker_scripts/preflight.sh
