@@ -14,6 +14,17 @@ import logging
 
 log = logging.getLogger(__name__)
 
+def _gene_length(fasta_lines, gene):
+    for i, line in enumerate(fasta_lines):
+        if line.startswith(">") and re.search(gene, line):
+            seq = []
+            for l in fasta_lines[i+1:]:
+                if l.startswith(">"):
+                    break
+                seq.append(l.strip())
+            return len("".join(seq))
+    return None
+
 def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
 
     quiet = is_quiet()
@@ -21,14 +32,10 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
     # legacy DB_2 is unreachable: always == DB_1
 
     lines = open(db_1).read().splitlines()
-    len_1 = None
 
     stem = in_hyb.replace(".hyb", "")
 
-    for i, line in enumerate(lines):
-        if re.search(gene_1, line):
-            len_1 = len(lines[i+1])
-            break
+    len_1 = _gene_length(lines, gene_1)
 
     with open(f"{gene_1}.length.txt", "w") as f:
         f.write(f"{gene_1}\t{len_1}\n")
@@ -109,12 +116,8 @@ def plot_viewpoint(in_hyb, db_1, gene_1, gene_2):
                     gene_lengths_file=f"{gene_1}.length.txt")
 
         lines = open(db_1).read().splitlines()
-        len_2 = None
 
-        for i, line in enumerate(lines):
-            if re.search(gene_2, line):
-                len_2 = len(lines[i+1])
-                break
+        len_2 = _gene_length(lines, gene_2)
 
         with open(f"{gene_2}.length.txt", "w") as f:
             f.write(f"{gene_2}\t{len_2}\n")
