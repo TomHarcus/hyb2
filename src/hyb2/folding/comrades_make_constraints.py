@@ -16,6 +16,7 @@ from hyb2.folding.hyb2constraints import hyb2constraints
 from hyb2.tools import config
 from hyb2.tools.ui import spinner
 import logging
+import concurrent.futures
 
 log = logging.getLogger(__name__)
 
@@ -100,26 +101,47 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
 
     return constr
 
-def _fold_vienna(bit1, bit2, ct, vienna_bin):
+
+def _fold_vienna(bit1, bit2, ct, vienna_bin, workers=None):
     b = (vienna_bin.rstrip("/") + "/") if vienna_bin else ""
+    rnacofold = b + "RNAcofold"
 
     with open(bit1) as f1, open(bit2) as f2:
         pasted = "".join(a.rstrip("\n") + "&" + b2 for a, b2 in zip(f1, f2))
 
-        # run vienna cofold
-        cofold = subprocess.run([b + "RNAcofold", "--noconv", "--noPS"],
-                                input=pasted, capture_output=True, text=True,
-                                check=True).stdout
-        
-        vienna = cofold.replace("&>", "-").replace("&", "")
+    lines = pasted.splitlines(keepends=True)
+    records = ["".join(lines[i:i + 2]) for i in range(0, len(lines), 2)]
 
-        ctdata = subprocess.run([b + "b2ct"], input=vienna,
-                                capture_output=True, text=True, check=True).stdout
-        
-        ctdata = ctdata.replace("ENERGY =", "dG =")
+    if workers is None:
+        try:
+            workers = len(os.sched_getaffinity(0))
+        except AttributeError:
+            workers = os.cpu_count() or 1
 
-        with open(ct, "w") as fout:
-            fout.write(ctdata)
+    def _fold_chunk(chunk):
+        return subprocess.run([rnacofold, "--noconv", "--noPS"],
+                              input=chunk, capture_output=True, text=True,
+                              check=True).stdout
+
+    if workers <= 1 or len(records) < 2 * workers:
+        cofold = _fold_chunk("".join(records))
+    else:
+        size = -(-len(records) // workers)
+
+        chunks = ["".join(records[i:i + size]) for i in range(0, len(records), size)]
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+            cofold = "".join(ex.map(_fold_chunk, chunks))
+
+    vienna = cofold.replace("&>", "-").replace("&", "")
+
+    ctdata = subprocess.run([b + "b2ct"], input=vienna,
+                            capture_output=True, text=True, check=True).stdout
+
+    ctdata = ctdata.replace("ENERGY =", "dG =")
+
+    with open(ct, "w") as fout:
+        fout.write(ctdata)
 
 def _fold_unafold(bit1, bit2, ct):
 
