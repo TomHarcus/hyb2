@@ -10,6 +10,21 @@ import argparse
 import re
 import sys
 
+def _add_viewbox(svg_text, margin=25):
+    xs = [float(m.group(2)) for m in re.finditer(r'\b(x|x1|x2|cx)="(-?\d+(?:\.\d+)?)"', svg_text)]
+    ys = [float(m.group(2)) for m in re.finditer(r'\b(y|y1|y2|cy)="(-?\d+(?:\.\d+)?)"', svg_text)]
+
+    if not xs or not ys:
+        return svg_text
+
+    minx, maxx = min(xs) - margin, max(xs) + margin
+    miny, maxy = min(ys) - margin, max(ys) + margin
+
+    vb = f'viewBox="{minx:.1f} {miny:.1f} {maxx - minx:.1f} {maxy - miny:.1f}"'
+    bg = f'<rect x="{minx:.1f}" y="{miny:.1f}" width="{maxx - minx:.1f}" height="{maxy - miny:.1f}" fill="white"/>'
+    return re.sub(r'(<svg\b(?![^>]*\bviewBox=)[^>]*)>',
+                  lambda mm: mm.group(1) + ' ' + vb + '>\n' + bg, svg_text, count=1)
+
 def svg_mod_coord(in_file, x_coord, y_coord, length, prefix):
 
     X = x_coord - 1
@@ -53,6 +68,7 @@ def svg_mod_coord(in_file, x_coord, y_coord, length, prefix):
 
     text = "\n".join(result) + "\n"
     text = text.replace('stroke-width="1.0"', 'stroke-width="0.25"')
+    text = _add_viewbox(text)
 
     with open(out_file, "w") as fout:
         fout.write(text)

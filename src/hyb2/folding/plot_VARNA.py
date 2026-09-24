@@ -19,6 +19,7 @@ from hyb2.tools.ui import spinner
 
 import logging
 import tempfile
+import os
 
 log = logging.getLogger(__name__)
 
@@ -50,7 +51,8 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
         "-colorMapMax", smax,
         "-colorMapStyle", colorstyle,
         "-title", header,
-        "-spaceBetweenBases", "0.6"
+        "-spaceBetweenBases", "0.6",
+        "-algorithm", "naview"
     ]
 
     if interactive:
@@ -69,6 +71,7 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
         prefix = score.split("__")[0]
 
         out = svg_mod_coord(svg, x_coord, y_coord, length, prefix)
+        os.remove(svg)
 
         return out
 
