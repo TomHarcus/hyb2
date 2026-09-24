@@ -15,7 +15,7 @@ from hyb2.tools.logsetup import is_quiet
 log = logging.getLogger(__name__)
 
 def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, interactive, 
-        FOLD, vienna_bin=None, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"], 
+        FOLD, vienna_bin=None, support_matrix=None, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"], 
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"], 
         max_phase2=CPL_DEFAULTS["max_phase2"], allow_pseudoknot=CPL_DEFAULTS["allow_pseudoknot"],
@@ -63,7 +63,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2=None, y_coord=None, Y1=None, Y2=None, length=None)
         _fasta_extraction(fasta_1, GENE_1, X1, length, out_fasta)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
@@ -80,7 +80,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=False)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                   VARNA, interactive)
 
@@ -96,7 +96,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=True)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -112,7 +112,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y2, length)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -317,12 +317,12 @@ def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_
     with open(out_fasta, "w") as f:
         f.write(f"{name}\n{seqX}{padding}{seqY}\n")
 
-def _fold(out_file, out_fasta, span, fold, vienna_bin, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model):
+def _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model):
     
     from hyb2.folding import comrades_fold
 
     comrades_make_constraints.run(out_file, out_fasta, 1, span,
-                                  fold=fold, vienna_bin=vienna_bin)
+                                  fold=fold, vienna_bin=vienna_bin, support_matrix=support_matrix)
     
     if fold == "cplfold":
         bp_scores = out_file.replace(".hyb", ".basepair_scores.txt")
@@ -432,6 +432,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-l", "--length", dest="length", type=int, required=True, help="fragment length")
     p.add_argument("-j", "--varna-jar", dest="varna_jar", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.VARNA_JAR)")
     p.add_argument("-0", "--interactive", dest="interactive", type=str2bool, default=False, metavar="BOOL", help="launch the interactive VARNA GUI (default false)")
+    p.add_argument("--support-matrix", dest="support_matrix", default=None, metavar="BASEPAIR_SCORES.txt", help="reuse a pre-built support matrix instead of rebuilding it")
     p.add_argument("-r", "--fold-backend", dest="fold_backend", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
     p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
@@ -464,6 +465,7 @@ def main(argv: list[str] | None = None) -> int:
         args.varna_jar,
         args.interactive,
         args.fold_backend,
+        support_matrix=args.support_matrix,
         alpha=args.alpha,
         beta=args.beta,
         normalize=args.normalize,

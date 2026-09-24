@@ -18,6 +18,7 @@ length:           300                # -l
 fold_backend:     cplfold            # -r  cplfold | vienna | unafold
 # interactive:     true              # -0  launch VARNA GUI (needs a display)
 
+# support_matrix:                    # reuse a pre-built support matrix instead of rebuilding it by providing path to file (the .basepair_scores.txt file)
 
 # --- CPLfold tuning (only used when fold_backend: cplfold) ---
 alpha:            0.5

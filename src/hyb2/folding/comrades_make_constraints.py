@@ -21,7 +21,7 @@ import concurrent.futures
 log = logging.getLogger(__name__)
 
 def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
-        vienna_bin=None):
+        vienna_bin=None, support_matrix=None):
 
     ref_bare = ref_fasta.rsplit(".", 1)[0]
     ref_tab = ref_bare + ".tab"
@@ -51,26 +51,35 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
             fout.write(f">{elements[0]}\n{seq}\n")
 
 
-    with open(ref_tab) as tab, open(in_hyb) as hyb, open(bit1, "w") as o1, open(bit2, "w") as o2:
-        for bit1_rec, bit2_rec in hyb2fasta_bits_allRNAs(tab, hyb):
-            o1.write(bit1_rec)
-            o2.write(bit2_rec)
+    if support_matrix is None:
 
-    with spinner("building support matrix "):
-        if fold in ("vienna", "cplfold"):
-            _fold_vienna(bit1, bit2, ct, vienna_bin)
+        with open(ref_tab) as tab, open(in_hyb) as hyb, open(bit1, "w") as o1, open(bit2, "w") as o2:
+            for bit1_rec, bit2_rec in hyb2fasta_bits_allRNAs(tab, hyb):
+                o1.write(bit1_rec)
+                o2.write(bit2_rec)
 
-        elif fold == "unafold":
-            _fold_unafold(bit1, bit2, ct)
+        with spinner("building support matrix "):
+            if fold in ("vienna", "cplfold"):
+                _fold_vienna(bit1, bit2, ct, vienna_bin)
+
+            elif fold == "unafold":
+                _fold_unafold(bit1, bit2, ct)
         
-        else:
-            raise ValueError(f"unknown folder: {fold}")
+            else:
+                raise ValueError(f"unknown folder: {fold}")
     
-    with open(ct) as fin:
-        scores = histogram(ct2bps_2(fin.read()))
+        with open(ct) as fin:
+            scores = histogram(ct2bps_2(fin.read()))
 
-    with open(bp_scores, "w") as fout:
-        fout.writelines(scores)
+        with open(bp_scores, "w") as fout:
+            fout.writelines(scores)
+
+    else:
+        if not (os.path.isfile(support_matrix) and os.path.getsize(support_matrix) > 0):
+            raise FileNotFoundError(f"support matrix not found or empty : {support_matrix}")
+        log.info(f"reusing support matrix: {support_matrix}")
+        if os.path.abspath(support_matrix) != os.path.abspath(bp_scores):
+            shutil.copyfile(support_matrix, bp_scores)
 
     with open(bp_scores) as fin, open(frag_scr, "w") as fout:
         printed = 0

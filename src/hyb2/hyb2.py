@@ -27,6 +27,7 @@ def print_help():
     print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
     print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
     print("\t--reproducible deterministic run-to-run output (adds bowtie2 --reorder)")
+    print("\t--support-matrix reuse a pre-built support matrix instead of rebuilding it (the .basepair_scores.txt file)")
 
     # folding parameters
     print("")
@@ -74,6 +75,7 @@ def print_help():
     print("\t--varna-jar (-j) directory of VARNAcmd.jar (default set when installing hyb2)")
     print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
     print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
+    print("\t--support-matrix reuse a pre-built support matrix instead of rebuilding it (the .basepair_scores.txt file)")
 
     # folding parameters
     print("")
@@ -123,7 +125,7 @@ steps = ui.Steps()
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
-        interactive=False, reproducible=False, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
+        interactive=False, reproducible=False, support_matrix=None, alpha=CPL_DEFAULTS["alpha"], beta=CPL_DEFAULTS["beta"],
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
         max_phase2=CPL_DEFAULTS["max_phase2"], allow_pseudoknot=CPL_DEFAULTS["allow_pseudoknot"],
@@ -238,7 +240,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         steps.start(f"Folding {gene_1} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=None, length=length,
-              VARNA=varna, interactive=interactive, FOLD=fold,
+              VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
               max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
@@ -247,7 +249,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         steps.start(f"Folding {gene_1} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=None, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
-              VARNA=varna, interactive=interactive, FOLD=fold,
+              VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
               max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
@@ -256,7 +258,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         steps.start(f"Folding {gene_1} with {gene_2} (this can take a while)")
         hyb2_fold.run(hyb_path, GENE_1=gene_1, GENE_2=gene_2, FASTA_1=db,
               x_coord=x_coord, y_coord=y_coord, length=length,
-              VARNA=varna, interactive=interactive, FOLD=fold,
+              VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
               max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)

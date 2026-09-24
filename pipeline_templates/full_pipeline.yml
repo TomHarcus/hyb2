@@ -27,6 +27,8 @@ fold_backend:     cplfold            # -r  cplfold | vienna | unafold
 
 # reproducible: true                 # deterministic run-to-run output (adds bowtie2 --reorder)
 
+# support_matrix:                    # reuse a pre-built support matrix instead of rebuilding it by providing path to file (the .basepair_scores.txt file)
+
 
 # --- CPLfold tuning (only used when fold_backend: cplfold) ---
 alpha:            0.5
