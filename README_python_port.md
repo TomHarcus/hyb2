@@ -7,9 +7,8 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
-- [Local Linux/WSL and macOS container installation](#local-linuxwsl-and-macos-container-installation)
-- [Eddie installation](#eddie-installation)
 - [Local native install (conda)](#local-native-install-conda)
+- [Eddie installation](#eddie-installation)
 - [Checking hyb2 with small test data](#checking-hyb2-with-small-test-data)
 - [Running hyb2](#running-hyb2)
 - [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
@@ -21,115 +20,63 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 - [Developing](#developing)
 - [Run the test suite](#run-the-test-suite)
 - [Known limitations](#known-limitations)
+- [Optional: run with Docker instead of conda](#optional-run-with-docker-instead-of-conda)
+- [Optional: run with docker instead of conda](#optional-run-with-docker-instead-of-conda)
 
 
 
 ## Prerequisites
 
-### Install Docker (Ignore if wanting to run hyb2 on Eddie)
+### Install Miniforge
 
-#### Linux/WSL:
-Install Docker Engine directly by following the official guide for your distribution:
-- Ubuntu: https://docs.docker.com/engine/install/ubuntu/
-- Fedora: https://docs.docker.com/engine/install/fedora/
-- Debian: https://docs.docker.com/engine/install/debian/
-- Other distros: https://docs.docker.com/engine/install/
+Install everything with conda (recommended to use **Miniforge** as it comes with the fast
+libmamba solver by default).
 
-#### macOS:
-On macOS install Docker Desktop:
-1. Go to https://www.docker.com/products/docker-desktop/
-2. Download the compatible build (Apple Silicon or Intel)
-3. Run it and follow the prompts (no need to create an account or sign in)
-4. Verify it worked by opening a terminal and running:
+If you don't already have conda, install **Miniforge**. Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
+
 ```bash
-docker run hello-world
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash "Miniforge3-$(uname)-$(uname -m).sh"
 ```
 
-#### Running the VARNA GUI on macOS:
+Restart your shell, then `conda --version` should work and you can proceed with cloning and installing the environment.
 
-To have compatibility for the VARNA GUI on macOS, XQuartz must be installed. XQuartz is the X11 windowing system for macOS.
+If you already have conda (Miniconda/Anaconda), you can use it instead of Miniforge. 
 
-Run the command:
+After the Miniforge/conda setup is correct, you can proceed.
+
+
+## Local native install (conda)
+
 ```bash
-brew install --cask xquartz     # installs XQuartz
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
+
+conda env create -f environment.yml     # env + all tools
+conda activate hyb2
+
+# CPLfold (pure python)
+git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
+export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
-Then launch XQuartz and go (Top Left) to **XQuartz** -> **Settings** -> **Security** -> **tick "Allow connections from network clients** -> **quit and reopen XQuartz**.
-The setting only takes effect after a restart.
+There are two cases that need a tweak to the `conda env create` line above:
 
-After you have fully closed and reopened XQuartz, run:
-```bash
-export DISPLAY=:0
-xhost +
-```
+- On macOS, `bioconductor-deseq2` has no native `osx-arm64` build, so a plain create fails. To fix, build the env as Intel
+(running underneath Rosetta) using this command instead:
+    ```bash
+    CONDA_SUBDIR=osx-64 conda env create -f environment.yml
+    ```
 
-Afterwards the macOS machine's state is ready.
+- If it hangs on "Solving environment" (an older conda on the classic solver), force libmamba by using this command instead:
+    ```bash
+    conda env create --solver=libmamba -f environment.yml
+    ```
+    (or set it once: `conda config --set solver libmamba`). Recent conda installations already default to libmamba, so this is for any
+    older installs.
 
-
-## Local Linux/WSL and macOS container installation
-
-### If using Linux/WSL:
-Start off by installing Docker Engine by following the Linux/WSL section in [Prerequisites](#prerequisites)
-
-### If using macOS:
-Start off by installing Docker Desktop by following the macOS section in [Prerequisites](#prerequisites)
-
-
-Once Docker is installed you can now grab the hyb2 container by running:
-```bash
-docker pull ghcr.io/tomharcus/hyb2:latest
-```
-This command fetches the most up to date version of hyb2.
-
-Next, to fetch the hyb2 setup script run:
-```bash
-curl -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/setup_hyb2.sh
-```
-This command downloads the script into your current directory. It is named: `setup_hyb2.sh`
-
-To run the setup script, run these commands:
-```bash
-chmod +x setup_hyb2.sh
-./setup_hyb2.sh
-```
-`chmod +x` makes the shell script runnable, and then `./setup_hyb2.sh` runs it.
-
-The setup file creates the file `~/.hyb2.sh` which contains a simple function wrapper that simplifies the hyb2 commands (instead of rewriting the long docker run command each time):
-
-### Linux/WSL:
-```bash
-hyb2() {
-    local tty=""; [ -t 1 ] && tty="-t"
-    local gui=()
-    if [ -n "${DISPLAY:-}" ] && [ -d /tmp/.X11-unix ]; then
-        xhost +local: >/dev/null 2>&1 || true
-        gui=(-e "DISPLAY=$DISPLAY" -v /tmp/.X11-unix:/tmp/.X11-unix)
-    fi
-    docker run --rm $tty "${gui[@]}" --user "$(id -u):$(id -g)" -e HOME=/tmp \
-        -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
-}
-```
-
-### macOS:
-```bash
-hyb2() {
-    local tty=""; [ -t 1 ] && tty="-t"
-    local gui=()
-    if [ -x /opt/X11/bin/xhost ]; then
-        /opt/X11/bin/xhost + 127.0.0.1 >/dev/null 2>&1 || true
-        gui=(-e "DISPLAY=host.docker.internal:0")
-    fi
-    docker run --rm --platform linux/amd64 $tty "${gui[@]}" -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest hyb2 "$@"
-}
-```
-
-It then writes one line to your shells startup configuration file (`~/.bashrc` or `~/.zshrc`):
-```bash
-[ -f ~/.hyb2.sh ] && source ~/.hyb2.sh
-```
-This makes sure that the `~/.hyb2.sh` file exists in your home directory and if it does, it executes it.
-
-Then once you run the setup script close the terminal and reopen it again.
+`conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**: edit `src/` or `rscripts/` and the changes are
+live with no reinstall.
 
 Afterwards you are ready to start.
 Type `hyb2` into your terminal to test that installation worked and to see information on how to use the pipeline.
@@ -145,7 +92,7 @@ You can now go to the next section on how to run the pipeline.
 
 ## Eddie installation
 
-Eddie uses **Apptainer** (not Docker) and is a shared batch cluster. The login node is limited, so compute intensive tasks should
+Eddie uses **Apptainer** and is a shared batch cluster. The login node is limited, so compute intensive tasks should
 be run on compute nodes via `qsub` (job batching) or `qlogin` (interactive).
 
 To get the Apptainer image on Eddie run:
@@ -210,100 +157,6 @@ hyb2 compare --help
 ```
 
 You can now go to the next section on how to run the pipeline.
-
-## Local native install (conda)
-
-If you want to **change the pipeline itself** install natively following the steps here. To just run it, use the container method above, no clone needed.
-
-For running the test suite or modifying the pipeline, install everything with conda (recommended to use **Miniforge** as it comes with the fast
-libmamba solver by default).
-
-If you don't already have conda, install **Miniforge**. Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
-
-```bash
-curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
-bash "Miniforge3-$(uname)-$(uname -m).sh"
-```
-
-Restart your shell, then `conda --version` should work and you can proceed with cloning and installing the environment.
-
-If you already have conda (Miniconda/Anaconda), you can use it instead of Miniforge. 
-
-After the Miniforge/conda setup is correct, you can proceed:
-
-#### Local Machine
-
-```bash
-git clone -b python-migration https://github.com/TomHarcus/hyb2.git
-cd hyb2
-
-conda env create -f environment.yml     # env + all tools
-conda activate hyb2
-
-# CPLfold (pure python)
-git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
-export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
-```
-
-There are two cases that need a tweak to the `conda env create` line above:
-
-- On macOS, `bioconductor-deseq2` has no native `osx-arm64` build, so a plain create fails. To fix, build the env as Intel
-(running underneath Rosetta) using this command instead:
-    ```bash
-    CONDA_SUBDIR=osx-64 conda env create -f environment.yml
-    ```
-
-- If it hangs on "Solving environment" (an older conda on the classic solver), force libmamba by using this command instead:
-    ```bash
-    conda env create --solver=libmamba -f environment.yml
-    ```
-    (or set it once: `conda config --set solver libmamba`). Recent conda installations already default to libmamba, so this is for any
-    older installs.
-
-#### Eddie
-
-The env is several GB and your home quota is too small, so point conda's package cache and envs at scratch (persists in ~/.condarc, survives logout):
-
-```bash
-conda config --add pkgs_dirs /exports/eddie/scratch/$USER/conda/pkgs
-conda config --add envs_dirs /exports/eddie/scratch/$USER/conda/envs
-
-cd /exports/eddie/scratch/$USER
-
-git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
-cd hyb2
-
-conda env create -f environment.yml     # env + all tools
-conda activate hyb2
-
-# CPLfold (pure python)
-git clone -b feature/pseudoknot-free-mode https://github.com/Vicky-0256/CPLfold.git
-export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
-```
-
-
-`conda env create` also runs `pip install -e .`, so `hyb2` is installed **editable**. You can edit `src/` or `rscripts/` and the changes
-are live with no reinstall. 
-
-**When running natively with no container**, hyb2 picks a safe temp location automatically: if `TMPDIR` is unset or a tmpfs (RAM-backed), it uses
-`.hyb2_tmp` in your working directory, so that it is off `/tmp`, and exported so the sort, R, and VARNA all use it. For large runs it's still best
-to point `TMPDIR` at a roomy disk explicitly, so the spill has guaranteed space and lands where you want:
-
-```bash
-export TMPDIR=$HOME/hyb2_tmp                           # local machine (any large disk)
-# export TMPDIR=/exports/eddie/scratch/$USER/hyb2_tmp   # on Eddie: scratch, not home
-mkdir -p "$TMPDIR"
-```
-
-This does two things: gives the `collapse` sort room to spill (avoids the out of space crash), and keeps temp files off the node's shared `/tmp`. 
-
-Then, to run locally, call it directly:
-
-```bash
-hyb2 -i reads.sam -d ref.fasta -o test -a MyRNA -x 3900 -l 300
-```
-
-On Eddie you run via batch jobs: see [Running the pipeline on Eddie with batch jobs](#running-the-pipeline-on-eddie-with-batch-jobs)
 
 
 ## Checking hyb2 with small test data
@@ -389,6 +242,7 @@ Here is a list of the key flags:
 | -V | verbose (shows per stage detail + subprocess errors) |
 | --config | read args from a YAML file |
 | --reproducible | byte-deterministic run | 
+| --support-matrix | euse a pre-built support matrix |
 
 
 **For complete information about each flag type: `hyb2 --help`**
@@ -397,11 +251,9 @@ Here is a list of the key flags:
 
 The hyb2 wrapper works in an interactive `qlogin` session, but **not** inside a batch job. A batch job runs on a non-interactive
 shell that doesn't load your `~/.bashrc`, so the `hyb2` function is not available. For batch jobs you write a small job script
-that calls the container directly with the full `apptainer run` command or activates the hyb2 env, then submit it with `qsub`.
+that calls the container directly with the full `apptainer run` command, then submit it with `qsub`.
 
-Create a file, e.g. `run_hyb2.sh`, in your scratch run directory.
-
-If using Apptainer, paste this:
+Create a file, e.g. `run_hyb2.sh`, in your scratch run directory, and paste this:
 
 ```bash
 #!/bin/bash
@@ -416,48 +268,15 @@ module load apptainer/1.4.4
 
 export APPTAINER_TMPDIR="$TMPDIR"   # Apptainer's own temp not /tmp
 
-# --bind "$TMPDIR":/tmp remaps the container's /tmp so tools like Java and R never write to the nodes /tmp
+# --bind "$TMPDIR":/tmp remaps the container's /tmp so tools like Java and R never write to the node's /tmp
 apptainer run --bind "$TMPDIR" --bind "$TMPDIR":/tmp --bind /exports/eddie/scratch/$USER \
-    /exports/eddie/scratch/$USER/<your_dir>/hyb2_latest.sif \
+    /exports/eddie/scratch/$USER/hyb2_latest.sif \
     hyb2 -i reads.sam -d ref.fasta -o myrun -a MyRNA -x 3900 -l 300
 ```
 
 The last line is the actual pipeline command. You can swap it for **any command from the sections above** (the full pipeline, `hyb2 fold`,
 `hyb2 compare`, ...). Everything before it is the cluster wrapping: request resources, load Apptainer, and bind the directories as Apptainer
 doesn't mount automatically (scratch and the node-local `$TMPDIR`, where the big sort spills).
-
-If using the native conda env, paste this:
-
-```bash
-#!/bin/bash
-#$ -cwd                      # run in the dir you submit from (must be on scratch)
-#$ -N hyb2_conda             # job name
-#$ -pe sharedmem 32          # cores (bowtie2 uses these)
-#$ -l h_vmem=8G              # memory PER core -> 32 x 8G = 256G total
-#$ -l h_rt=12:00:00          # max runtime (hh:mm:ss)
-
-# keep every JVM this job spawns off the node's shared /tmp:
-#   - R's `getsp` probes at conda-env activation (R CMD javareconf)
-#   - VARNA at fold time
-# both would otherwise create /tmp/hsperfdata_<user>; this suppresses it.
-export _JAVA_OPTIONS="-XX:-UsePerfData"
-
-# a batch shell doesn't load ~/.bashrc, so conda isn't initialised: source it
-source "$HOME/miniforge3/etc/profile.d/conda.sh"
-conda activate hyb2
-
-# CPLfold (pure-Python) location, needed for the cplfold backend
-export HYB2_CPLFOLD_DIR=/exports/eddie/scratch/$USER/hyb2/CPLfold
-
-# all pipeline temp (collapse sort spill, R temp) on scratch: room to spill, off /tmp
-export TMPDIR=/exports/eddie/scratch/$USER/hyb2_tmp
-mkdir -p "$TMPDIR"
-
-# clear any stale hsperfdata husk left on this node by earlier jobs
-rm -rf /tmp/hsperfdata_$USER
-
-hyb2 -i reads.sam -d ref.fasta -o myrun -a MyRNA -x 3900 -l 300
-```
 
 Then you can submit the job and check its status:
 ```bash
@@ -473,7 +292,7 @@ skipping the database creation step.
 
 ## Config files
 
-Instead of typing all the arguments on the command line, any command can read them from a YAML config file. This is handy for reproducable, shareable runs.
+Instead of typing all the arguments on the command line, any command can read them from a YAML config file. This is handy for reproducible, shareable runs.
 
 Fetch a template (one per command):
 ```bash
@@ -575,15 +394,17 @@ To check a runs peak memory:
 
 ## Developing
 
-**How a change works:**
-
-Modifying the code only changes the pipeline locally, the published container is what users run, so a change only reaches them once it's
-pushed and CI rebuilds the image:
+The native install is editable (`pip install -e .`), so the local loop is just **edit -> test -> run**: changes to `src/` or `rscripts/`
+are live immediately, no reinstall.
 
 ```
-edit -> tests -> git commit + push
-     -> CI rebuilds the image -> publishes ghcr.io/tomharcus/hyb2:latest
-     -> re-pull to run the new version
+edit -> tests -> run
+```
+
+Eddie runs the **container**, not your local checkout, so a change only reaches the cluster once it's pushed and CI rebuilds the image:
+
+```
+git commit + push -> CI rebuilds the image -> publishes ghcr.io/tomharcus/hyb2:latest -> re-pull on Eddie
 ```
 
 Any pushed change to `src/`, `rscripts/`, the `Dockerfile`, `environment.yml`, or `pyproject.toml` triggers a CI build, so `:latest`
@@ -616,3 +437,21 @@ scripts/generate_unafold_baseline.sh           # needs oligoarrayaux
 
 - **`comradesScore`** (randomized 1000x parallel folding): not ported, needs a `qsub` cluster.
 - **`hyb2_app`** (Shiny GUI): the R app is unchanged, only its thin launcher wrapper is not ported.
+
+## Optional: run with Docker instead of conda
+
+If you'd rather not install conda, you can run the same image the cluster uses. On **Linux/WSL** this works well; on **Apple Silicon
+macOS** it runs under emulation and is slow unless you enable "Use Rosetta for x86/amd64 emulation" in Docker Desktop, so conda is the
+better choice there.
+
+```bash
+docker pull ghcr.io/tomharcus/hyb2:latest
+docker run --rm -v "$PWD:/data" -w /data ghcr.io/tomharcus/hyb2:latest \
+    hyb2 -i reads.sam -d ref.fasta -o myrun -a MyRNA -x 3900 -l 300
+```
+
+The `-v "$PWD:/data" -w /data` mounts your current directory into the container as its working directory, so it reads and writes your
+files. Swap the last line for any command from the sections above.
+
+For a shorter command, `setup_hyb2.sh` installs a `hyb2()` wrapper. Only source it if you are **not** also using the native conda
+install: the wrapper function shadows the native `hyb2` binary.
