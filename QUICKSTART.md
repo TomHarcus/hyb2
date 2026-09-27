@@ -3,38 +3,45 @@
 This tool analyses RNA proximity ligation data. It takes in mapped reads (fastq/SAM) and tells you which RNA regions are physically interacting with each other, with
 their sequence, coordinates, and predicted folded structure. Hyb2 outputs contact maps, viewpoint graphs, and the folded RNA structures.
 
-This guide gets hyb2 setup and running as fast as possible using Docker. For advanced use, see the full [README_python_port.md](README_python_port.md)
+This guide gets hyb2 setup and running as fast as possible using conda. For advanced use, see the full [README_python_port.md](README_python_port.md)
 
-## 1. Install Docker
+## 1. Install Miniforge
 
-- **Linux/WSL**: install Docker Engine (https://docs.docker.com/engine/install/)
-- **macOS**: install Docker Desktop (https://www.docker.com/products/docker-desktop/)
-
-Check if it worked:
+If you don't already have conda, install **Miniforge** (it ships the fast libmamba solver). Follow <https://github.com/conda-forge/miniforge#install>, or on Linux/WSL/macOS:
 ```bash
-docker run hello-world
+curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-$(uname)-$(uname -m).sh"
+bash "Miniforge3-$(uname)-$(uname -m).sh"
+```
+
+Restart your shell, then check it worked:
+```bash
+conda --version
 ```
 
 ## 2. Get hyb2
 
-Pull the container:
+Clone the repo and create the environment:
 ```bash
-docker pull ghcr.io/tomharcus/hyb2:latest
+git clone -b python-migration https://github.com/TomHarcus/hyb2.git
+cd hyb2
+
+conda env create -f environment.yml     # env + all tools
+conda activate hyb2
+
+# CPLfold (pure python)
+git clone https://github.com/Vicky-0256/CPLfold.git && git -C CPLfold checkout 24bab52
+export HYB2_CPLFOLD_DIR="$PWD/CPLfold"
 ```
 
-Download and run the setup script:
-```bash
-curl -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/setup_hyb2.sh
-chmod +x setup_hyb2.sh
-./setup_hyb2.sh
-```
+> **macOS (Apple Silicon):** `bioconductor-deseq2` has no arm64 build, so replace the create line with
+> `CONDA_SUBDIR=osx-64 conda env create -f environment.yml` (builds the env as Intel, runs under Rosetta).
 
-Close down the terminal and then reopen it. Check if it worked:
+Check it worked:
 ```bash
 hyb2
 ```
 
-This should print the pipelines information.
+This should print the pipeline's information. In a new terminal, run `conda activate hyb2` first.
 
 ## 3. Verify it works with test data
 
@@ -66,4 +73,3 @@ hyb2 -i your_reads.sam -d your_reference.fasta -o my_run -a MyGeneName -x 3900 -
 
 This guide covers the basic pipeline. See the full [README_python_port.md](README_python_port.md) for running on Eddie, modifying the pipeline's code, tuning CPLfold, comparing datasets, 
 or anything else.
-
