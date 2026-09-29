@@ -170,17 +170,10 @@ mkdir hyb2_test
 cd hyb2_test
 ```
 
-Once inside the directory, download the test data:
+Once inside the directory, test the pipeline by running:
 
 ```bash
-curl -L -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/data/Zika_18S_formatted.fasta  # reference fasta
-curl -L -O https://raw.githubusercontent.com/TomHarcus/hyb2/python-migration/data/testData.sam              # input sam file
-```
-
-Then test the pipeline by running:
-
-```bash
-hyb2 -i testData.sam -d Zika_18S_formatted.fasta -o testrun -a Zika_virusRNA -x 3900 -l 300 -r cplfold
+hyb2 -i hyb2/data/testData.sam -d hyb2/data/Zika_18S_formatted.fasta -o testrun -a Zika_virusRNA -x 3900 -l 300 -r cplfold
 ```
 
 This should produce a `testrun.hyb` file, a contact density map PDF, a viewpoint PDF, and the folded structure. This tests the pipeline end to end.
