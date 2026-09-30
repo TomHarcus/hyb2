@@ -55,6 +55,9 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
         "-algorithm", "naview"
     ]
 
+    VARNA_OUTPUT = in_file[:-3] + ".VARNA" if in_file.endswith(".ct") else in_file + ".VARNA"
+    subprocess.run(varna_cmd + ["-o", VARNA_OUTPUT], stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None, check=True)
+
     if interactive:
         subprocess.run(varna_cmd, stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
         log.info("Modify base numbers: svg_mod_coord -i <svg> -x start_coord -y 2nd_strand_coord(only if it exists) -l length_of_fragment")
