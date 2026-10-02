@@ -369,10 +369,13 @@ def _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length, VARNA
     name = ranked[0]
     vname = name.split("__", 1)[1]
 
+    cij = sum(float(x) for x in open(name) if x.strip())
+
     vienna_top = vname.replace(".VARNA_scores.txt", ".vienna")
 
     energy = open(vienna_top).read().rstrip().rsplit("(", 1)[-1].rstrip(")")
     log.info(f"Folded structure: Delta G = {energy} kcal/mol")
+    log.info(f"Chimeric support score (COMRADES/Cij) = {cij:g}")
 
     log.debug(f"Open {vienna_top} in VARNA for more customization options")
 

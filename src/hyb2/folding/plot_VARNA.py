@@ -55,7 +55,9 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
         "-algorithm", "naview"
     ]
 
+    # .VARNA's output starts from 1...length
     VARNA_OUTPUT = in_file[:-3] + ".VARNA" if in_file.endswith(".ct") else in_file + ".VARNA"
+  
     subprocess.run(varna_cmd + ["-o", VARNA_OUTPUT], stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
     if interactive:
