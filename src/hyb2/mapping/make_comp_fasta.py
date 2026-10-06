@@ -38,20 +38,17 @@ def make_comp_fasta(lines):
         else:
             cnt[fld2] = cnt.get(fld2, 0) + 1
 
-    out = []
-
+    # Yield records line-by-line rather than building a full list 
     if barcodes == 1:
         order = sorted(cnt, key=lambda s: (cnt[s], cnt_barcodes[s]), reverse=True)
 
         for nr, seq in enumerate(order, 1):
-            out.append(f">{nr}-{cnt_barcodes[seq]}_{cnt[seq]}")
-            out.append(seq)
+            yield f">{nr}-{cnt_barcodes[seq]}_{cnt[seq]}\n"
+            yield f"{seq}\n"
 
     else:
         order = sorted(cnt, key=lambda s: cnt[s], reverse=True)
 
         for nr, seq in enumerate(order, 1):
-            out.append(f">{nr}_{cnt[seq]}")
-            out.append(seq)
-
-    return "\n".join(out) + "\n"
+            yield f">{nr}_{cnt[seq]}\n"
+            yield f"{seq}\n"

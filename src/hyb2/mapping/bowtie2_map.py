@@ -11,8 +11,6 @@ from hyb2.tools.logsetup import is_quiet
 
 import subprocess, gzip, os, contextlib
 
-from pathlib import Path
-
 def bowtie2_map(in_file, db, out, reproducible=False):
 
     suffix = in_file.split(".")
@@ -44,11 +42,10 @@ def bowtie2_map(in_file, db, out, reproducible=False):
 
         comp_path = f"{out}_comp.fasta"
 
-        with gzip.open(in_file, "rt") as fin:
+        with gzip.open(in_file, "rt") as fin, open(comp_path, "w") as fout:
             fasta = solexa_to_fasta_lines(fin)
             tab = fasta_to_tab_lines(fasta)
-            comp = make_comp_fasta(tab)
-            Path(comp_path).write_text(comp)
+            fout.writelines(make_comp_fasta(tab))
 
         _bowtie2(db, out, comp_path, reproducible=reproducible)
 
@@ -62,11 +59,10 @@ def bowtie2_map(in_file, db, out, reproducible=False):
 
         comp_path = f"{out}_comp.fasta"
 
-        with open(in_file) as fin:
+        with open(in_file) as fin, open(comp_path, "w") as fout:
             fasta = solexa_to_fasta_lines(fin)
             tab = fasta_to_tab_lines(fasta)
-            comp = make_comp_fasta(tab)
-            Path(comp_path).write_text(comp)
+            fout.writelines(make_comp_fasta(tab))
 
         _bowtie2(db, out, comp_path, reproducible=reproducible)
 
