@@ -16,6 +16,8 @@ dependencies:
   - bioconductor-deseq2=1.42.0
   - r-ggplot2=3.5.1
   - r-data.table=1.15.2
+  - r-dplyr=1.1.4
+  - r-gridextra=2.3
 
   # cross-platform correctness
   - coreutils     # GNU sort on MacOS (parity critical for collapse_blast)
