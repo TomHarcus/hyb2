@@ -156,7 +156,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
 
     # split to determine what file type
     ext = in_file.split(".")
-    mappable = ext[-1] in ("fasta", "fastq") or ext[-2:] == ["fastq", "gz"]
+    mappable = ext[-1] in ("fasta", "fastq") or ext[-2:] == ["fastq", "gz"] or ext[-2:] == ["fasta", "gz"]
     hyb_path = f"{out}.hyb"
 
     if ext[-1] == "hyb":
