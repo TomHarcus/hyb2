@@ -20,8 +20,53 @@ import concurrent.futures
 
 log = logging.getLogger(__name__)
 
-def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
-        vienna_bin=None, support_matrix=None):
+def _validate_single_rna(in_hyb):
+    """Coordinate-only constraints require one RNA coordinate system.
+
+    hyb2_fold has already selected and remapped two-RNA interactions to a
+    synthetic single RNA. Raw intergenic input must instead select a gene pair.
+    """
+    gene = None
+    with open(in_hyb) as source:
+        for number, line in enumerate(source, 1):
+            if not line.strip() or line.startswith("#"):
+                continue
+            fields = line.rstrip("\n").split("\t")
+            if len(fields) < 14:
+                raise ValueError(f"Invalid HYB row {number}: expected at least 14 columns")
+            if gene is None:
+                gene = fields[3]
+            if fields[3] != gene or fields[9] != gene:
+                raise ValueError(
+                    "Mixed-gene HYB input cannot be scored as one RNA: "
+                    "supply gene1/gene2 (--gene-1/--gene-2) for gene-pair scores, "
+                    "or use hyb2 fold -a RNA_A -b RNA_B with region coordinates "
+                    "for structure prediction."
+                )
+
+
+def run(in_hyb, ref_fasta, begin=None, end=None, *, num_constraints=75, fold="vienna",
+        vienna_bin=None, support_matrix=None, gene1=None, gene2=None, output=None):
+    """Build single-RNA constraints or explicitly selected gene-pair scores.
+
+    Returns the constraint path in single-RNA mode, or the labelled score-table
+    path when gene1/gene2 are supplied. The latter retains original coordinates
+    and must not be interpreted as single-sequence folding constraints.
+    """
+    if gene1 is not None or gene2 is not None:
+        if not gene1 or not gene2:
+            raise ValueError("gene1 and gene2 must be supplied together")
+        if begin is not None or end is not None or support_matrix is not None:
+            raise ValueError("gene-pair scoring requires original HYB input without a window or support_matrix")
+        from hyb2.folding.gene_pair_scores import score_gene_pair
+        return score_gene_pair(in_hyb, ref_fasta, gene1, gene2, fold=fold,
+                               vienna_bin=vienna_bin, output=output)
+    if begin is None or end is None:
+        raise ValueError("single-RNA constraints require begin and end")
+    if output is not None:
+        raise ValueError("output is only available with gene-pair scoring")
+    # Validate before writing intermediates, including when reusing a matrix.
+    _validate_single_rna(in_hyb)
 
     ref_bare = ref_fasta.rsplit(".", 1)[0]
     ref_tab = ref_bare + ".tab"
@@ -154,35 +199,56 @@ def _fold_vienna(bit1, bit2, ct, vienna_bin, workers=None):
 
 def _fold_unafold(bit1, bit2, ct):
 
+    # hybrid-min derives output names from its input arguments. Run alongside
+    # the paired FASTAs so absolute paths do not become embedded in filenames.
+    workdir = os.path.dirname(os.path.abspath(bit1))
+    first = os.path.basename(bit1)
+    second = os.path.relpath(os.path.abspath(bit2), workdir)
     # run unafold
-    subprocess.run(["hybrid-min", bit1, bit2],
+    subprocess.run(["hybrid-min", first, second], cwd=workdir,
                    capture_output=True, text=True, check=True,
                    env={**os.environ, "UNAFOLDDAT": str(config.UNAFOLD_DIR)})
 
-    result = f"{bit1}-{bit2}.ct"
+    result = os.path.join(workdir, f"{first}-{second}.ct")
 
-    if result != ct:
+    if os.path.abspath(result) != os.path.abspath(ct):
         shutil.move(result, ct)
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        prog="comrades-make-constraints",
-        description="create constraints",
+        prog="hyb2 scores",
+        description="Calculate gene-pair COMRADES scores, or single-sequence constraints with -b/-e",
         add_help=False
     )
 
     p.add_argument("--help", action="help", help="Show this help message and exit")
     p.add_argument("-i", dest="in_hyb", required=True, metavar="INPUT.HYB", help="Input HYB (required)")
     p.add_argument("-f", dest="ref_fasta", required=True, metavar="INPUT.FASTA", help="Input FASTA (required)")
-    p.add_argument("-b", dest="begin", required=True, type=int, help="start coordinate")
-    p.add_argument("-e", dest="end", required=True, type=int, help="end coordinate")
+    p.add_argument("-b", dest="begin", type=int, help="start coordinate (constraint mode)")
+    p.add_argument("-e", dest="end", type=int, help="end coordinate (constraint mode)")
+    p.add_argument("-1", "--gene-1", dest="gene1", help="exact first reference ID (gene-pair scoring)")
+    p.add_argument("-2", "--gene-2", dest="gene2", help="exact second reference ID (gene-pair scoring)")
+    p.add_argument("-o", "--output", help="gene-pair score table output path")
     p.add_argument("-n", dest="num_constraints", type=int, default=75, help="number of folding constraints (default=75)")
     p.add_argument("-r", dest="fold", type=str, default="vienna", help="folder to be used")
 
     return p
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.gene1 is not None or args.gene2 is not None:
+        if not args.gene1 or not args.gene2:
+            parser.error("--gene-1 and --gene-2 must be supplied together")
+        if args.begin is not None or args.end is not None:
+            parser.error("gene-pair scoring uses full RNA coordinates; omit -b/-e")
+        run(args.in_hyb, args.ref_fasta, gene1=args.gene1, gene2=args.gene2,
+            fold=args.fold, output=args.output)
+        return 0
+    if args.begin is None or args.end is None:
+        parser.error("constraint mode requires -b and -e")
+    if args.output is not None:
+        parser.error("--output is only available with gene-pair scoring")
     run(
         args.in_hyb,
         args.ref_fasta,

@@ -5,6 +5,7 @@ The main orchestrator that ties in the whole pipeline
 """
 
 def print_help():
+    print("Gene-pair COMRADES scores: hyb2 scores -i reads.hyb -f ref.fasta --gene-1 RNA_A --gene-2 RNA_B -o pair_scores.tsv")
     print("Usage:")
     print("hyb2 -i <input.fastq/sam> -d <fasta_file> -o <output_ID> -a <gene_ID_1> -x <start_coord_1> -y <start_coord_2> -l <length_of_fragments>")
     print("Options:")

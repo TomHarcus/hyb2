@@ -86,11 +86,13 @@ def main(argv: list[str] | None = None) -> int:
     from hyb2.folding.hyb2_fold import main as fold_main
     from hyb2.compare.hyb2_compare import main as compare_main
     from hyb2.coverage.hyb2_coverage import main as coverage_main
+    from hyb2.folding.comrades_make_constraints import main as scores_main
 
     subcommands = {
         "fold": fold_main,
         "compare": compare_main,
-        "coverage": coverage_main
+        "coverage": coverage_main,
+        "scores": scores_main,
     }
 
     if argv and argv[0] in subcommands:

@@ -15,6 +15,7 @@ This is the Python reimplementation of the HYB2 RNA pipeline. It is used for ana
 - [Config files](#config-files)
 - [Folding backends and CPLfold tuning](#folding-backends-and-cplfold-tuning)
 - [Comparing datasets](#comparing-datasets)
+- [Gene-pair COMRADES scores](#gene-pair-comrades-scores)
 - [Deterministic runs](#deterministic-runs)
 - [Large files and memory](#large-files-and-memory)
 - [Developing](#developing)
@@ -191,6 +192,7 @@ or if somewhere else on your machine, you can provide the full path. The followi
 | folding | `hyb2 fold` | 
 | coverage / CDM | `hyb2 coverage` | 
 | dataset comparison | `hyb2 compare` | 
+| gene-pair COMRADES scores | `hyb2 scores` |
 
 
 Example full pipeline run:
@@ -337,6 +339,45 @@ hyb2 compare -i input.table -o cmp -a MyRNA -d ref.fasta
 ```
 
 >Gotcha: use non-numeric dataset stems (e.g. `ctrl_rep1`, not `1`). R's `read.table` mangles numeric column headers and breaks DESeq2.
+
+## Gene-pair COMRADES scores
+
+To calculate support for base pairs between two specific RNAs in a mixed-gene
+`.hyb` file:
+
+```bash
+hyb2 scores -i reads.hyb -f ref.fasta \
+    --gene-1 RNA_A --gene-2 RNA_B -o RNA_A_RNA_B.scores.tsv
+```
+
+Use exact reference IDs matching columns 4 and 10 of the `.hyb` file. Both gene
+options are required; `-1` and `-2` are their short aliases. Use the same ID twice
+for self-interactions. Reversed arms are reordered so column 1 always refers to
+the first requested RNA and column 2 to the second. Other gene pairs are excluded.
+Only base pairs crossing between the two read arms contribute to these scores.
+
+The output is a tab-separated table with a header `RNA_A`, `RNA_B`, `score`,
+followed by 1-based positions in the original RNAs and supporting counts. No
+matching interactions produces a header-only table. Without `-o`, the filename
+includes the input stem and both gene IDs. Paired FASTAs and CT intermediates
+are preserved next to the table.
+
+Scoring uses RNAcofold by default (`-r vienna`); `-r unafold` uses `hybrid-min`.
+`-r cplfold` uses RNAcofold for this support-building stage, as in the full pipeline.
+This mode scores the full selected RNA pair; omit the single-sequence `-b/-e`
+window options. It does not generate folding constraints or fold a final structure.
+The labelled table is **not** a `--support-matrix` input: that option expects a
+headerless matrix in the combined fragment's coordinate system. Continue using
+`hyb2 fold -a RNA_A -b RNA_B ...` for structure prediction; its existing coordinate
+mapping and score format are unchanged.
+
+Both `hyb2 scores` and direct calls to `comrades_make_constraints.run` use the
+same entry point. Python callers can pass `gene1="RNA_A", gene2="RNA_B"`
+(without `begin`/`end`) to obtain a labelled score table. Calls with `begin`/`end`
+retain the single-RNA constraint behaviour, but now reject input containing
+multiple RNA IDs before writing outputs, including when reusing a support matrix.
+For two-RNA structure prediction, `hyb2 fold` performs the required selection and
+coordinate remapping before calling this routine.
 
 ## Deterministic runs
 
