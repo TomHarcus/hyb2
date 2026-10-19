@@ -50,8 +50,8 @@ quant <- quantile(all_data$count, probs = LIMIT)
 cdm <- list()
 for (i in unique(all_data$ID)) {
   cdm[[i]] <- ggplot(all_data[all_data$ID == i, ], aes(x, y)) +
-    geom_tile(aes(fill = pmin(count, quant)), show.legend = FALSE, na.rm=TRUE) +
-    scale_fill_gradient(na.value = "#ffffff", low = "#ffffff", high = "#000000", limits = c(0, ceiling(quant))) +
+    geom_tile(aes(fill = pmin(count, quant)), show.legend = TRUE, na.rm=TRUE) +
+    scale_fill_gradient(name = "chimeras", na.value = "#ffffff", low = "#ffffff", high = "#000000", limits = c(0, ceiling(quant))) +
     theme_bw() + theme(aspect.ratio = 1) +
     labs(title = i, x = "3'-5' chimera (nt)", y = "5'-3' chimera (nt)") +
     scale_x_continuous(expand = c(0, 0), limits = c(x1, x2), breaks = c(x1 + 25, x2 - 45), labels = c(x1, x2)) +
@@ -64,5 +64,8 @@ for (i in unique(all_data$ID)) {
 
 # Combine plots and save
 com <- do.call("grid.arrange", c(cdm, nrow = 1))
-ggsave(filename = paste0(x1, x2, y1, y2, ".pdf"), plot = com, units = "cm", height = 8, width = (length(cdm) * 8))
+# Readable filename: the x- and y-coordinate ranges of the zoomed region, with
+# separators (was paste0(x1,x2,y1,y2) -> a cryptic run-together like 1260-70230).
+ggsave(filename = paste0("contact_zoom_x", x1, "-", x2, "_y", y1, "-", y2, ".pdf"),
+       plot = com, units = "cm", height = 8, width = (length(cdm) * 8))
 

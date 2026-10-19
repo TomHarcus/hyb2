@@ -32,5 +32,14 @@ all(rownames(colData) == colnames(countData2))
 dds <- DESeqDataSetFromMatrix(countData = round(countData2), colData = colData, design = ~ conditions)
 dds <- dds[ rowSums(counts(dds)) > MIN, ]
 dds<-DESeq(dds)
-res<-results(dds, contrast=c("conditions","condition_one","condition_two"), alpha=0.01)
+# Read the condition names from the input table rather than hardcoding
+# 'condition_one'/'condition_two' -- the user chooses what to call them.
+# log2FC is reported for the first condition relative to the second (order of
+# first appearance in the table).
+conds <- unique(colData[["conditions"]])
+if (length(conds) != 2) {
+  stop(sprintf("DESeq comparison needs exactly 2 conditions, found %d: %s",
+               length(conds), paste(conds, collapse=", ")))
+}
+res<-results(dds, contrast=c("conditions", conds[1], conds[2]), alpha=0.01)
 write.table(file=paste0("DESeq_",(gsub(pattern="\\.table.txt$","",TABLE)),".txx"), res[order(res$padj),], sep="\t")

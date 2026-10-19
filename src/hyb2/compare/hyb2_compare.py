@@ -218,7 +218,7 @@ def _differential_map(out, min_reads, interaction_range, LIMIT, value):
     for sign in ("pos", "neg"):
         hm = f"{out}_{interaction_range}range_{sign}_enrichment.heatmap.txt"
         full_file = Path(hm).read_text().splitlines()[1:11]
-        for row in ui.track(full_file, "zoom CDMs ", total=len(full_file)):       # awk NR>1 && NR<12
+        for row in ui.track(full_file, f"zoom CDMs ({sign}-enriched) ", total=len(full_file)):       # awk NR>1 && NR<12
             c = row.split("\t")
             subprocess.run(
                 ["Rscript", config.rscript("contact_density_map_zoom.R"),
