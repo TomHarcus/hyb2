@@ -105,6 +105,7 @@ def print_help():
 from pathlib import Path
 
 import sys
+import re
 
 from hyb2.mapping.fasta_hyb2_formatting import fasta_hyb2_formatting
 from hyb2.mapping.bowtie2_map import bowtie2_map
@@ -122,6 +123,30 @@ log = logging.getLogger(__name__)
 
 from hyb2.tools import ui
 steps = ui.Steps()
+
+def _check_gene(gene, db, current_text, reformatted):
+    # Fail early and clearly if the -a/-b gene name is not in the reference.
+
+    if gene is None:
+        return
+
+    headers = [l for l in current_text.splitlines() if l.startswith(">")]
+    if any(re.search(gene, h) for h in headers):
+        return
+
+    names = ", ".join(h[1:].split()[0] for h in headers) or "(none)"
+    hint = (
+        "\nThe reference contained '|', so its headers were reformatted "
+        "('|'->'_', '_'->'-') before use -- an underscore in your header "
+        "became a dash. Use pipe-delimited headers (e.g. '>Zika|virusRNA', "
+        "which becomes 'Zika_virusRNA') so the reference matches your reads/SAM."
+        if reformatted else ""
+    )
+    raise ValueError(
+        f"gene '{gene}' not found in reference '{db}'.\n"
+        f"Available genes: {names}.{hint}"
+    )
+
 
 def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         gene_1, gene_2, limit, x_coord, y_coord, length, varna, fold,
@@ -148,11 +173,19 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
     """
 
     db_text = Path(db).read_text()
+    reformatted = "|" in db_text
 
-    if "|" in db_text:
+    if reformatted:
         formatted = fasta_hyb2_formatting(db_text)
         db = db.replace(".fasta", ".hyb.fasta", 1)
         Path(db).write_text(formatted)
+        db_text = formatted
+
+    # Check the gene names against the (possibly reformatted) reference now, so a
+    # name mismatch fails with a clear message here rather than as a cryptic
+    # error deep in the viewpoint/fold code later.
+    _check_gene(gene_1, db, db_text, reformatted)
+    _check_gene(gene_2, db, db_text, reformatted)
 
     # split to determine what file type
     ext = in_file.split(".")
