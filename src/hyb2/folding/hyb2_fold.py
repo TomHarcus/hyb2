@@ -136,7 +136,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                         str(int(c[6]) - x_coord + 1),
                         str(int(c[7]) - x_coord + 1),
                         c[8], c[9], c[10],
-                        "12",
+                        c[11],
                         str(int(c[12]) - x_coord + 1),
                         str(int(c[13]) - x_coord + 1)
                     ]
@@ -157,7 +157,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                         str(int(c[6]) - x_coord + 1),
                         str(int(c[7]) - x_coord + 1),
                         c[8], c[3], c[10],
-                        "12",
+                        c[11],
                         str(int(c[12]) - y_coord + length + 101),
                         str(int(c[13]) - y_coord + length + 101)
                     ]
@@ -174,7 +174,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                         str(int(c[6]) - y_coord + length + 101),
                         str(int(c[7]) - y_coord + length + 101),
                         c[8], c[9], c[10],
-                        "12",
+                        c[11],
                         str(int(c[12]) - x_coord + 1),
                         str(int(c[13]) - x_coord + 1)
                     ]
@@ -200,7 +200,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                         str(int(c[6]) - x_coord + 1),
                         str(int(c[7]) - x_coord + 1),
                         c[8], c[9], c[10],
-                        "12",
+                        c[11],
                         str(int(c[12]) - y_coord + length + 101),
                         str(int(c[13]) - y_coord + length + 101)
                     ]
@@ -217,7 +217,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                         str(int(c[6]) - y_coord + length + 101),
                         str(int(c[7]) - y_coord + length + 101),
                         c[8], c[9], c[10], 
-                        "12",
+                        c[11],
                         str(int(c[12]) - x_coord + 1),
                         str(int(c[13]) - x_coord + 1)
                     ]
@@ -238,7 +238,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                         str(int(c[6]) - x_coord + 1),
                         str(int(c[7]) - x_coord + 1),
                         c[8], c[9], c[10],
-                        "12",
+                        c[11],
                         str(int(c[12]) - y_coord + length + 101),
                         str(int(c[13]) - y_coord + length + 101)
                     ]
@@ -255,7 +255,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                         str(int(c[6]) - y_coord + length + 101),
                         str(int(c[7]) - y_coord + length + 101),
                         c[8], c[9], c[10], 
-                        "12",
+                        c[11],
                         str(int(c[12]) - x_coord + 1),
                         str(int(c[13]) - x_coord + 1),
                     ]
