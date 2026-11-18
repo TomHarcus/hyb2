@@ -1,8 +1,10 @@
 """ Port of plot_VARNA
 
 Renders a folded .ct with VARNA (coloured by per-base support scores), then
-relabels the SVG coordinates via svg_mod_coord. Interactive mode (-0 1) pops up
-the VARNA GUI; headless mode writes <prefix>.<name>_plot.svg. The WSL/Windows
+relabels the SVG coordinates via svg_mod_coord. A VARNA session file
+(<name>.VARNA, layout + support colours) is always written and can be reopened in VARNA.
+Interactive mode (-0 1) pops up the VARNA GUI in the radiate layout, where dragging
+a base rotates its stem; headless mode writes <prefix>.<name>_plot.svg. The WSL/Windows
 branch of the legacy is dropped (Linux-only). Intermediate SVG is preserved
 (the legacy rm's it).
 """
@@ -61,7 +63,10 @@ def plot_VARNA(in_file, score, VARNA=None, *, x_coord, y_coord, length, interact
     subprocess.run(varna_cmd + ["-o", VARNA_OUTPUT], stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None, check=True)
 
     if interactive:
-        subprocess.run(varna_cmd, stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
+        # open the GUI in the radiate layout: only there does dragging a base swing its
+        # whole stem (in naview dragging moves single bases). Saved files stay naview.
+        gui_cmd = varna_cmd[:varna_cmd.index("-algorithm")] + ["-algorithm", "radiate"]
+        subprocess.run(gui_cmd, stdout=subprocess.DEVNULL if quiet else None, stderr=subprocess.DEVNULL if quiet else None)
         log.info("Modify base numbers: svg_mod_coord -i <svg> -x start_coord -y 2nd_strand_coord(only if it exists) -l length_of_fragment")
         return None
     
