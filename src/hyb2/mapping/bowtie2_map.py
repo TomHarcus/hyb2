@@ -9,28 +9,34 @@ from hyb2.common.fasta2tab import fasta_to_tab_lines
 from hyb2.tools.ui import spinner
 from hyb2.tools.logsetup import is_quiet
 
-import subprocess, gzip, os, contextlib
+import subprocess, gzip, os, contextlib, re
+
+# read IDs as written by make_comp_fasta: <nr>_<count> or <nr>-<barcodes>_<count>
+_COLLAPSED_ID = re.compile(r"\d+(-\d+)?_\d+")
 
 def bowtie2_map(in_file, db, out, reproducible=False):
 
     suffix = in_file.split(".")
 
-    # check if in_file is a .fasta file
-    if suffix[-1] == "fasta":
+    # check if in_file is a .fasta or .fasta.gz file
+    # downstream stages read the read count from the ID suffix (<nr>_<count>), so
+    # raw reads are collapsed first, as for fastq; already-collapsed input is
+    # mapped as-is so its counts are kept
+    if suffix[-1] == "fasta" or suffix[-2:] == ["fasta", "gz"]:
 
         make_hyb_db_2(db)
 
-        _bowtie2(db, out, in_file, reproducible=reproducible)
-        
-        print("Mapping concluded")
+        opener = gzip.open if suffix[-1] == "gz" else open
 
-    # support for .fasta.gz files
-    elif suffix[-2] == "fasta" and suffix[-1] == "gz":
+        if _is_collapsed(in_file, opener):
+            reads = in_file
+        else:
+            reads = f"{out}_comp.fasta"
+            with opener(in_file, "rt") as fin, open(reads, "w") as fout:
+                fout.writelines(make_comp_fasta(fasta_to_tab_lines(fin)))
 
-        make_hyb_db_2(db)
-        
-        _bowtie2(db, out, in_file, reproducible=reproducible)
-                
+        _bowtie2(db, out, reads, reproducible=reproducible)
+
         print("Mapping concluded")
 
     # check if in_file is a .fastq.gz file
@@ -70,6 +76,12 @@ def bowtie2_map(in_file, db, out, reproducible=False):
 
     else:
         raise ValueError(f"unsupported input format: {in_file}")
+
+# True if every read ID already has the collapsed <nr>_<count> form
+def _is_collapsed(in_file, opener=open):
+    with opener(in_file, "rt") as fin:
+        return all(_COLLAPSED_ID.fullmatch((line[1:].split() or [""])[0])
+                   for line in fin if line.startswith(">"))
 
 # run bowtie2
 def _bowtie2(db, out, reads, reproducible):

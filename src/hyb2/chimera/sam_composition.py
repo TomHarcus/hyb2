@@ -19,6 +19,7 @@ while the collapse -> mtophits -> reference branch only builds the ranking
 """
 
 import argparse
+import re
 import sys
 
 from hyb2.chimera.sam2blast import sam2blast
@@ -29,6 +30,32 @@ from hyb2.chimera.get_mtop_hybrids import get_mtop_hybrids
 from hyb2.chimera.remove_duplicate_hybrids import remove_duplicate_hybrids
 from hyb2.common.histogram import histogram
 from hyb2.tools import ui
+
+
+# SAM header lines are '@' + a two-letter record type + tab (@HD, @SQ, @PG, ...)
+_SAM_HEADER = re.compile(r"@[A-Za-z][A-Za-z0-9]\t")
+_COLLAPSED_ID = re.compile(r"\d+(-\d+)?_\d+")
+
+
+def _check_read_ids(in_sam: str) -> None:
+    """Fail early if read IDs aren't the collapsed <nr>_<count> form.
+
+    sam2blast treats every '@' line as header, so '@'-prefixed read IDs would
+    be dropped silently; other IDs crash later in create_reference.
+    """
+    with open(in_sam) as fin:
+        for line in fin:
+            if _SAM_HEADER.match(line):
+                continue
+            read_id = line.split("\t", 1)[0]
+            if not _COLLAPSED_ID.fullmatch(read_id):
+                raise ValueError(
+                    f"{in_sam}: read ID '{read_id}' is not in the collapsed "
+                    "<nr>_<count> form (e.g. '1_523') that hyb2 expects.\n"
+                    "Map the reads with hyb2 instead (-i reads.fasta/.fastq), which "
+                    "collapses and renames them before mapping."
+                )
+            return
 
 
 def run(
@@ -46,6 +73,8 @@ def run(
 
     if out is None:
         out = in_sam[:-4] if in_sam.endswith(".sam") else in_sam
+
+    _check_read_ids(in_sam)
 
     blast = out + ".blast"
     with open(in_sam) as fin, open(blast, "w") as fout:
