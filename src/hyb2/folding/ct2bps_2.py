@@ -6,11 +6,18 @@ Parses folding output where each chimeric reads header encodes the
 genomic coordinates of its two arms, then converts local fold
 coordinates back to those absolute coordinates
 
+Two deliberate departures from the legacy awk (pass legacy=True to reproduce it):
+  * pairs formed within one arm (partner also in arm 1) are skipped. The awk mapped
+    them through the arm-2 offset, producing spurious pairs (~1% of pairs on U2).
+  * each pair is written as (lower, higher) coordinate. Chimeras are sequenced in
+    both arm orders, so the awk reported the same base pair as "i j" or "j i" and the
+    support for one pair was split between two keys downstream.
+
 """
 
 import sys
 
-def ct2bps_2(ct_file):
+def ct2bps_2(ct_file, legacy=False):
 
     for line in ct_file.splitlines():
         columns = line.split()
@@ -39,8 +46,14 @@ def ct2bps_2(ct_file):
             if pairing_partner == 0 or current_position > bit1_len:
                 continue
 
+            if not legacy and pairing_partner <= bit1_len:
+                continue   # intra-arm pair, not evidence for the chimeric interaction
+
             current_position += int(bit1_st) - 1
             pairing_partner = pairing_partner - bit1_len + int(bit2_st) - 1
+
+            if not legacy and pairing_partner < current_position:
+                current_position, pairing_partner = pairing_partner, current_position
 
             yield f"{current_position}\t{pairing_partner}\n"
 

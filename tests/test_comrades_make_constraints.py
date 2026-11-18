@@ -26,7 +26,7 @@ def test_comrades_make_constraints_matches_golden(
     ref = tmp_path / "ref.fasta"
     ref.write_text((repo_root / "data" / "Zika_18S_formatted.fasta").read_text())
 
-    constr = run(str(hyb), str(ref), 1, 10298, vienna_bin=vienna_bin)
+    constr = run(str(hyb), str(ref), 1, 10298, vienna_bin=vienna_bin, legacy=True)
 
     produced = Path(constr).read_text()
     golden = (folding_fixtures_dir / "comrades_mini.folding_constraints").read_text()

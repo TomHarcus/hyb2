@@ -19,7 +19,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"], 
         max_phase2=CPL_DEFAULTS["max_phase2"], allow_pseudoknot=CPL_DEFAULTS["allow_pseudoknot"],
-        energy_model=CPL_DEFAULTS["energy_model"]):
+        energy_model=CPL_DEFAULTS["energy_model"], support=CPL_DEFAULTS["support"]):
 
     if FOLD is None:
         FOLD = "cplfold"
@@ -63,7 +63,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2=None, y_coord=None, Y1=None, Y2=None, length=None)
         _fasta_extraction(fasta_1, GENE_1, X1, length, out_fasta)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model, support)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
               VARNA, interactive)
 
@@ -80,7 +80,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=False)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model, support)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                   VARNA, interactive)
 
@@ -96,7 +96,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform_two_region(in_hyb, out_file, GENE_1, x_coord, y_coord, X1, X2, Y1, Y2, length, homodimer=True)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2=None)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model, support)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -112,7 +112,7 @@ def run(in_hyb, GENE_1, GENE_2, FASTA_1, x_coord, y_coord, length, VARNA, intera
 
         _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y2, length)
         _fasta_extraction_two_region(fasta_1, GENE_1, X1, Y1, length, out_fasta, GENE_2)
-        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model)
+        _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model, support)
         _postfold(in_hyb, out_file, out_fasta, span, x_coord, y_coord, length,
                     VARNA, interactive)
 
@@ -130,7 +130,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[6]) >= X1 and int(c[7]) <= X2
                     and int(c[12]) >= X1 and int(c[13]) <= X2):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -151,7 +151,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[7]) <= X2 and re.search(GENE_2, c[9]) 
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -168,7 +168,7 @@ def _transform(in_hyb, out_file, GENE_1, x_coord, X1, X2, GENE_2, y_coord, Y1, Y
                     and int(c[13]) <= X2 and re.search(GENE_2, c[3]) 
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[9], c[4], c[5],
                         str(int(c[6]) - y_coord + length + 101),
@@ -194,7 +194,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[6]) >= X1 and int(c[7]) <= X2
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -211,7 +211,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[12]) >= X1 and int(c[13]) <= X2
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - y_coord + length + 101),
@@ -232,7 +232,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
                     and int(c[12]) >= Y1 and int(c[13]) <= Y2
                     and int(c[15]) >=5):
 
-                    # plain string 12 follows legacy script
+                    # column 12 is copied from the input (the legacy awk printed a literal "12")
                     out = [
                         c[0], c[1], c[2], c[3], c[4], c[5],
                         str(int(c[6]) - x_coord + 1),
@@ -245,7 +245,7 @@ def _transform_two_region(in_hyb, out_file, GENE, x_coord, y_coord, X1, X2, Y1, 
 
                     fout.write("\t".join(out) + "\n")
 
-                # plain string 12 follows legacy script
+                # column 12 is copied from the input (the legacy awk printed a literal "12")
                 if (int(c[12]) >= X1 and int(c[13]) <= X2
                     and int(c[6]) >= Y1 and int(c[7]) <= Y2
                     and int(c[15]) >=5):
@@ -317,7 +317,7 @@ def _fasta_extraction_two_region(fasta, GENE_1, X1, Y1, length, out_fasta, GENE_
     with open(out_fasta, "w") as f:
         f.write(f"{name}\n{seqX}{padding}{seqY}\n")
 
-def _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model):
+def _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, beta, normalize, beam_size, energy_delta, max_phase1, max_phase2, allow_pseudoknot, energy_model, support):
     
     from hyb2.folding import comrades_fold
 
@@ -332,7 +332,8 @@ def _fold(out_file, out_fasta, span, fold, vienna_bin, support_matrix, alpha, be
                           vienna_bin=vienna_bin, alpha=alpha, beta=beta,
                           normalize=normalize, beam_size=beam_size,
                           energy_delta=energy_delta, max_phase1=max_phase1,
-                          max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
+                          max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model,
+                          support=support, support_hyb=out_file)
         
     else:
         constraints = out_file.replace(".hyb", f".1-{span}_folding_constraints.txt")
@@ -436,7 +437,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-j", "--varna-jar", dest="varna_jar", default=None, metavar="VARNA.JAR", help="path to the VARNA jar (default: config.VARNA_JAR)")
     p.add_argument("-0", "--interactive", dest="interactive", type=str2bool, default=False, metavar="BOOL", help="launch the interactive VARNA GUI (default false)")
     p.add_argument("--support-matrix", dest="support_matrix", default=None, metavar="BASEPAIR_SCORES.txt", help="reuse a pre-built support matrix instead of rebuilding it")
-    p.add_argument("-r", "--fold-backend", dest="fold_backend", default="cplfold", choices=["vienna", "unafold", "cplfold", "1", "0"], help="folding backend: (1=vienna, 0=unafold are legacy aliases)")
+    p.add_argument("-r", "--fold-backend", dest="fold_backend", default="cplfold", choices=["vienna", "mfold", "unafold", "cplfold", "1", "0"], help="folding backend: cplfold (default), vienna, mfold; unafold = hybrid-ss-min, which ignores forced pairs in the OligoArrayAux build (1=vienna, 0=unafold are legacy aliases)")
     p.add_argument("--alpha", dest="alpha", type=float, default=CPL_DEFAULTS["alpha"], help="cplfold bonus weight")
     p.add_argument("--beta", dest="beta", type=float, default=CPL_DEFAULTS["beta"], help="cplfold bonus weight")
     p.add_argument("--normalize", dest="normalize", choices=["raw", "log"], default=CPL_DEFAULTS["normalize"], help="cplfold bonus normalization")
@@ -444,8 +445,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
     p.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
     p.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
-    p.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot toggle (default true)")
+    p.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot search; slow on long RNAs (default false)")
     p.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
+    p.add_argument("--support", dest="support", choices=["cofold", "coverage", "gaussian"], default=CPL_DEFAULTS["support"], help="cplfold support matrix from chimeras: cofold (pairs predicted by cofolding the arms; default), coverage (all pairs spanned by the arms), gaussian (IRIS model)")
 
     return p
 
@@ -477,7 +479,8 @@ def main(argv: list[str] | None = None) -> int:
         max_phase1=args.max_phase1,
         max_phase2=args.max_phase2,
         allow_pseudoknot=args.allow_pseudoknot,
-        energy_model=args.energy_model
+        energy_model=args.energy_model,
+        support=args.support
     )
 
     return 0

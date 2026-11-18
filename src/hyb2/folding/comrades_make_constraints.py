@@ -4,6 +4,12 @@ Folds each chimeric read pairs arm sequences with RNAcofold, tallies basepair fr
 all chimeras in a given reference window, and outputs the top-N most frequent basepairs as folding 
 constraints for that region
 
+legacy=True reproduces the legacy scripts exactly (used by the parity tests). The default
+(legacy=False) applies three fixes: base pairs are counted once regardless of which arm
+was sequenced first, intra-arm cofold pairs are ignored (see ct2bps_2), and weak pairs
+are trimmed from the ends of merged helices (trim_fraction, see bp2hyb). Identical
+constraints are written once.
+
 """
 
 import argparse, subprocess, sys, os, shutil
@@ -20,8 +26,14 @@ import concurrent.futures
 
 log = logging.getLogger(__name__)
 
+TRIM_FRACTION = 0.05
+
+
 def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
-        vienna_bin=None, support_matrix=None):
+        vienna_bin=None, support_matrix=None, legacy=False, trim_fraction=TRIM_FRACTION):
+
+    if legacy:
+        trim_fraction = 0.0
 
     ref_bare = ref_fasta.rsplit(".", 1)[0]
     ref_tab = ref_bare + ".tab"
@@ -69,7 +81,7 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
                 raise ValueError(f"unknown folder: {fold}")
     
         with open(ct) as fin:
-            scores = histogram(ct2bps_2(fin.read()))
+            scores = histogram(ct2bps_2(fin.read(), legacy=legacy))
 
         with open(bp_scores, "w") as fout:
             fout.writelines(scores)
@@ -94,18 +106,23 @@ def run(in_hyb, ref_fasta, begin, end, *, num_constraints=75, fold="vienna",
                 printed += 1
 
     with open(frag_scr) as fin, open(ranked, "w") as fout:
-        fout.writelines(bp2hyb(fin))
+        fout.writelines(bp2hyb(fin, trim_fraction=trim_fraction))
 
     with open(ranked) as fin, open(constr, "w") as fout:
-        for count, output in enumerate(hyb2constraints(fin)):
-            if count >= num_constraints:
+        written = set()
+        for output in hyb2constraints(fin):
+            if len(written) >= num_constraints:
                 break
 
             elements = output.rstrip("\n").split("\t")
             elements[1] = str(int(elements[1]) - (begin - 1))
             elements[2] = str(int(elements[2]) - (begin - 1))
 
-            fout.write("\t".join(elements) + "\n")
+            line = "\t".join(elements) + "\n"
+            if not legacy and line in written:
+                continue
+            written.add(line)
+            fout.write(line)
         
 
     return constr

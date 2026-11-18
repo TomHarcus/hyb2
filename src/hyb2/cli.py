@@ -13,6 +13,7 @@ import yaml
 import logging
 
 from hyb2.tools.config import CPL_DEFAULTS
+from hyb2.mapping.bowtie2_map import MAPPING_DEFAULTS
 from hyb2.tools.config import str2bool
 
 
@@ -54,10 +55,16 @@ def build_parser() -> argparse.ArgumentParser:
         "-r", "--fold-backend",
         dest="fold_backend",
         default="cplfold",
-        choices=["cplfold", "vienna", "unafold", "0", "1"]
+        choices=["cplfold", "vienna", "mfold", "unafold", "0", "1"]
     )
     parser.add_argument("-0", "--interactive", dest="interactive", type=str2bool, default=False, metavar="BOOL", help="launch the interactive VARNA GUI (default false)")
     parser.add_argument("--reproducible", action="store_true", help="deterministic run-to-run output (adds bowtie2 --reorder)")
+
+    parser.add_argument("--adapter", dest="adapter", default=MAPPING_DEFAULTS["adapter"], help="3' adapter trimmed with cutadapt before mapping; 'none' to skip (default %(default)s)")
+    parser.add_argument("--min-length", dest="min_length", type=int, default=MAPPING_DEFAULTS["min_length"], help="minimum read length after trimming (default %(default)s)")
+    parser.add_argument("--seed-length", dest="seed_length", type=int, default=MAPPING_DEFAULTS["seed_length"], help="bowtie2 seed length -L (default %(default)s; legacy 16)")
+    parser.add_argument("--score-min", dest="score_min", default=MAPPING_DEFAULTS["score_min"], help="bowtie2 --score-min (default %(default)s; legacy L,18,0)")
+    parser.add_argument("--bowtie2-args", dest="bowtie2_args", default=None, metavar="'ARGS'", help="extra bowtie2 arguments, quoted, appended to the command")
 
     parser.add_argument("--support-matrix", dest="support_matrix", default=None, metavar="BASEPAIR_SCORES.txt", help="reuse a pre-built support matrix instead of rebuilding it")
 
@@ -68,8 +75,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--energy-delta", dest="energy_delta", type=float, default=CPL_DEFAULTS["energy_delta"], help="cplfold energy delta")
     parser.add_argument("--max-phase1", dest="max_phase1", type=int, default=CPL_DEFAULTS["max_phase1"], help="cplfold max phase 1")
     parser.add_argument("--max-phase2", dest="max_phase2", type=int, default=CPL_DEFAULTS["max_phase2"], help="cplfold max phase 2")
-    parser.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot toggle (default true)")
+    parser.add_argument("--allow-pseudoknot", dest="allow_pseudoknot", type=str2bool, default=CPL_DEFAULTS["allow_pseudoknot"], metavar="BOOL", help="cplfold pseudoknot search; slow on long RNAs (default false)")
     parser.add_argument("--energy-model", dest="energy_model", choices=["DP09", "DP03", "CC06", "CC09", "RE"], default=CPL_DEFAULTS["energy_model"], help="cplfold energy model")
+    parser.add_argument("--support", dest="support", choices=["cofold", "coverage", "gaussian"], default=CPL_DEFAULTS["support"], help="cplfold support matrix: cofold (default), coverage, gaussian")
 
     return parser
 
@@ -115,7 +123,11 @@ def main(argv: list[str] | None = None) -> int:
              alpha=args.alpha, beta=args.beta, normalize=args.normalize,
              beam_size=args.beam_size, energy_delta=args.energy_delta,
              max_phase1=args.max_phase1, max_phase2=args.max_phase2,
-             allow_pseudoknot=args.allow_pseudoknot, energy_model=args.energy_model)
+             allow_pseudoknot=args.allow_pseudoknot, energy_model=args.energy_model,
+             support=args.support,
+             adapter=None if str(args.adapter).lower() in ("none", "") else args.adapter,
+             min_length=args.min_length, seed_length=args.seed_length,
+             score_min=args.score_min, bowtie2_args=args.bowtie2_args)
 
     return 0
 

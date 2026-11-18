@@ -22,7 +22,7 @@ def test_basepair_scores_match_legacy(unafold_fixtures_dir, unafold_env, repo_ro
     shutil.copy(repo_root / "data" / "Zika_18S_formatted.fasta", tmp_path / "ref.fasta")
     monkeypatch.chdir(tmp_path)
 
-    run("mini.hyb", "ref.fasta", 1, 10298, fold="unafold")
+    run("mini.hyb", "ref.fasta", 1, 10298, fold="unafold", legacy=True)
 
     produced = (tmp_path / "mini.basepair_scores.txt").read_text().splitlines()
     golden = (unafold_fixtures_dir / "mini.basepair_scores.golden").read_text().splitlines()

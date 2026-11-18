@@ -24,9 +24,14 @@ def print_help():
     print("\t--length (-l) length of fragments for zoomed-in contact and folding")
     print("\t--varna-jar (-j) directory of VARNAcmd.jar (default set when installing hyb2)")
     print("\t--calc-energy (-e) calculate folding energy: true to calculate, false to skip and save on runtime (default=false)")
-    print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
+    print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'vienna' or '1' for ViennaRNA, 'mfold' for mfold 3.6, 'unafold' or '0' for hybrid-ss-min (OligoArrayAux build ignores forced pairs; use mfold) (default='cplfold')")
     print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
     print("\t--reproducible deterministic run-to-run output (adds bowtie2 --reorder)")
+    print("\t--adapter 3' adapter trimmed with cutadapt before mapping; 'none' to skip (default=TGGAATTCTCGGGTGCCAAGG)")
+    print("\t--min-length minimum read length after trimming (default=18)")
+    print("\t--seed-length bowtie2 seed length -L (default=10; legacy 16)")
+    print("\t--score-min bowtie2 --score-min (default=L,15,0; legacy L,18,0)")
+    print("\t--bowtie2-args extra bowtie2 arguments, quoted, appended to the command")
     print("\t--support-matrix reuse a pre-built support matrix instead of rebuilding it (the .basepair_scores.txt file)")
 
     # folding parameters
@@ -35,11 +40,12 @@ def print_help():
     print("\t--alpha cplfold bonus weight (default=0.5)")
     print("\t--beta cplfold bonus weight (default=0.0)")
     print("\t--normalize cplfold bonus normalization either 'raw' or 'log' (default='log')")
-    print("\t--beam-size cplfold beam size (default=100)")
+    print("\t--beam-size cplfold beam size (default=200)")
     print("\t--energy-delta cplfold energy delta (default=5.0)")
     print("\t--max-phase1 cplfold max phase 1 (default=10)")
     print("\t--max-phase2 cplfold max phase 2 (default=5)")
-    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation")
+    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation; slow on long RNAs (default=false)")
+    print("\t--support cplfold support matrix: cofold (default), coverage, gaussian")
     print("\t--energy-model cplfold energy model: 'DP09', 'DP03', 'CC06', 'CC09', 'RE' (default='DP09')")
 
     print("")
@@ -73,7 +79,7 @@ def print_help():
     print("\t--y-start (-y) start coordinate of 2nd strand/gene for folding")
     print("\t--length (-l) length of fragment")
     print("\t--varna-jar (-j) directory of VARNAcmd.jar (default set when installing hyb2)")
-    print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'unafold' or '0' for UNAfold, 'vienna' or '1' for ViennaRNA (default='cplfold')")
+    print("\t--fold-backend (-r) folding algorithm: 'cplfold' for CPLfold, 'vienna' or '1' for ViennaRNA, 'mfold' for mfold 3.6, 'unafold' or '0' for hybrid-ss-min (OligoArrayAux build ignores forced pairs; use mfold) (default='cplfold')")
     print("\t--interactive (-0) interactive mode for VARNA pop-up: false to disable, true to activate (default=false)")
     print("\t--support-matrix reuse a pre-built support matrix instead of rebuilding it (the .basepair_scores.txt file)")
 
@@ -83,11 +89,12 @@ def print_help():
     print("\t--alpha cplfold bonus weight (default=0.5)")
     print("\t--beta cplfold bonus weight (default=0.0)")
     print("\t--normalize cplfold bonus normalization either 'raw' or 'log' (default='log')")
-    print("\t--beam-size cplfold beam size (default=100)")
+    print("\t--beam-size cplfold beam size (default=200)")
     print("\t--energy-delta cplfold energy delta (default=5.0)")
     print("\t--max-phase1 cplfold max phase 1 (default=10)")
     print("\t--max-phase2 cplfold max phase 2 (default=5)")
-    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation")
+    print("\t--allow-pseudoknot toggle for cplfold pseudoknot generation; slow on long RNAs (default=false)")
+    print("\t--support cplfold support matrix: cofold (default), coverage, gaussian")
     print("\t--energy-model cplfold energy model: 'DP09', 'DP03', 'CC06', 'CC09', 'RE' (default='DP09')")
 
     print("")
@@ -108,7 +115,7 @@ import sys
 import re
 
 from hyb2.mapping.fasta_hyb2_formatting import fasta_hyb2_formatting
-from hyb2.mapping.bowtie2_map import bowtie2_map
+from hyb2.mapping.bowtie2_map import bowtie2_map, MAPPING_DEFAULTS
 from hyb2.chimera import sam_composition
 from hyb2.coverage.hyb2_coverage import hyb2_coverage
 from hyb2.viewpoint.plot_viewpoint import plot_viewpoint
@@ -154,7 +161,10 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
         normalize=CPL_DEFAULTS["normalize"], beam_size=CPL_DEFAULTS["beam_size"],
         energy_delta=CPL_DEFAULTS["energy_delta"], max_phase1=CPL_DEFAULTS["max_phase1"],
         max_phase2=CPL_DEFAULTS["max_phase2"], allow_pseudoknot=CPL_DEFAULTS["allow_pseudoknot"],
-        energy_model=CPL_DEFAULTS["energy_model"]):
+        energy_model=CPL_DEFAULTS["energy_model"], support=CPL_DEFAULTS["support"],
+        adapter=MAPPING_DEFAULTS["adapter"], min_length=MAPPING_DEFAULTS["min_length"],
+        seed_length=MAPPING_DEFAULTS["seed_length"], score_min=MAPPING_DEFAULTS["score_min"],
+        bowtie2_args=None):
 
     ensure_offtmp_tmpdir()
     
@@ -203,7 +213,9 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
                 f"{hyb_path} already exists: delete it, move it, or change output_id to avoid overwriting"
             )
         if mappable:
-            bowtie2_map(in_file, db, out, reproducible=reproducible)
+            bowtie2_map(in_file, db, out, reproducible=reproducible, adapter=adapter,
+                        min_length=min_length, seed_length=seed_length, score_min=score_min,
+                        bowtie2_args=bowtie2_args)
             log.info("SAM file generated")
             sam = f"{out}.sam"
 
@@ -276,7 +288,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model, support=support)
 
     elif x_coord and length and not gene_2 and y_coord:
         steps.start(f"Folding {gene_1} (this can take a while)")
@@ -285,7 +297,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model, support=support)
 
     elif x_coord and length and gene_2 and y_coord:
         steps.start(f"Folding {gene_1} with {gene_2} (this can take a while)")
@@ -294,7 +306,7 @@ def run(in_file, db, out, *, hmax, blast_threshold, max_overlap,
               VARNA=varna, interactive=interactive, FOLD=fold, support_matrix=support_matrix,
               alpha=alpha, beta=beta, normalize=normalize, beam_size=beam_size,
               energy_delta=energy_delta, max_phase1=max_phase1,
-              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model)
+              max_phase2=max_phase2, allow_pseudoknot=allow_pseudoknot, energy_model=energy_model, support=support)
 
     else:
         log.info("No options specified to generate secondary structure")

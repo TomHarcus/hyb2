@@ -9,7 +9,9 @@ dependencies:
   # folding / mapping tools (subprocess deps)
   - viennarna=2.7.0   #RNAcofold / RNAfold / b2ct (vienna + cplfold support matrix)
   - bowtie2=2.5.4     # read mapping
-  - oligoarrayaux=3.8.1     # hybrid-min / hybrid-ss-min (unafold backend)
+  - oligoarrayaux=3.8.1     # hybrid-min / hybrid-ss-min (unafold backend; ignores forced pairs)
+  - mfold=3.6     # constrained folding backend (-r mfold), honours F/P constraints
+  - cutadapt     # 3' adapter trimming before mapping
 
   # R + plotting (Rscript subprocess)
   - r-base=4.3

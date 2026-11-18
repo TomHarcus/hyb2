@@ -9,7 +9,16 @@ The interactive/GUI mode is not tested (nothing to diff); only the headless
 .ct -> SVG -> svg_mod_coord path.
 """
 
+import re
+
 from hyb2.folding.plot_VARNA import plot_VARNA
+
+_FLOAT = re.compile(r"-?\d+\.\d+")
+
+
+def _rounded(svg):
+    """VARNA's coordinates differ in the last float digit between Java versions; compare to 4 dp."""
+    return _FLOAT.sub(lambda m: f"{float(m.group()):.4f}", svg)
 
 
 def test_plot_VARNA_headless_matches_golden(folding_fixtures_dir, varna_jar, tmp_path, monkeypatch):
@@ -26,4 +35,4 @@ def test_plot_VARNA_headless_matches_golden(folding_fixtures_dir, varna_jar, tmp
     )
 
     produced = (tmp_path / out).read_text()
-    assert produced == (folding_fixtures_dir / "plot_varna.golden").read_text()
+    assert _rounded(produced) == _rounded((folding_fixtures_dir / "plot_varna.golden").read_text())
