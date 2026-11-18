@@ -144,10 +144,18 @@ def _fold_vienna(bit1, bit2, ct, vienna_bin, workers=None):
         except AttributeError:
             workers = os.cpu_count() or 1
 
-    def _fold_chunk(chunk):
-        return subprocess.run([rnacofold, "--noconv", "--noPS"],
-                              input=chunk, capture_output=True, text=True,
-                              check=True).stdout
+    def _fold_chunk(chunk, attempts=3):
+        # RNAcofold occasionally crashes (SIGSEGV) when several copies run at once,
+        # seen with the x86_64 build under Rosetta on Apple Silicon. Its output is
+        # deterministic, so a crashed chunk is simply re-run.
+        for attempt in range(1, attempts + 1):
+            proc = subprocess.run([rnacofold, "--noconv", "--noPS"],
+                                  input=chunk, capture_output=True, text=True)
+            if proc.returncode == 0:
+                return proc.stdout
+            if attempt < attempts:
+                log.warning(f"RNAcofold exited with code {proc.returncode}; retrying ({attempt}/{attempts - 1})")
+        raise subprocess.CalledProcessError(proc.returncode, proc.args, proc.stdout, proc.stderr)
 
     if workers <= 1 or len(records) < 2 * workers:
         cofold = _fold_chunk("".join(records))

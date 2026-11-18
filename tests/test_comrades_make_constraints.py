@@ -31,3 +31,23 @@ def test_comrades_make_constraints_matches_golden(
     produced = Path(constr).read_text()
     golden = (folding_fixtures_dir / "comrades_mini.folding_constraints").read_text()
     assert produced == golden
+
+
+def test_cofold_chunk_retried_after_crash(tmp_path, monkeypatch):
+    import subprocess
+    from hyb2.folding import comrades_make_constraints as m
+    real = subprocess.run
+    calls = {"n": 0}
+
+    def flaky(cmd, **kw):
+        if cmd[0].endswith("RNAcofold"):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                return subprocess.CompletedProcess(cmd, -11, "", "")
+        return real(cmd, **kw)
+
+    monkeypatch.setattr(m.subprocess, "run", flaky)
+    (tmp_path / "b1.fa").write_text(">a_RNA_1_4\nGGGG\n")
+    (tmp_path / "b2.fa").write_text(">b_RNA_11_14\nCCCC\n")
+    m._fold_vienna(str(tmp_path / "b1.fa"), str(tmp_path / "b2.fa"), str(tmp_path / "x.ct"), None, workers=1)
+    assert calls["n"] == 2 and (tmp_path / "x.ct").read_text().strip()
